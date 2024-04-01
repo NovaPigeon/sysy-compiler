@@ -3,7 +3,10 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <string.h>
+#include "koopa.h"
 #include "ast.h"
+#include "riscv.h"
 
 using namespace std;
 
@@ -28,7 +31,7 @@ int main(int argc, const char *argv[])
   // 打开输入文件, 并且指定 lexer 在解析的时候读取这个文件
   yyin = fopen(input, "r");
   assert(yyin);
-  fout=fopen(output,"w");
+  fout = fopen(output, "w");
   assert(fout);
 
   // 调用 parser 函数, parser 函数会进一步调用 lexer 解析输入文件的
@@ -36,14 +39,40 @@ int main(int argc, const char *argv[])
   auto ret = yyparse(ast);
   assert(!ret);
 
+  std::string IR = ast->GenerateIR();
 
   // 输出解析得到的 AST, 其实就是个字符串
   // cout << *ast << endl;
   // fprintf(fout,"%s",ast->c_str());
 
-  std::string IR=ast->GenerateIR();
-  fprintf(fout,"%s\n",IR.c_str());
-  cout<<IR;
-  
+  if (strcmp(mode, "-koopa")==0)
+  {
+    fprintf(fout, "%s\n", IR.c_str());
+    cout << IR;
+  }
+  else if(strcmp(mode,"-riscv")==0)
+  {
+    // 解析字符串 str, 得到 Koopa IR 程序
+    koopa_program_t program;
+    koopa_error_code_t ret = koopa_parse_from_string(IR.c_str(), &program);
+    assert(ret == KOOPA_EC_SUCCESS); // 确保解析时没有出错
+    // 创建一个 raw program builder, 用来构建 raw program
+    koopa_raw_program_builder_t builder = koopa_new_raw_program_builder();
+    // 将 Koopa IR 程序转换为 raw program
+    koopa_raw_program_t raw = koopa_build_raw_program(builder, program);
+    // 释放 Koopa IR 程序占用的内存
+    koopa_delete_program(program);
+
+    // 处理 raw program
+    std::string rscv=Visit(raw);
+    fprintf(fout, "%s\n", rscv.c_str());
+    cout << rscv;
+
+    // 处理完成, 释放 raw program builder 占用的内存
+    // 注意, raw program 中所有的指针指向的内存均为 raw program builder 的内存
+    // 所以不要在 raw program 处理完毕之前释放 builder
+    koopa_delete_raw_program_builder(builder);
+  }
+
   return 0;
 }
