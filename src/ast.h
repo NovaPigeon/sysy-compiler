@@ -537,19 +537,27 @@ public:
         }
         else if (bnf_type == BianryOPExpType::EXPAND)
         {
+            /*
+            2 && 4
+            %0 = ne 2, 0
+            %1 = ne 4, 0
+            %2 = and %0, %1
+            */
             std::string l = land_exp->GenerateIR();
             std::string lvar = get_var(l);
             std::string lir = get_IR(l);
             std::string r = eq_exp->GenerateIR();
             std::string rvar = get_var(r);
             std::string rir = get_IR(r);
-            std::string new_var = "%" + std::to_string(symbol_cnt);
+            std::string new_var = "%" + std::to_string(symbol_cnt+2);
             ret = new_var + "\n" +
                   lir +
                   rir +
-                  "  " + new_var + " = " + op_names["&&"] + " " +
-                  lvar + ", " + rvar + "\n";
-            symbol_cnt++;
+                  "  %" + std::to_string(symbol_cnt) + " = ne " + lvar + ", 0\n" +
+                  "  %" + std::to_string(symbol_cnt + 1) + " = ne " + rvar + ", 0\n" +
+                  "  " + new_var + " = " + op_names["&&"] + " %" +
+                  std::to_string(symbol_cnt) + ", %" + std::to_string(symbol_cnt + 1) + "\n";
+            symbol_cnt+=3;
         }
         else
             assert(false);
@@ -587,19 +595,27 @@ public:
         }
         else if (bnf_type == BianryOPExpType::EXPAND)
         {
+            /*
+            11 || 0
+            %0 = ne 11, 0
+            %1 = ne 0, 0
+            %2 = or %0, %1
+            */
             std::string l = lor_exp->GenerateIR();
             std::string lvar = get_var(l);
             std::string lir = get_IR(l);
             std::string r = land_exp->GenerateIR();
             std::string rvar = get_var(r);
             std::string rir = get_IR(r);
-            std::string new_var = "%" + std::to_string(symbol_cnt);
+            std::string new_var = "%" + std::to_string(symbol_cnt + 2);
             ret = new_var + "\n" +
                   lir +
                   rir +
-                  "  " + new_var + " = " + op_names["||"] + " " +
-                  lvar + ", " + rvar + "\n";
-            symbol_cnt++;
+                  "  %" + std::to_string(symbol_cnt) + " = ne " + lvar + ", 0\n" +
+                  "  %" + std::to_string(symbol_cnt + 1) + " = ne " + rvar + ", 0\n" +
+                  "  " + new_var + " = " + op_names["||"] + " %" +
+                  std::to_string(symbol_cnt) + ", %" + std::to_string(symbol_cnt + 1) + "\n";
+            symbol_cnt += 3;
         }
         else
             assert(false);

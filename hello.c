@@ -1,4 +1,4 @@
 int main()
 {
-    return 11 || 0;
+    return 2 && 4;
 }
