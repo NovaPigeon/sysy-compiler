@@ -1,8 +1,4 @@
 int main()
 {
-    /* 
-    adawiudahwhiu */
-    //
-    
-    return -234234;
+    return 11 || 0;
 }

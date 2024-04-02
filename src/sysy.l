@@ -24,9 +24,9 @@ BlockComment  \/\*[^*]*\*+([^/*][^*]*\*+)*\/
 Identifier    [a-zA-Z_][a-zA-Z0-9_]*
 
 /* 整数字面量 */
-Decimal       -?[1-9][0-9]*
-Octal         -?0[0-7]*
-Hexadecimal   -?0[xX][0-9a-fA-F]+
+Decimal       [1-9][0-9]*
+Octal         0[0-7]*
+Hexadecimal   0[xX][0-9a-fA-F]+
 
 %%
 
@@ -42,6 +42,13 @@ Hexadecimal   -?0[xX][0-9a-fA-F]+
 {Decimal}       { yylval.int_val = strtol(yytext, nullptr, 0); return INT_CONST; }
 {Octal}         { yylval.int_val = strtol(yytext, nullptr, 0); return INT_CONST; }
 {Hexadecimal}   { yylval.int_val = strtol(yytext, nullptr, 0); return INT_CONST; }
+
+"<="            {return LE;}
+">="            {return GE;}
+"=="            {return EQ;}
+"!="            {return NEQ;}
+"&&"            {return AND;}
+"||"            {return OR;}
 
 .               { return yytext[0]; }
 

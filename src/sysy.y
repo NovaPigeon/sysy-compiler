@@ -41,9 +41,16 @@ using namespace std;
 %token INT RETURN
 %token <str_val> IDENT
 %token <int_val> INT_CONST
+%token <str_val> LE GE EQ NEQ AND OR
 
 // 非终结符的类型定义
-%type <ast_val> FuncDef FuncType Block Stmt Number
+%type <ast_val> FuncDef FuncType Block Stmt
+%type <ast_val> Exp PrimaryExp UnaryExp MulExp 
+%type <ast_val> AddExp RelExp EqExp LAndExp LOrExp
+%type <str_val> UnaryOP MulOP AddOP RelOP EqOP
+%type <int_val> Number
+
+
 
 %%
 
@@ -98,20 +105,231 @@ Block
   ;
 
 Stmt
-  : RETURN Number ';' {
+  : RETURN Exp ';' {
     auto stmt=new StmtAST();
-    stmt->number=unique_ptr<BaseAST>($2);
+    stmt->exp=unique_ptr<BaseAST>($2);
     $$=stmt;
   }
   ;
 
-Number
-  : INT_CONST {
-    auto number=new NumberAST();
-    number->int_const=($1);
-    $$=number;
+Exp
+  : LOrExp {
+    auto exp=new ExpAST();
+    exp->lor_exp=unique_ptr<BaseAST>($1);
+    $$=exp;
   }
   ;
+
+PrimaryExp
+  : '(' Exp ')' {
+    auto primary_exp=new PrimaryExpAST();
+    primary_exp->exp=unique_ptr<BaseAST>($2);
+    primary_exp->bnf_type=PrimaryExpType::EXP;
+    $$=primary_exp;
+  }
+  | Number {
+    auto primary_exp=new PrimaryExpAST();
+    primary_exp->number=($1);
+    primary_exp->bnf_type=PrimaryExpType::NUMBER;
+    $$=primary_exp;
+  }
+  ;
+
+UnaryExp
+  : PrimaryExp {
+    auto unary_exp=new UnaryExpAST();
+    unary_exp->primary_exp=unique_ptr<BaseAST>($1);
+    unary_exp->bnf_type=UnaryExpType::PRIMARY;
+    $$=unary_exp;
+
+  }
+  | UnaryOP UnaryExp {
+    auto unary_exp=new UnaryExpAST();
+    unary_exp->unary_op=*unique_ptr<string>($1);
+    unary_exp->unary_exp=unique_ptr<BaseAST>($2);
+    unary_exp->bnf_type=UnaryExpType::UNARY;
+    $$=unary_exp;
+  }
+  ;
+
+MulExp
+  : UnaryExp {
+    auto mul_exp=new MulExpAST();
+    mul_exp->bnf_type=BianryOPExpType::INHERIT;
+    mul_exp->unary_exp=unique_ptr<BaseAST>($1);
+    $$=mul_exp;
+  }
+  | MulExp MulOP UnaryExp {
+    auto mul_exp=new MulExpAST();
+    mul_exp->bnf_type=BianryOPExpType::EXPAND;
+    mul_exp->mul_exp=unique_ptr<BaseAST>($1);
+    mul_exp->op=*unique_ptr<string>($2);
+    mul_exp->unary_exp=unique_ptr<BaseAST>($3);
+    $$=mul_exp;
+  }
+  ;
+
+AddExp
+  : MulExp {
+    auto add_exp=new AddExpAST();
+    add_exp->bnf_type=BianryOPExpType::INHERIT;
+    add_exp->mul_exp=unique_ptr<BaseAST>($1);
+    $$=add_exp;
+  }
+  | AddExp AddOP MulExp {
+    auto add_exp=new AddExpAST();
+    add_exp->bnf_type=BianryOPExpType::EXPAND;
+    add_exp->add_exp=unique_ptr<BaseAST>($1);
+    add_exp->op=*unique_ptr<string>($2);
+    add_exp->mul_exp=unique_ptr<BaseAST>($3);
+    $$=add_exp;
+  }
+  ;
+
+RelExp
+  : AddExp {
+    auto rel_exp=new RelExpAST();
+    rel_exp->bnf_type=BianryOPExpType::INHERIT;
+    rel_exp->add_exp=unique_ptr<BaseAST>($1);
+    $$=rel_exp;
+  }
+  | RelExp RelOP AddExp {
+    auto rel_exp=new RelExpAST();
+    rel_exp->bnf_type=BianryOPExpType::EXPAND;
+    rel_exp->rel_exp=unique_ptr<BaseAST>($1);
+    rel_exp->op=*unique_ptr<string>($2);
+    rel_exp->add_exp=unique_ptr<BaseAST>($3);
+    $$=rel_exp;
+  }
+  ;
+
+EqExp
+  : RelExp {
+    auto eq_exp=new EqExpAST();
+    eq_exp->bnf_type=BianryOPExpType::INHERIT;
+    eq_exp->rel_exp=unique_ptr<BaseAST>($1);
+    $$=eq_exp;
+  }
+  | EqExp EqOP RelExp {
+    auto eq_exp=new EqExpAST();
+    eq_exp->bnf_type=BianryOPExpType::EXPAND;
+    eq_exp->eq_exp=unique_ptr<BaseAST>($1);
+    eq_exp->op=*unique_ptr<string>($2);
+    eq_exp->rel_exp=unique_ptr<BaseAST>($3);
+    $$=eq_exp;
+  }
+  ;
+
+LAndExp
+  : EqExp {
+    auto land_exp=new LAndExpAST();
+    land_exp->bnf_type=BianryOPExpType::INHERIT;
+    land_exp->eq_exp=unique_ptr<BaseAST>($1);
+    $$=land_exp;
+  }
+  | LAndExp AND EqExp {
+    auto land_exp=new LAndExpAST();
+    land_exp->bnf_type=BianryOPExpType::EXPAND;
+    land_exp->land_exp=unique_ptr<BaseAST>($1);
+    land_exp->eq_exp=unique_ptr<BaseAST>($3);
+    $$=land_exp;
+  }
+  ;
+
+LOrExp
+  : LAndExp {
+    auto lor_exp=new LOrExpAST();
+    lor_exp->bnf_type=BianryOPExpType::INHERIT;
+    lor_exp->land_exp=unique_ptr<BaseAST>($1);
+    $$=lor_exp;
+  }
+  | LOrExp OR LAndExp {
+    auto lor_exp=new LOrExpAST();
+    lor_exp->bnf_type=BianryOPExpType::EXPAND;
+    lor_exp->lor_exp=unique_ptr<BaseAST>($1);
+    lor_exp->land_exp=unique_ptr<BaseAST>($3);
+    $$=lor_exp;
+  }
+  ;
+
+UnaryOP
+  : '+' {
+      string *op = new string("+");
+      $$ = op;
+  }
+  | '-' {
+      string *op = new string("-");
+      $$ = op;
+  }
+  | '!' {
+      string *op = new string("!");
+      $$ = op;
+  }
+  ;
+
+MulOP
+  : '*' {
+      string *op = new string("*");
+      $$ = op;
+  }
+  | '/' {
+      string *op = new string("/");
+      $$ = op;
+  }
+  | '%' {
+      string *op = new string("%");
+      $$ = op;
+  }
+  ;
+
+AddOP
+  : '+' {
+      string *op = new string("+");
+      $$ = op;
+  }
+  | '-' {
+      string *op = new string("-");
+      $$ = op;
+  }
+  ;
+
+RelOP
+  : '<' {
+      string *op = new string("<");
+      $$ = op;
+  }
+  | '>' {
+      string *op = new string(">");
+      $$ = op;
+  }
+  | LE {
+      string *op = new string("<=");
+      $$ = op;
+  }
+  | GE {
+      string *op = new string(">=");
+      $$ = op;
+  }
+  ;
+
+EqOP
+  : EQ {
+      string *op = new string("==");
+      $$ = op;
+  }
+  | NEQ {
+      string *op = new string("!=");
+      $$ = op;
+  }
+  ;
+
+
+Number
+  : INT_CONST {
+    $$=($1);
+  }
+  ;
+
 
 %%
 

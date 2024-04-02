@@ -8,6 +8,7 @@
 #include "ast.h"
 #include "riscv.h"
 
+
 using namespace std;
 
 // 声明 lexer 的输入, 以及 parser 函数
@@ -39,6 +40,7 @@ int main(int argc, const char *argv[])
   auto ret = yyparse(ast);
   assert(!ret);
 
+  ast->Dump();
   std::string IR = ast->GenerateIR();
 
   // 输出解析得到的 AST, 其实就是个字符串
