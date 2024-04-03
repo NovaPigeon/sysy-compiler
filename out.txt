@@ -7,10 +7,8 @@ working directory: /root/wd
 -- Generating done
 -- Build files have been written to: /root/wd
 Scanning dependencies of target compiler
-[ 16%] Building CXX object CMakeFiles/compiler.dir/src/main.cpp.o
-[ 33%] Building CXX object CMakeFiles/compiler.dir/sysy.lex.cpp.o
-[ 50%] Building CXX object CMakeFiles/compiler.dir/sysy.tab.cpp.o
-[ 66%] Linking CXX executable compiler
+[ 14%] Building CXX object CMakeFiles/compiler.dir/src/riscv.cpp.o
+[ 28%] Linking CXX executable compiler
 [100%] Built target compiler
 running test "lv1/0_main" ... [0;32mPASSED[0m
 running test "lv1/1_comments" ... [0;32mPASSED[0m

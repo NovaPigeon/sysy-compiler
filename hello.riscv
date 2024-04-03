@@ -1,0 +1,8 @@
+  .text
+  .globl main
+main:
+  li t0, 7
+  sub t0, x0, t0
+  mv a0, t0
+  ret
+
