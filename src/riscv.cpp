@@ -19,7 +19,7 @@ static const std::string regs[REG_NUM]=
 static std::string gen_reg(int id)
 {
     if (id < REG_NUM)
-        return gen_reg(id);
+        return regs[id];
     return "a"+std::to_string(id);
 }
 
