@@ -4,6 +4,13 @@
 #include "koopa.h"
 
 #define REG_NUM 15
+//#define RISCV_DEBUG
+
+#ifdef RISCV_DEBUG
+#define dbg_printf(...) fprintf(stderr, __VA_ARGS__)
+#else
+#define dbg_printf(...)
+#endif
 // 函数声明
 std::string Visit(const koopa_raw_program_t &program);
 std::string Visit(const koopa_raw_slice_t &slice);

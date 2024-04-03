@@ -75,7 +75,7 @@ std::string Visit(const koopa_raw_slice_t &slice)
             assert(false);
         }
     }
-    printf("Visit slice:\n%s\n", rscv.c_str());
+    dbg_printf("Visit slice:\n%s\n", rscv.c_str());
     return rscv;
 }
 
@@ -87,7 +87,7 @@ std::string Visit(const koopa_raw_function_t &func)
     rscv += func_name + ":\n";
     // 访问所有基本块
     rscv += Visit(func->bbs);
-    printf("Visit func:\n%s\n", rscv.c_str());
+    dbg_printf("Visit func:\n%s\n", rscv.c_str());
     return rscv;
 }
 
@@ -96,7 +96,7 @@ std::string Visit(const koopa_raw_basic_block_t &bb)
 {
     // 访问所有指令
     std::string rscv = Visit(bb->insts);
-    printf("Visit bb:\n%s\n",rscv.c_str());
+    dbg_printf("Visit bb:\n%s\n",rscv.c_str());
     return rscv;
 }
 
@@ -127,7 +127,7 @@ std::string Visit(const koopa_raw_value_t &value)
         assert(false);
     }
     is_visited[value]=get_reg(rscv);
-    printf("Visit value: %d\n%s\n", kind.tag,rscv.c_str());
+    dbg_printf("Visit value: %d\n%s\n", kind.tag,rscv.c_str());
     return rscv;
 }
 
@@ -143,7 +143,7 @@ std::string Visit(const koopa_raw_return_t &ret)
     std::string insts=get_insts(tmp);
     std::string rscv="a0\n"+insts+"  mv a0, "+reg+"\n";
     rscv += "  ret\n";
-    printf("Visit return:\n%s\n", rscv.c_str());
+    dbg_printf("Visit return:\n%s\n", rscv.c_str());
     return rscv;
 }
 
@@ -157,7 +157,7 @@ std::string Visit(const koopa_raw_integer_t &interger)
     interger_reg_cnt++;
     std::string rscv = reg+"\n"
     "  li "+reg+", " + std::to_string(val) + "\n";
-    printf("Visit integer:\n%s\n", rscv.c_str());
+    dbg_printf("Visit integer:\n%s\n", rscv.c_str());
     return rscv;
 }
 
@@ -208,7 +208,7 @@ std::string Visit(const koopa_raw_binary_t &binary)
     case KOOPA_RBO_GE:
         rscv += "  slt " + new_reg + ", " + l_reg + ", " + r_reg + "\n" + "  xori " + new_reg + ", " + new_reg + ", 1\n";
     }
-    printf("Visit value: %d\n%s\n", op, rscv.c_str());
+    dbg_printf("Visit value: %d\n%s\n", op, rscv.c_str());
     return rscv;
 }
 

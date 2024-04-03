@@ -1,8 +1,30 @@
   .text
   .globl main
 main:
-  li t0, 7
-  sub t0, x0, t0
-  mv a0, t0
+  li t0, 8
+  li t1, 1
+  add t0, t0, t1
+  li t1, 8
+  li t2, 7
+  rem t1, t1, t2
+  sub t2, x0, t1
+  li t3, 78
+  xor t3, t3, x0
+  seqz t3, t3
+  li t4, 9
+  xor t4, t4, x0
+  snez t4, t4
+  xor t5, t3, x0
+  snez t5, t5
+  or t6, t4, t5
+  li a0, 1
+  sub a0, t6, a0
+  xor a1, t2, a0
+  snez a1, a1
+  add a2, t0, a1
+  li a3, 1215752191
+  xor a3, a3, a2
+  seqz a3, a3
+  mv a0, a3
   ret
 
