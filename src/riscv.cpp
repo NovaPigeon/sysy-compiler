@@ -10,11 +10,18 @@
 #include "riscv.h"
 
 
+
 static const std::string regs[REG_NUM]=
 {
     "t0","t1","t2","t3","t4","t5","t6",
     "a0","a1","a2","a3","a4","a5","a6","a7"
 };
+static std::string gen_reg(int id)
+{
+    if (id < REG_NUM)
+        return gen_reg(id);
+    return "a"+std::to_string(id);
+}
 
 static std::map<koopa_raw_binary_op_t, std::string> op_names = 
 {
@@ -153,7 +160,7 @@ std::string Visit(const koopa_raw_integer_t &interger)
     int32_t val = interger.value;
     if(val==0)
         return "x0\n";
-    std::string reg = regs[interger_reg_cnt];
+    std::string reg = gen_reg( interger_reg_cnt);
     interger_reg_cnt++;
     std::string rscv = reg+"\n"
     "  li "+reg+", " + std::to_string(val) + "\n";
@@ -174,7 +181,7 @@ std::string Visit(const koopa_raw_binary_t &binary)
     std::string r_insts=get_insts(r);
     
     interger_reg_cnt=reg_cnt;
-    std::string new_reg=regs[reg_cnt];
+    std::string new_reg=gen_reg (reg_cnt);
     reg_cnt++;
 
     std::string rscv=new_reg+"\n"+l_insts+r_insts;
