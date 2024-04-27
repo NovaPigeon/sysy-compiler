@@ -144,7 +144,6 @@ public:
     int val=-1;
     void Copy(std::unique_ptr<BaseExpAST>& exp)
     {
-        //is_var=exp->is_var;
         is_const=exp->is_const;
         is_evaled=exp->is_evaled;
         val=exp->val;
@@ -211,9 +210,9 @@ public:
         dbg_ast_printf("Block :: = '{' { BlockItem } '}'';\n");
         std::cout << "%entry:" << std::endl;
         for(auto &item:block_items->vec)
-        {   
-            if(is_ret)
-                return
+        {  
+            if(is_ret==true)
+                break;
             item->GenerateIR();
         }
         
@@ -231,10 +230,10 @@ public:
     {
         if(bnf_type==StmtType::STMT_RETURN)
         {
-            is_ret=true;
             dbg_ast_printf("Stmt ::= 'return' Exp ';';\n");
             exp->Eval();
             std::cout << "  ret " << exp->ident << std::endl;
+            is_ret = true;
         }
         else if(bnf_type==StmtType::STMT_ASSIGN)
         {
