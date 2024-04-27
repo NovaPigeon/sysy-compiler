@@ -936,26 +936,3 @@ public:
         return "";
     }
 };
-std::string get_var(std::string str)
-{
-    std::istringstream iss(str);
-    std::string var;
-    std::getline(iss, var);
-    return var;
-}
-
-std::string get_IR(std::string str)
-{
-    std::istringstream iss(str);
-    std::string var;
-    std::getline(iss, var);
-
-    std::string IR;
-    std::string line;
-    while (std::getline(iss, line))
-    {
-        IR += line + "\n";
-    }
-
-    return IR;
-}
