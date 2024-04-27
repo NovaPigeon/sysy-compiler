@@ -6,8 +6,9 @@ int SymbolTable::Insert(std::string symbol,int val)
 {
     if(Exist(symbol))
         return -1;
-    symbol_info_t* info=new symbol_info_t;
+    symbol_info_t* info=(symbol_info_t*)malloc(sizeof(symbol_info_t));
     info->val=val;
+    printf("insert %s %d\n",symbol.c_str(),val);
     this->symbol_table[symbol]=info;
     return 0;
 }

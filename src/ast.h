@@ -10,7 +10,7 @@
 
 #include "symbol_table.h"
 
-//#define DEBUG_AST
+#define DEBUG_AST
 #ifdef DEBUG_AST
 #define dbg_ast_printf(...) fprintf(stderr, __VA_ARGS__)
 #else
@@ -161,6 +161,7 @@ public:
     {   
         dbg_ast_printf("CompUnit :: = FuncDef;\n");
         func_def->GenerateIR();
+        printf("done\n");
         return "";
     }
 };
@@ -180,9 +181,10 @@ public:
                  <<ident
                  <<"(): ";
         std::cout<<func_type->GenerateIR();
-        std::cout<<" {\n";
+        std::cout << " {" << std::endl;
         block->GenerateIR();
-        std::cout<<"}\n";
+        std::cout << "}" << std::endl;
+        return "";
     }
 };
 
@@ -205,7 +207,7 @@ public:
     std::string GenerateIR() const override
     {
         dbg_ast_printf("Block :: = '{' { BlockItem } '}'';\n");
-        std::cout<<"%entry:\n";
+        std::cout << "%entry:" << std::endl;
         for(auto &item:block_items->vec)
         {
             item->GenerateIR();
@@ -223,13 +225,14 @@ public:
     {
         dbg_ast_printf("Stmt ::= 'return' Exp ';';\n");
         exp->Eval();
+        std::string var = exp->GenerateIR();
         if(exp->is_const)
         {
-            std::cout<<"  ret "<<exp->val<<"\n";
+            std::cout<<"  ret "<<exp->val<<std::endl;
             return "";
         }
-        std::string var = exp->GenerateIR();
-        std::cout<<"  ret "<<var<<"\n";
+        std::cout << "  ret " << var << std::endl;
+        return "";
     }
 };
 
@@ -240,7 +243,6 @@ public:
     std::unique_ptr<BaseExpAST> lor_exp;
     std::string GenerateIR() const override
     {
-        dbg_ast_printf("Exp ::= LOrExp;\n");
         return lor_exp->GenerateIR();
     }
     void Eval() override
@@ -249,6 +251,7 @@ public:
             return;
         lor_exp->Eval();
         Copy(lor_exp);
+        dbg_ast_printf("Exp ::= LOrExp(%d);\n",lor_exp->val);
         is_evaled=true;
     }
 };
@@ -269,9 +272,11 @@ public:
         {
             exp->Eval();
             Copy(exp);
+            dbg_ast_printf("PrimaryExp :: = '(' Exp(%d) ')'\n", exp->val);
         }
         else if (bnf_type == PrimaryExpType::NUMBER)
         {
+            dbg_ast_printf("PrimaryExp :: = Number(%d)\n",number);
             val=number;
             is_const=true;
         }
@@ -279,6 +284,7 @@ public:
         {
             lval->Eval();
             Copy(lval);
+            dbg_ast_printf("PrimaryExp :: = LVal(%d)\n",lval->val);
         }
         else
             assert(false);
@@ -288,17 +294,17 @@ public:
     {
         if (bnf_type == PrimaryExpType::EXP)
         {
-            dbg_ast_printf("PrimaryExp :: = '(' Exp ')'\n");
+            
             return exp->GenerateIR();
         }
         else if (bnf_type == PrimaryExpType::NUMBER)
         {
-            dbg_ast_printf("PrimaryExp :: = Number\n");
+            
             return std::to_string(number);
         }
         else if (bnf_type == PrimaryExpType::LVAL)
         {
-            dbg_ast_printf("PrimaryExp :: = LVal\n");
+            
             return lval->GenerateIR();
         }
         else
@@ -321,8 +327,10 @@ public:
             return;
         if (bnf_type == UnaryExpType::PRIMARY)
         {
+            
             primary_exp->Eval();
             Copy(primary_exp);
+            dbg_ast_printf("UnaryExp :: = PrimaryExp(%d)\n",val);
         }
         else if (bnf_type == UnaryExpType::UNARY)
         {
@@ -344,8 +352,9 @@ public:
                 }
                 else
                     assert(false);
-                is_evaled=true;
+                dbg_ast_printf("UnaryExp :: = %s UnaryExp(%d)\n",unary_op.c_str(),unary_exp->val);
             }
+            is_evaled = true;
         }
     }
     std::string GenerateIR() const override
@@ -353,12 +362,10 @@ public:
         std::string ret = "";
         if (bnf_type == UnaryExpType::PRIMARY)
         {
-            dbg_ast_printf("UnaryExp :: = PrimaryExp\n");
             ret = primary_exp->GenerateIR();
         }
         else if (bnf_type == UnaryExpType::UNARY)
         {
-            dbg_ast_printf("UnaryExp :: = UnaryOp UnaryExp\n");
             std::string uvar = unary_exp->GenerateIR();
             if(unary_exp->is_const)
                 ret=std::to_string(val);
@@ -406,6 +413,7 @@ public:
         {
             unary_exp->Eval();
             Copy(unary_exp);
+            dbg_ast_printf("MulExp :: = UnaryExp(%d);\n",val);
         }
         else if (bnf_type == BianryOPExpType::EXPAND)
         {
@@ -414,15 +422,18 @@ public:
             is_const=mul_exp->is_const && unary_exp->is_const;
             if(is_const)
             {
+                int val1=mul_exp->val,val2=unary_exp->val;
                 if(op=="*")
-                    val=mul_exp->val*unary_exp->val;
+                    val=val1*val2;
                 else if(op=="/")
-                    val=mul_exp->val/unary_exp->val;
+                    val=val1/val2;
                 else if(op=="%")
-                    val=mul_exp->val%unary_exp->val;
+                    val=val1%val2;
                 else
                     assert(false);
+                dbg_ast_printf("MulExp :: = MulExp(%d) %s UnaryExp(%d);\n",val1,op.c_str(),val2);
             }
+
         }
         else
             assert(false);
@@ -455,6 +466,7 @@ public:
         //     assert(false);
         if(is_const)
             return std::to_string(val);
+        return "";
     }
 };
 
@@ -472,22 +484,26 @@ public:
             return;
         if (bnf_type == BianryOPExpType::INHERIT)
         {
+            
             mul_exp->Eval();
             Copy(mul_exp);
+            dbg_ast_printf("AddExp :: = MulExp(%d);\n",val);
         }
         else if (bnf_type == BianryOPExpType::EXPAND)
         {
             add_exp->Eval();
             mul_exp->Eval();
             is_const=add_exp->is_const&&mul_exp->is_const;
+            int val1=add_exp->val,val2=mul_exp->val;
             if(is_const)
             {
                 if(op=="+")
-                    val=add_exp->val+mul_exp->val;
+                    val=val1+val2;
                 else if(op=="-")
-                    val=add_exp->val-mul_exp->val;
+                    val=val1-val2;
                 else
                     assert(false);
+                dbg_ast_printf("AddExp :: = AddExp(%d) %s MulExp(%d);\n", val1, op.c_str(), val2);
             }
         }
         else
@@ -498,6 +514,7 @@ public:
     {
         if (is_const)
             return std::to_string(val);
+        return "";
     }
 };
 
@@ -517,6 +534,7 @@ public:
         {
             add_exp->Eval();
             Copy(add_exp);
+            dbg_ast_printf("RelExp :: = AddExp(%d);\n",val);
         }
         else if (bnf_type == BianryOPExpType::EXPAND)
         {
@@ -536,6 +554,7 @@ public:
                     val=(val1>=val2);
                 else
                     assert(false);
+                dbg_ast_printf("RelExp :: = RelExp(%d) %s AddExp(%d);\n",val1,op.c_str(),val2);
             }
         }
         else
@@ -544,8 +563,10 @@ public:
     }
     std::string GenerateIR() const override
     {
+        
         if(is_const)
             return std::to_string(val);
+        return "";
     }
 };
 
@@ -563,11 +584,14 @@ public:
             return;
         if (bnf_type == BianryOPExpType::INHERIT)
         {
+            
             rel_exp->Eval();
             Copy(rel_exp);
+            dbg_ast_printf("EqExp :: = RelExp(%d);\n",val);
         }
         else if (bnf_type == BianryOPExpType::EXPAND)
         {
+            
             eq_exp->Eval();
             rel_exp->Eval();
             is_const=eq_exp->is_const&&rel_exp->is_const;
@@ -580,15 +604,18 @@ public:
                     val = (val1 != val2);
                 else
                     assert(false);
+                dbg_ast_printf("EqExp :: = EqExp(%d) %s RelExp(%d);",val1,op.c_str(),val2);
             }
         }
         else
             assert(false);
+        is_evaled=true;
     }
     std::string GenerateIR() const override
     {
         if (is_const)
             return std::to_string(val);
+        return "";
     }
 };
 
@@ -605,11 +632,13 @@ public:
             return;
         if (bnf_type == BianryOPExpType::INHERIT)
         {
+            dbg_ast_printf("LAndExp :: = EqExp;\n");
             eq_exp->Eval();
             Copy(eq_exp);
         }
         else if (bnf_type == BianryOPExpType::EXPAND)
         {
+            
             land_exp->Eval();
             eq_exp->Eval();
             is_const = eq_exp->is_const && land_exp->is_const;
@@ -617,10 +646,12 @@ public:
             {
                 int val1 = land_exp->val, val2 = eq_exp->val;
                 val = (val1 && val2);
+                dbg_ast_printf("LAndExp :: = LAndExp(%d) '&&' EqExp(%d);\n",val1,val2);
             }
         }
         else
             assert(false);
+        is_evaled=true;
     }
     std::string GenerateIR() const override
     {
@@ -658,6 +689,7 @@ public:
         // return ret;
         if(is_const)
             return std::to_string(val);
+        return "";
     }
 };
 
@@ -676,6 +708,7 @@ public:
         {
             land_exp->Eval();
             Copy(land_exp);
+            dbg_ast_printf("LOrExp :: = LAndExp(%d);\n",val);
         }
         else if (bnf_type == BianryOPExpType::EXPAND)
         {
@@ -686,10 +719,13 @@ public:
             {
                 int val1 = lor_exp->val, val2 = land_exp->val;
                 val = (val1 || val2);
+                dbg_ast_printf("LOrExp :: = LOrExp(%d) '||' LAndExp(%d);\n", val1, val2);
             }
+            
         }
         else
             assert(false);
+        is_evaled=true;
     }
     std::string GenerateIR() const override
     {
@@ -726,6 +762,7 @@ public:
         //     assert(false);
         if(is_const)
             return std::to_string(val);
+        return "";
     }
 };
 
@@ -740,12 +777,15 @@ public:
     {
         if(bnf_type==DeclType::CONST_DECL)
         {
+            dbg_ast_printf("Decl :: = ConstDecl\n");
             return const_decl->GenerateIR();
         }
         else if(bnf_type==DeclType::VAR_DECL)
         {
+            dbg_ast_printf("Decl :: = VarDecl\n");
             return var_decl->GenerateIR();
         }
+        return "";
     }
 
 };
@@ -760,6 +800,7 @@ public:
 
     std::string GenerateIR() const override
     {
+        dbg_ast_printf("ConstDecl :: = 'const' i32 ConstDef { ',' ConstDef } ';'\n");
         for(auto& def: const_defs->vec)
         {
             def->GenerateIR();
@@ -788,6 +829,7 @@ public:
     
     std::string GenerateIR() const override
     {
+        dbg_ast_printf("ConstDef :: = IDENT '=' ConstInitVal;\n");
         const_init_val->Eval();
         const_init_val->GenerateIR();
         symbol_table.Insert(ident,const_init_val->val);
@@ -810,6 +852,8 @@ public:
         if(is_evaled)
             return;
         const_exp->Eval();
+        Copy(const_exp);
+        dbg_ast_printf("ConstInitVal :: = ConstExp(%d);\n",const_exp->val);
         is_evaled=true;
     }
 };
@@ -826,9 +870,15 @@ public:
     std::string GenerateIR() const override
     {
         if(bnf_type==BlockItemType::BLK_DECL)
+        {
+            dbg_ast_printf("BlockItem :: = Decl;\n");
             return decl->GenerateIR();
+        }
         else if(bnf_type==BlockItemType::BLK_STMT)
+        {
+            dbg_ast_printf("BlockItem :: = Stmt;\n");
             return stmt->GenerateIR();
+        }
     }
 };
 
@@ -847,6 +897,9 @@ public:
             val=info->val;
             is_const=true;
         }
+        else
+            assert(false);
+        dbg_ast_printf("LVal :: = IDENT(%d);\n",val);
         is_evaled=true;
     }
     
@@ -871,14 +924,16 @@ public:
             return;
         exp->Eval();
         Copy(exp);
+        dbg_ast_printf("ConstExp :: = Exp(%d);\n",exp->val);
         is_evaled=true;
 
     }
     
     std::string GenerateIR() const override
-    {
+    {   
         if(is_const)
             return std::to_string(val);
+        return "";
     }
 };
 std::string get_var(std::string str)

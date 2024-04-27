@@ -30,7 +30,6 @@ int main(int argc, const char *argv[])
   auto input = argv[2];
   auto output = argv[4];
 
-  std::streambuf *coutBuf = std::cout.rdbuf();
   // 打开输入文件, 并且指定 lexer 在解析的时候读取这个文件
   yyin = fopen(input, "r");
   assert(yyin);
@@ -41,14 +40,10 @@ int main(int argc, const char *argv[])
   std::unique_ptr<BaseAST> ast;
   auto ret = yyparse(ast);
   assert(!ret);
-#ifdef RISKV_DEBUG
-  ast->Dump();
-#endif
+
 
   std::string IR;
-
-  std::streambuf *filebuf=fout.rdbuf();
-  std::cout.rdbuf(filebuf);
+  std::streambuf *oldcout = std::cout.rdbuf(fout.rdbuf());
   if (strcmp(mode, "-koopa")==0)
   {
     ast->GenerateIR();
@@ -76,9 +71,8 @@ int main(int argc, const char *argv[])
     // 所以不要在 raw program 处理完毕之前释放 builder
     koopa_delete_raw_program_builder(builder);
   }
-  fout.flush();
+  std::cout.rdbuf(oldcout);
   fout.close();
-  std::cout.rdbuf(coutBuf);
 
   return 0;
 }
