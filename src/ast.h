@@ -108,6 +108,7 @@ static std::map<std::string, std::string> op_names = {
     {"||", "or"}};
 
 static int symbol_cnt = 0;
+static bool is_ret=false;
 // static std::string get_var(std::string str);
 // static std::string get_IR(std::string str);
 
@@ -210,7 +211,9 @@ public:
         dbg_ast_printf("Block :: = '{' { BlockItem } '}'';\n");
         std::cout << "%entry:" << std::endl;
         for(auto &item:block_items->vec)
-        {
+        {   
+            if(is_ret)
+                return
             item->GenerateIR();
         }
         
@@ -228,9 +231,9 @@ public:
     {
         if(bnf_type==StmtType::STMT_RETURN)
         {
+            is_ret=true;
             dbg_ast_printf("Stmt ::= 'return' Exp ';';\n");
             exp->Eval();
-            
             std::cout << "  ret " << exp->ident << std::endl;
         }
         else if(bnf_type==StmtType::STMT_ASSIGN)
