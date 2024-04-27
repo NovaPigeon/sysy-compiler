@@ -47,11 +47,11 @@ using namespace std;
 
 // 非终结符的类型定义
 %type <ast_val> FuncDef FuncType Block Stmt
-%type <ast_val> Decl ConstDecl BType ConstDef BlockItem
+%type <ast_val> Decl ConstDecl BType ConstDef BlockItem VarDef VarDecl
 %type <exp_val> Exp PrimaryExp UnaryExp MulExp 
 %type <exp_val> AddExp RelExp EqExp LAndExp LOrExp
-%type <exp_val> ConstInitVal LVal ConstExp 
-%type <vec_val> BlockItems ConstDefs 
+%type <exp_val> ConstInitVal LVal ConstExp InitVal
+%type <vec_val> BlockItems ConstDefs VarDefs
 %type <str_val> UnaryOP MulOP AddOP RelOP EqOP
 %type <int_val> Number
 
@@ -147,7 +147,15 @@ BlockItem
 Stmt
   : RETURN Exp ';' {
     auto stmt=new StmtAST();
+    stmt->bnf_type=StmtType::STMT_RETURN;
     stmt->exp=unique_ptr<BaseExpAST>($2);
+    $$=stmt;
+  }
+  | LVal '=' Exp ';' {
+    auto stmt=new StmtAST();
+    stmt->bnf_type=StmtType::STMT_ASSIGN;
+    stmt->lval=unique_ptr<BaseExpAST>($1);
+    stmt->exp=unique_ptr<BaseExpAST>($3);
     $$=stmt;
   }
   ;
@@ -381,6 +389,13 @@ Decl
   : ConstDecl {
     auto decl=new DeclAST();
     decl->const_decl=unique_ptr<BaseAST>($1);
+    decl->bnf_type=DeclType::CONST_DECL;
+    $$=decl;
+  }
+  | VarDecl {
+    auto decl=new DeclAST();
+    decl->var_decl=unique_ptr<BaseAST>($1);
+    decl->bnf_type=DeclType::VAR_DECL;
     $$=decl;
   }
   ;
@@ -451,8 +466,54 @@ LVal
   }
   ;
 
+VarDecl
+  : BType VarDefs ';' {
+    auto var_decl=new VarDeclAST();
+    var_decl->btype=unique_ptr<BaseAST>($1);
+    var_decl->var_defs=unique_ptr<VecAST>($2);
+    $$=var_decl;
+  }
+  ;
 
+VarDefs
+  : VarDef {
+    auto var_def=unique_ptr<BaseAST>($1);
+    auto var_defs=new VecAST();
+    var_defs->push_back(var_def);
+    $$=var_defs;
+  }
+  | VarDefs ',' VarDef {
+    auto var_defs=$1;
+    auto var_def=unique_ptr<BaseAST>($3);
+    var_defs->push_back(var_def);
+    $$=var_defs;
+  }
+  ;
 
+VarDef
+  : IDENT {
+    auto var_def=new VarDefAST();
+    var_def->bnf_type=VarDefType::VAR;
+    var_def->ident=*unique_ptr<string>($1);
+    $$=var_def;
+
+  }
+  | IDENT '=' InitVal {
+    auto var_def=new VarDefAST();
+    var_def->bnf_type=VarDefType::VAR_ASSIGN;
+    var_def->ident=*unique_ptr<string>($1);
+    var_def->init_val=unique_ptr<BaseExpAST>($3);
+    $$=var_def;
+  }
+  ;
+
+InitVal
+  : Exp {
+    auto init_val=new InitValAST();
+    init_val->exp=unique_ptr<BaseExpAST>($1);
+    $$=init_val;
+  }
+  ;
 
 
 

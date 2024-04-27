@@ -8,11 +8,22 @@ int SymbolTable::Insert(std::string symbol,int val)
         return -1;
     symbol_info_t* info=(symbol_info_t*)malloc(sizeof(symbol_info_t));
     info->val=val;
-    printf("insert %s %d\n",symbol.c_str(),val);
+    info->type=SYMBOL_TYPE::CONST_SYMBOL;
+    printf("insert const %s %d\n",symbol.c_str(),val);
     this->symbol_table[symbol]=info;
     return 0;
 }
-
+int SymbolTable::Insert(std::string symbol, std::string ir_name)
+{
+    if (Exist(symbol))
+        return -1;
+    symbol_info_t *info = (symbol_info_t *)malloc(sizeof(symbol_info_t));
+    info->type=SYMBOL_TYPE::VAR_SYMBOL;
+    info->ir_name=ir_name;
+    printf("insert var %s %s\n", symbol.c_str(), ir_name.c_str());
+    this->symbol_table[symbol] = info;
+    return 0;
+}
 bool SymbolTable::Exist(std::string symbol)
 {
     return (symbol_table.find(symbol)!=symbol_table.end());
