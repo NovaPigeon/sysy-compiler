@@ -1,6 +1,7 @@
 #include <cassert>
 #include <cstdio>
 #include <iostream>
+#include <fstream>
 #include <memory>
 #include <string>
 #include <string.h>
@@ -9,7 +10,7 @@
 #include "riscv.h"
 
 
-using namespace std;
+
 
 // 声明 lexer 的输入, 以及 parser 函数
 // 为什么不引用 sysy.tab.hpp 呢? 因为首先里面没有 yyin 的定义
@@ -17,8 +18,8 @@ using namespace std;
 // 你的代码编辑器/IDE 很可能找不到这个文件, 然后会给你报错 (虽然编译不会出错)
 // 看起来会很烦人, 于是干脆采用这种看起来 dirty 但实际很有效的手段
 extern FILE *yyin;
-extern int yyparse(unique_ptr<BaseAST> &ast);
-FILE *fout;
+extern int yyparse(std::unique_ptr<BaseAST> &ast);
+
 
 int main(int argc, const char *argv[])
 {
@@ -29,29 +30,28 @@ int main(int argc, const char *argv[])
   auto input = argv[2];
   auto output = argv[4];
 
+  std::streambuf *coutBuf = std::cout.rdbuf();
   // 打开输入文件, 并且指定 lexer 在解析的时候读取这个文件
   yyin = fopen(input, "r");
   assert(yyin);
-  fout = fopen(output, "w");
+  std::ofstream fout(output);
   assert(fout);
 
   // 调用 parser 函数, parser 函数会进一步调用 lexer 解析输入文件的
-  unique_ptr<BaseAST> ast;
+  std::unique_ptr<BaseAST> ast;
   auto ret = yyparse(ast);
   assert(!ret);
 #ifdef RISKV_DEBUG
   ast->Dump();
 #endif
-  std::string IR = ast->GenerateIR();
 
-  // 输出解析得到的 AST, 其实就是个字符串
-  // cout << *ast << endl;
-  // fprintf(fout,"%s",ast->c_str());
+  std::string IR;
 
+  std::streambuf *filebuf=fout.rdbuf();
+  std::cout.rdbuf(filebuf);
   if (strcmp(mode, "-koopa")==0)
   {
-    fprintf(fout, "%s\n", IR.c_str());
-    cout << IR;
+    ast->GenerateIR();
   }
   else if(strcmp(mode,"-riscv")==0)
   {
@@ -68,14 +68,17 @@ int main(int argc, const char *argv[])
 
     // 处理 raw program
     std::string rscv=Visit(raw);
-    fprintf(fout, "%s\n", rscv.c_str());
-    cout << rscv;
+    //fprintf(fout, "%s\n", rscv.c_str());
+    std::cout << rscv;
 
     // 处理完成, 释放 raw program builder 占用的内存
     // 注意, raw program 中所有的指针指向的内存均为 raw program builder 的内存
     // 所以不要在 raw program 处理完毕之前释放 builder
     koopa_delete_raw_program_builder(builder);
   }
+  fout.flush();
+  fout.close();
+  std::cout.rdbuf(coutBuf);
 
   return 0;
 }
