@@ -10,17 +10,16 @@
 #include "riscv.h"
 
 
-
-static const std::string regs[REG_NUM]=
+static const std::string regs_name[REG_NUM+1]=
 {
     "t0","t1","t2","t3","t4","t5","t6",
-    "a0","a1","a2","a3","a4","a5","a6","a7"
+    "a0","a1","a2","a3","a4","a5","a6","a7","x0"
 };
 static std::string gen_reg(int id)
 {
-    if (id < REG_NUM)
-        return regs[id];
-    return "a"+std::to_string(id);
+    if (id <= REG_NUM)
+        return regs_name[id];
+    assert(false);
 }
 
 static std::map<koopa_raw_binary_op_t, std::string> op_names = 
@@ -36,29 +35,26 @@ static std::map<koopa_raw_binary_op_t, std::string> op_names =
     {KOOPA_RBO_OR, "or"}
 };
 
-static std::map<koopa_raw_value_t,std::string> is_visited;
+static std::map<koopa_raw_value_t,var_info_t> is_visited;
+static StackFrame stack_frame;
+static RegManager reg_manager;
 
-int interger_reg_cnt=0; // 临时的 reg，用于计算 binary，当调用新的 binary 是会被刷新。
-int reg_cnt=0; // 永久分配，binary 计算的结果。
-
-static std::string get_reg(std::string str);
-static std::string get_insts(std::string str);
 
 // 访问 raw program
-std::string Visit(const koopa_raw_program_t &program)
+void Visit(const koopa_raw_program_t &program)
 {
-    std::string rscv = "  .text\n";
+    dbg_rscv_printf("Visit program\n");
     // 访问所有全局变量
-    rscv += Visit(program.values);
+    Visit(program.values);
+    std::cout << "  .text"<<std::endl;
     // 访问所有函数
-    rscv += Visit(program.funcs);
-    return rscv;
+    Visit(program.funcs);
 }
 
 // 访问 raw slice
-std::string Visit(const koopa_raw_slice_t &slice)
+void Visit(const koopa_raw_slice_t &slice)
 {
-    std::string rscv = "";
+    dbg_rscv_printf("Visit slice\n");
     for (size_t i = 0; i < slice.len; ++i)
     {
         auto ptr = slice.buffer[i];
@@ -67,128 +63,216 @@ std::string Visit(const koopa_raw_slice_t &slice)
         {
         case KOOPA_RSIK_FUNCTION:
             // 访问函数
-            rscv +=get_insts(  Visit(reinterpret_cast<koopa_raw_function_t>(ptr)));
+            Visit(reinterpret_cast<koopa_raw_function_t>(ptr));
             break;
         case KOOPA_RSIK_BASIC_BLOCK:
             // 访问基本块
-            rscv += get_insts( Visit(reinterpret_cast<koopa_raw_basic_block_t>(ptr)));
+            Visit(reinterpret_cast<koopa_raw_basic_block_t>(ptr));
             break;
         case KOOPA_RSIK_VALUE:
             // 访问指令
-            rscv += get_insts( Visit(reinterpret_cast<koopa_raw_value_t>(ptr)));
+            Visit(reinterpret_cast<koopa_raw_value_t>(ptr));
             break;
         default:
             // 我们暂时不会遇到其他内容, 于是不对其做任何处理
             assert(false);
         }
     }
-    dbg_printf("Visit slice:\n%s\n", rscv.c_str());
-    return rscv;
 }
-
-// 访问函数
-std::string Visit(const koopa_raw_function_t &func)
+void Prologue(const koopa_raw_function_t &func)
 {
+    std::cout<<std::endl<<"  # prologue"<<std::endl;
+    int stack_size=0;
+    for(uint32_t i=0;i<func->bbs.len;++i)
+    {
+        koopa_raw_basic_block_t bb=reinterpret_cast<koopa_raw_basic_block_t>(func->bbs.buffer[i]);
+        for(uint32_t j=0;j<bb->insts.len;++j)
+        {
+            koopa_raw_value_t inst=reinterpret_cast<koopa_raw_value_t>(bb->insts.buffer[j]);
+            if(inst->ty->tag!=KOOPA_RTT_UNIT)
+                stack_size=stack_size+4;
+        }
+    }
+    stack_size=(stack_size+15)&(~15);
+    stack_frame.set_stack_size(stack_size);
+    if(stack_size<=MAX_IMMEDIATE_VAL)
+    {
+        std::cout<<"  addi sp, sp, "<<-stack_size<<std::endl;
+    }
+    else
+    {
+        std::cout<<"  li t0, "<<-stack_size<<std::endl;
+        std::cout<<"  addi sp, sp, t0"<<std::endl;
+    }
+
+}
+// 访问函数
+void Visit(const koopa_raw_function_t &func)
+{
+    dbg_rscv_printf("Visit func\n");
     std::string func_name = std::string(func->name + 1);
-    std::string rscv = "  .globl " + func_name + "\n";
-    rscv += func_name + ":\n";
+    std::cout<< "  .globl " << func_name <<std::endl;
+    std::cout<< func_name <<":"<<std::endl;
+    Prologue(func);
     // 访问所有基本块
-    rscv += Visit(func->bbs);
-    dbg_printf("Visit func:\n%s\n", rscv.c_str());
-    return rscv;
+    Visit(func->bbs);
 }
 
 // 访问基本块
-std::string Visit(const koopa_raw_basic_block_t &bb)
+void Visit(const koopa_raw_basic_block_t &bb)
 {
+    dbg_rscv_printf("Visit basic block\n");
     // 访问所有指令
-    std::string rscv = Visit(bb->insts);
-    dbg_printf("Visit bb:\n%s\n",rscv.c_str());
-    return rscv;
+    Visit(bb->insts);
 }
 
 // 访问指令
-std::string Visit(const koopa_raw_value_t &value)
+var_info_t Visit(const koopa_raw_value_t &value)
 {
+    dbg_rscv_printf("Visit value\n");
     if(is_visited.find(value)!=is_visited.end())
-        return is_visited[value];
-    std::string rscv = "";
+    {
+        var_info_t info=is_visited[value];
+        if(info.type==VAR_TYPE::ON_REG)
+            return info;
+        else if(info.type==VAR_TYPE::ON_STACK)
+        {
+            int location=info.stack_location;
+            assert(location>=0);
+            int reg_id=reg_manager.alloc_reg();
+            std::cout<<"  lw "<<gen_reg(reg_id)<<", "<<location<<"(sp)"<<std::endl;
+            info.type=VAR_TYPE::ON_REG;
+            info.reg_id=reg_id;
+            return info;
+        }
+        
+    }
+
     // 根据指令类型判断后续需要如何访问
     const auto &kind = value->kind;
+    var_info_t vinfo;
     switch (kind.tag)
     {
     case KOOPA_RVT_RETURN:
         // 访问 return 指令
-        rscv += Visit(kind.data.ret);
+        Visit(kind.data.ret);
+        reg_manager.free_regs();
         break;
     case KOOPA_RVT_INTEGER:
         // 访问 integer 指令
-        rscv += Visit(kind.data.integer);
+        vinfo=Visit(kind.data.integer);
         break;
     case KOOPA_RVT_BINARY:
         // 访问 binary 指令
-        rscv += Visit(kind.data.binary);
+        vinfo=Visit(kind.data.binary);
+        is_visited[value]=vinfo;
+        reg_manager.free_regs();
+        break;
+    case KOOPA_RVT_ALLOC:
+        std::cout <<std::endl<< "  # alloc" << std::endl;
+        vinfo.type=VAR_TYPE::ON_STACK;
+        vinfo.stack_location=stack_frame.push();
+        is_visited[value]=vinfo;
+        reg_manager.free_regs();
+        break;
+    case KOOPA_RVT_STORE:
+        Visit(kind.data.store);
+        reg_manager.free_regs();
+        break;
+    case KOOPA_RVT_LOAD:
+        vinfo = Visit(kind.data.load);
+        is_visited[value]=vinfo;
+        reg_manager.free_regs();
         break;
     default:
         // 其他类型暂时遇不到
         assert(false);
     }
-    is_visited[value]=get_reg(rscv);
-    dbg_printf("Visit value: %d\n%s\n", kind.tag,rscv.c_str());
-    return rscv;
+    return vinfo;
+}
+
+void Epilogue()
+{
+    std::cout<<std::endl<<"  # epilogue"<<std::endl;
+    int stack_size=stack_frame.get_stack_size();
+    if (stack_size < MAX_IMMEDIATE_VAL)
+    {
+        std::cout << "  addi sp, sp, " << stack_size << std::endl;
+    }
+    else
+    {
+        std::cout << "  li t0, " << stack_size << std::endl;
+        std::cout << "  addi sp, sp, t0" << std::endl;
+    }
 }
 
 // 访问对应类型指令的函数定义略
 // 视需求自行实现
 // ...
 // 访问 return
-std::string Visit(const koopa_raw_return_t &ret)
+void Visit(const koopa_raw_return_t &ret)
 {
+    dbg_rscv_printf("Visit return\n");
+    std::cout << std::endl
+              << "  # ret" << std::endl;
     koopa_raw_value_t val = ret.value;
-    std::string tmp=Visit(val);
-    std::string reg = get_reg(tmp);
-    std::string insts=get_insts(tmp);
-    std::string rscv="a0\n"+insts+"  mv a0, "+reg+"\n";
-    rscv += "  ret\n";
-    dbg_printf("Visit return:\n%s\n", rscv.c_str());
-    return rscv;
+    var_info_t var=Visit(val);
+    assert(var.type==VAR_TYPE::ON_REG);
+    std::cout<<"  mv a0, "<<gen_reg(var.reg_id)<<std::endl;
+    Epilogue();
+    std::cout<<"  ret"<<std::endl;
+    
 }
 
-// 访问 interger 指令
-std::string Visit(const koopa_raw_integer_t &interger)
+// 访问 integer 指令
+var_info_t Visit(const koopa_raw_integer_t &interger)
 {
+    dbg_rscv_printf("Visit integer\n");
     int32_t val = interger.value;
+    var_info_t vinfo;
+    vinfo.type=VAR_TYPE::ON_REG;
     if(val==0)
-        return "x0\n";
-    std::string reg = gen_reg( interger_reg_cnt);
-    interger_reg_cnt++;
-    std::string rscv = reg+"\n"
-    "  li "+reg+", " + std::to_string(val) + "\n";
-    dbg_printf("Visit integer:\n%s\n", rscv.c_str());
-    return rscv;
+    {
+        vinfo.reg_id=ZERO_REG_ID;
+        return vinfo;
+    }
+    int new_reg_id=reg_manager.alloc_reg();
+    vinfo.reg_id=new_reg_id;
+    std::string reg = gen_reg(new_reg_id);
+    std::cout<<"  li "<<reg<<", "<<std::to_string(val)<<std::endl;
+    return vinfo;
 }
 
-std::string Visit(const koopa_raw_binary_t &binary)
+var_info_t Visit(const koopa_raw_binary_t &binary)
 {
-    
-    interger_reg_cnt=reg_cnt;
-    
-    std::string l=Visit(binary.lhs);
-    std::string l_reg=get_reg(l);
-    std::string l_insts=get_insts(l);
-    std::string r=Visit(binary.rhs);
-    std::string r_reg=get_reg(r);
-    std::string r_insts=get_insts(r);
-    
-    interger_reg_cnt=reg_cnt;
-    std::string new_reg=gen_reg (reg_cnt);
-    reg_cnt++;
+    dbg_rscv_printf("Visit binary\n");
+    std::cout << std::endl
+              << "  # binary" << std::endl;
 
-    std::string rscv=new_reg+"\n"+l_insts+r_insts;
+    var_info_t lvar=Visit(binary.lhs);
+    var_info_t rvar=Visit(binary.rhs);
     
+    if(lvar.type==VAR_TYPE::ON_STACK)
+    {
+        lvar.type=VAR_TYPE::ON_REG;
+        lvar.reg_id=reg_manager.alloc_reg();
+        std::cout<<"  lw "<<gen_reg(lvar.reg_id)<<", "<<lvar.stack_location<<"(sp)"<<std::endl;
+    }
+    if (rvar.type == VAR_TYPE::ON_STACK)
+    {
+        rvar.type = VAR_TYPE::ON_REG;
+        rvar.reg_id = reg_manager.alloc_reg();
+        std::cout << "  lw " << gen_reg(rvar.reg_id) << ", " << lvar.stack_location << "(sp)" << std::endl;
+    }
 
+    var_info_t tmp_result;
+    tmp_result.type=VAR_TYPE::ON_REG;
+    tmp_result.reg_id=reg_manager.alloc_reg();
+    
+    std::string new_reg=gen_reg(tmp_result.reg_id),
+                l_reg=gen_reg(lvar.reg_id),
+                r_reg=gen_reg(rvar.reg_id);
     koopa_raw_binary_op_t op = binary.op;
-    std::string op_insts="";
     switch (op)
     {
     case KOOPA_RBO_GT:
@@ -200,47 +284,60 @@ std::string Visit(const koopa_raw_binary_t &binary)
     case KOOPA_RBO_MOD:
     case KOOPA_RBO_AND:
     case KOOPA_RBO_OR:
-        op_insts = op_names[op];
-        rscv += "  " + op_insts + " " + new_reg + ", " + l_reg + ", " + r_reg + "\n";
+        std::cout << "  " <<op_names[op] << " " <<new_reg<< ", " <<l_reg<< ", " << r_reg<<std::endl;
         break;
     case KOOPA_RBO_EQ:
-        rscv += "  xor " + new_reg + ", " + l_reg + ", " + r_reg + "\n" + "  seqz " + new_reg + ", " + new_reg + "\n";
+        std::cout<< "  xor " << new_reg << ", " << l_reg << ", " << r_reg << std::endl;
+        std::cout<< "  seqz " << new_reg << ", " << new_reg <<std::endl;
         break;
     case KOOPA_RBO_NOT_EQ:
-        rscv += "  xor " + new_reg + ", " + l_reg + ", " + r_reg + "\n" + "  snez " + new_reg + ", " + new_reg + "\n";
+        std::cout<< "  xor " <<new_reg << ", " << l_reg << ", " << r_reg << std::endl;
+        std::cout<< "  snez " << new_reg << ", " << new_reg << std::endl;;
         break;
     case KOOPA_RBO_LE:  
-        rscv+="  sgt "+new_reg+", "+l_reg+", "+r_reg+"\n"+"  xori "+new_reg+", "+new_reg+", 1\n";
+        std::cout<<"  sgt "<<new_reg<<", "<<l_reg<<", "<<r_reg<<std::endl;
+        std::cout<<"  xori "<<new_reg<<", "<<new_reg<<", 1"<<std::endl;
         break;
     case KOOPA_RBO_GE:
-        rscv += "  slt " + new_reg + ", " + l_reg + ", " + r_reg + "\n" + "  xori " + new_reg + ", " + new_reg + ", 1\n";
+        std::cout << "  slt " << new_reg << ", " << l_reg << ", " << r_reg << std::endl;
+        std::cout << "  xori " << new_reg << ", " << new_reg << ", 1" << std::endl;
     }
-    dbg_printf("Visit value: %d\n%s\n", op, rscv.c_str());
-    return rscv;
+    
+    var_info_t res;
+    res.type=VAR_TYPE::ON_STACK;
+    res.stack_location=stack_frame.push();
+    std::cout<<"  sw "<<new_reg<<", "<<res.stack_location<<"(sp)"<<std::endl;
+    return res;
 }
 
-std::string get_reg(std::string str)
+void Visit(const koopa_raw_store_t &store)
 {
-    std::istringstream iss(str);
-    std::string var;
-    std::getline(iss, var);
-    return var;
+    dbg_rscv_printf("Visit store\n");
+    std::cout << std::endl
+              << "  # store" << std::endl;
+    koopa_raw_value_t dst=store.dest;
+    assert(is_visited.find(dst)!=is_visited.end());
+
+    var_info_t dst_var=is_visited[dst];
+    assert(dst_var.type == VAR_TYPE::ON_STACK);
+    
+    var_info_t src_var=Visit(store.value);
+    assert(src_var.type==VAR_TYPE::ON_REG);
+
+    std::cout<<"  sw "<<gen_reg(src_var.reg_id)<<", "<<dst_var.stack_location<<"(sp)"<<std::endl;
+
 }
 
-std::string get_insts(std::string str)
+var_info_t Visit(const koopa_raw_load_t &load)
 {
-    std::istringstream iss(str);
-    std::string var;
-    std::getline(iss, var);
-
-    std::string rscv;
-    if(var[0]==' ')
-        rscv=var+"\n";
-    std::string line;
-    while (std::getline(iss, line))
-    {
-        rscv += line + "\n";
-    }
-
-    return rscv;
+    dbg_rscv_printf("Visit load\n");
+    std::cout << std::endl
+              << "  # load" << std::endl;
+    var_info_t src_var=Visit(load.src);
+    assert(src_var.type==VAR_TYPE::ON_REG);
+    var_info_t dst_var;
+    dst_var.type=VAR_TYPE::ON_STACK;
+    dst_var.stack_location=stack_frame.push();
+    std::cout<<"  sw "<<gen_reg(src_var.reg_id)<<", "<<dst_var.stack_location<<"(sp)"<<std::endl;
+    return dst_var;
 }

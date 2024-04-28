@@ -65,10 +65,8 @@ int main(int argc, const char *argv[])
     koopa_delete_program(program);
 
     // 处理 raw program
-    std::string rscv=Visit(raw);
-    //fprintf(fout, "%s\n", rscv.c_str());
-    std::cout << rscv;
-
+    Visit(raw);
+    
     // 处理完成, 释放 raw program builder 占用的内存
     // 注意, raw program 中所有的指针指向的内存均为 raw program builder 的内存
     // 所以不要在 raw program 处理完毕之前释放 builder
