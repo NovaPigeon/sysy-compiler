@@ -5,6 +5,8 @@ fun @main(): i32 {
   %0 = load @x
   %1 = add %0, 1
   store %1, @x
+  @x_0 = alloc i32
+  store 3, @x_0
   %2 = load @x
   ret %2
 }

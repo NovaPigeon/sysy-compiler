@@ -88,7 +88,11 @@ enum BlockItemType
 enum StmtType
 {
     STMT_ASSIGN,
-    STMT_RETURN
+    STMT_EMPTY_RET,
+    STMT_RETURN,
+    STMT_EMPTY_EXP,
+    STMT_EXP,
+    STMT_BLK
 };
 
 
@@ -183,9 +187,9 @@ public:
                  <<"(): ";
         std::cout<<func_type->ident;
         std::cout << " {" << std::endl;
+        std::cout << "%entry:" << std::endl;
         block->GenerateIR();
         std::cout << "}" << std::endl;
-        
     }
 };
 
@@ -208,24 +212,24 @@ public:
     void GenerateIR()  override
     {
         dbg_ast_printf("Block :: = '{' { BlockItem } '}'';\n");
-        std::cout << "%entry:" << std::endl;
         for(auto &item:block_items->vec)
         {  
             if(is_ret==true)
                 break;
             item->GenerateIR();
         }
-        
     }
 };
 
-// Stmt :: = LVal "=" Exp ";" | "return" Exp ";";
+// Stmt :: = LVal "=" Exp ";" | [Exp] ";" | Block | "return" [Exp] ";";
+
 class StmtAST : public BaseAST
 {
 public:
     StmtType bnf_type;
     std::unique_ptr<BaseExpAST> lval;
     std::unique_ptr<BaseExpAST> exp;
+    std::unique_ptr<BaseAST> block;
     void GenerateIR()  override
     {
         if(bnf_type==StmtType::STMT_RETURN)
@@ -233,6 +237,12 @@ public:
             dbg_ast_printf("Stmt ::= 'return' Exp ';';\n");
             exp->Eval();
             std::cout << "  ret " << exp->ident << std::endl;
+            is_ret = true;
+        }
+        else if(bnf_type==StmtType::STMT_EMPTY_RET)
+        {
+            dbg_ast_printf("Stmt ::= 'return' ';';\n");
+            std::cout << "  ret" << std::endl;
             is_ret = true;
         }
         else if(bnf_type==StmtType::STMT_ASSIGN)
@@ -243,9 +253,26 @@ public:
             lval->Eval();
             assert(!lval->is_const);
             exp->GenerateIR();
-            symbol_info_t *info=symbol_table.LookUp(lval->ident);
+            symbol_info_t *info=symbol_table_stack.LookUp(lval->ident);
             std::cout<<"  store "<<exp->ident<<", "<<info->ir_name<<std::endl;
             
+        }
+        else if(bnf_type==StmtType::STMT_BLK)
+        {
+            dbg_ast_printf("Stmt :: = Block\n");
+            symbol_table_stack.PushScope();
+            block->GenerateIR();
+            symbol_table_stack.PopScope();
+        }
+        else if(bnf_type==StmtType::STMT_EMPTY_EXP)
+        {
+            dbg_ast_printf("Stmt :: = ';'\n");
+        }
+        else if (bnf_type == StmtType::STMT_EXP)
+        {
+            dbg_ast_printf("Stmt :: = EXP ';'\n");
+            exp->Eval();
+            exp->GenerateIR();
         }
         else
             assert(false);
@@ -764,7 +791,7 @@ public:
     {
         dbg_ast_printf("ConstDef :: = IDENT '=' ConstInitVal;\n");
         const_init_val->Eval();
-        symbol_table.Insert(ident,const_init_val->val);
+        symbol_table_stack.Insert(ident,const_init_val->val);
     }
 };
 
@@ -822,7 +849,7 @@ public:
         if(is_evaled)
             return;
         
-        symbol_info_t *info=symbol_table.LookUp(ident);
+        symbol_info_t *info=symbol_table_stack.LookUp(ident);
         assert(info!=nullptr);
         if(!is_left)
         {
@@ -880,6 +907,7 @@ public:
     std::unique_ptr<VecAST> var_defs;
     void GenerateIR()  override
     {
+        dbg_ast_printf("VarDecl :: = BType VarDef { ',' VarDef } ';';\n");
         for(auto& def: var_defs->vec)
         {
             def->GenerateIR();
@@ -897,12 +925,17 @@ public:
     void GenerateIR() override
     {
         std::string ir_name="@"+ident;
-        symbol_table.Insert(ident,ir_name);
+        ir_name=symbol_table_stack.Insert(ident,ir_name);
         std::cout<<"  "<<ir_name<<" = alloc i32"<<std::endl;
         if(bnf_type==VarDefType::VAR_ASSIGN)
         {
+            dbg_ast_printf("VarDef :: IDENT '=' InitVal;\n");
             init_val->Eval();
             std::cout<<"  "<<"store "<<init_val->ident<<", "<<ir_name<<std::endl;
+        }
+        else
+        {
+            dbg_ast_printf("VarDef :: IDENT\n");
         }
     }
 };

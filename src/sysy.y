@@ -158,6 +158,28 @@ Stmt
     stmt->exp=unique_ptr<BaseExpAST>($3);
     $$=stmt;
   }
+  | ';' {
+    auto stmt=new StmtAST();
+    stmt->bnf_type=StmtType::STMT_EMPTY_EXP;
+    $$=stmt;
+  }
+  | Exp ';' {
+    auto stmt=new StmtAST();
+    stmt->bnf_type=StmtType::STMT_EXP;
+    stmt->exp=unique_ptr<BaseExpAST>($1);
+    $$=stmt;
+  }
+  | Block {
+    auto stmt=new StmtAST();
+    stmt->bnf_type=StmtType::STMT_BLK;
+    stmt->block=unique_ptr<BaseAST>($1);
+    $$=stmt;
+  }
+  | RETURN ';' {
+    auto stmt=new StmtAST();
+    stmt->bnf_type=StmtType::STMT_EMPTY_RET;
+    $$=stmt;
+  }
   ;
 
 Exp

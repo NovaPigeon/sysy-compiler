@@ -3,7 +3,7 @@
 main:
 
   # prologue
-  addi sp, sp, -16
+  addi sp, sp, -32
 
   # alloc
 
@@ -25,14 +25,20 @@ main:
   lw t0, 8(sp)
   sw t0, 0(sp)
 
-  # load
-  lw t0, 0(sp)
+  # alloc
+
+  # store
+  li t0, 3
   sw t0, 12(sp)
 
+  # load
+  lw t0, 0(sp)
+  sw t0, 16(sp)
+
   # ret
-  lw t0, 12(sp)
+  lw t0, 16(sp)
   mv a0, t0
 
   # epilogue
-  addi sp, sp, 16
+  addi sp, sp, 32
   ret
