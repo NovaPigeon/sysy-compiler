@@ -242,7 +242,7 @@ public:
         else if(bnf_type==StmtType::STMT_EMPTY_RET)
         {
             dbg_ast_printf("Stmt ::= 'return' ';';\n");
-            std::cout << "  ret" << std::endl;
+            std::cout << "  ret 0" << std::endl;
             is_ret = true;
         }
         else if(bnf_type==StmtType::STMT_ASSIGN)

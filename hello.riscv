@@ -8,22 +8,20 @@ main:
   # alloc
 
   # store
-  li t0, 10
+  li t0, 1
   sw t0, 0(sp)
 
-  # load
-  lw t0, 0(sp)
-  sw t0, 4(sp)
-
-  # binary
-  lw t0, 4(sp)
-  li t1, 1
-  add t2, t0, t1
-  sw t2, 8(sp)
+  # alloc
 
   # store
-  lw t0, 8(sp)
-  sw t0, 0(sp)
+  li t0, 3
+  sw t0, 4(sp)
+
+  # alloc
+
+  # store
+  li t0, 2
+  sw t0, 8(sp)
 
   # alloc
 
@@ -35,8 +33,22 @@ main:
   lw t0, 0(sp)
   sw t0, 16(sp)
 
-  # ret
+  # binary
   lw t0, 16(sp)
+  li t1, 1
+  add t2, t0, t1
+  sw t2, 20(sp)
+
+  # store
+  lw t0, 20(sp)
+  sw t0, 0(sp)
+
+  # load
+  lw t0, 0(sp)
+  sw t0, 24(sp)
+
+  # ret
+  lw t0, 24(sp)
   mv a0, t0
 
   # epilogue
