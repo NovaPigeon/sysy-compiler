@@ -19,7 +19,7 @@ static std::string gen_reg(int id)
 {
     if (id <= REG_NUM)
         return regs_name[id];
-    assert(false);
+    return "t0";
 }
 
 static std::map<koopa_raw_binary_op_t, std::string> op_names = 
@@ -101,8 +101,8 @@ void Prologue(const koopa_raw_function_t &func)
     }
     else
     {
-        std::cout<<"  li s11, "<<-stack_size<<std::endl;
-        std::cout<<"  addi sp, sp, s11"<<std::endl;
+        std::cout<<"  li t0, "<<-stack_size<<std::endl;
+        std::cout<<"  addi sp, sp, t0"<<std::endl;
     }
 
 }
@@ -209,8 +209,8 @@ void Epilogue()
     }
     else
     {
-        std::cout << "  li s11, " << stack_size << std::endl;
-        std::cout << "  addi sp, sp, s11" << std::endl;
+        std::cout << "  li t0, " << stack_size << std::endl;
+        std::cout << "  addi sp, sp, t0" << std::endl;
     }
 }
 
