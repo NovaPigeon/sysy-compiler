@@ -1,14 +1,6 @@
 int main()
 {
-    int a = 1, b = 0;
-    if (a || b)
-    {
-        b = 1;
-        a = 0;
-    }
-    if (a && b)
-    {
-        return 0;
-    }
-    return 77;
+    const int x = 1 * 2 || 2 * 3 && 3 * 4;
+    const int y = x * 3 > 10;
+    return y + 4 - x;
 }

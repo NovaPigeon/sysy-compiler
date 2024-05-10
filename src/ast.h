@@ -10,7 +10,7 @@
 
 #include "symbol_table.h"
 
-// #define DEBUG_AST
+#define DEBUG_AST
 #ifdef DEBUG_AST
 #define dbg_ast_printf(...) fprintf(stderr, __VA_ARGS__)
 #else
@@ -874,6 +874,12 @@ public:
             ident = "%" + std::to_string(symbol_cnt);
             symbol_cnt++;
             std::cout << "  " << ident << " = load " << ir_name << std::endl;
+            if (land_exp->is_const && eq_exp->is_const)
+            {
+                val = land_exp->val && eq_exp->val;
+                ident = std::to_string(val);
+                is_const = true;
+            }
             dbg_ast_printf("LAndExp :: = LAndExp(%s) '&&' EqExp(%s);\n", land_exp->ident.c_str(), eq_exp->ident.c_str());
         }
         else
@@ -951,7 +957,12 @@ public:
             ident = "%" + std::to_string(symbol_cnt);
             symbol_cnt++;
             std::cout<<"  "<<ident<<" = load "<<ir_name<<std::endl;
-
+            if(land_exp->is_const && lor_exp->is_const)
+            {
+                val=land_exp->val || lor_exp->val;
+                ident=std::to_string(val);
+                is_const=true;
+            }
             dbg_ast_printf("LOrExp :: = LOrExp(%s) || LAndExp(%s);\n",lor_exp->ident.c_str(),land_exp->ident.c_str());
         }
         else
