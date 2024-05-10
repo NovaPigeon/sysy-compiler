@@ -8,7 +8,7 @@
 #define MAX_IMMEDIATE_VAL 2048
 #define ZERO_REG_ID 15
 
-#define RISCV_DEBUG
+//#define RISCV_DEBUG
 #ifdef RISCV_DEBUG
 #define dbg_rscv_printf(...) fprintf(stderr, __VA_ARGS__)
 #else
