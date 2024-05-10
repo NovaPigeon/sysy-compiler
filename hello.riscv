@@ -3,92 +3,185 @@
 main:
 
   # prologue
-  addi sp, sp, -32
+  addi sp, sp, -48
 entry:
 
   # alloc
 
-  # binary
-  li t0, 2
-  xor t1, t0, x0
-  seqz t1, t1
-  sw t1, 4(sp)
-
-  # branch
-  lw t0, 4(sp)
-  bnez  t0, then_0
-  j     else_0
-then_0:
+  # alloc
 
   # alloc
 
-  # binary
-  li t0, 6
-  xor t1, t0, x0
-  snez t1, t1
-  sw t1, 12(sp)
-
-  # branch
-  lw t0, 12(sp)
-  bnez  t0, then_1
-  j     else_1
-else_0:
+  # alloc
 
   # store
   li t0, 1
   sw t0, 0(sp)
 
-  # jump
-  j     end_0
-then_1:
-
-  # binary
-  li t0, 12
-  xor t1, t0, x0
-  snez t1, t1
-  sw t1, 16(sp)
+  # store
+  sw x0, 4(sp)
 
   # store
+  li t0, 13
+  sw t0, 8(sp)
+
+  # store
+  li t0, 9
+  sw t0, 12(sp)
+
+  # load
+  lw t0, 4(sp)
+  sw t0, 16(sp)
+
+  # branch
   lw t0, 16(sp)
+  bnez  t0, then_0
+  j     end_0
+then_0:
+
+  # load
+  lw t0, 0(sp)
+  sw t0, 20(sp)
+
+  # branch
+  lw t0, 20(sp)
+  bnez  t0, then_1
+  j     else_1
+end_0:
+
+  # load
+  lw t0, 0(sp)
+  sw t0, 24(sp)
+
+  # branch
+  lw t0, 24(sp)
+  bnez  t0, then_3
+  j     end_3
+then_1:
+
+  # store
+  li t0, 29
   sw t0, 8(sp)
 
   # jump
   j     end_1
 else_1:
 
-  # store
-  sw x0, 8(sp)
+  # load
+  lw t0, 4(sp)
+  sw t0, 28(sp)
 
-  # jump
-  j     end_1
-end_0:
+  # branch
+  lw t0, 28(sp)
+  bnez  t0, then_2
+  j     else_2
+then_3:
+
+  # branch
+  bnez  x0, then_4
+  j     else_4
+end_3:
 
   # load
-  lw t0, 0(sp)
-  sw t0, 20(sp)
+  lw t0, 12(sp)
+  sw t0, 32(sp)
 
   # ret
-  li t0, 3
+  lw t0, 32(sp)
   mv a0, t0
 
   # epilogue
-  addi sp, sp, 32
+  addi sp, sp, 48
   ret
 end_1:
 
-  # load
-  lw t0, 8(sp)
-  sw t0, 24(sp)
-
-  # binary
-  li t0, 1
-  xor t1, t0, x0
-  snez t1, t1
-  sw t1, 28(sp)
-
-  # store
-  lw t0, 28(sp)
-  sw t0, 0(sp)
-
   # jump
   j     end_0
+then_2:
+
+  # store
+  li t0, 36
+  sw t0, 8(sp)
+
+  # jump
+  j     end_2
+else_2:
+
+  # store
+  li t0, 43
+  sw t0, 8(sp)
+
+  # jump
+  j     end_2
+then_4:
+
+  # store
+  li t0, 7
+  sw t0, 12(sp)
+
+  # jump
+  j     end_4
+else_4:
+
+  # load
+  lw t0, 4(sp)
+  sw t0, 36(sp)
+
+  # branch
+  lw t0, 36(sp)
+  bnez  t0, then_5
+  j     else_5
+end_2:
+
+  # jump
+  j     end_1
+end_4:
+
+  # jump
+  j     end_3
+then_5:
+
+  # store
+  li t0, 11
+  sw t0, 12(sp)
+
+  # jump
+  j     end_5
+else_5:
+
+  # load
+  lw t0, 0(sp)
+  sw t0, 40(sp)
+
+  # branch
+  lw t0, 40(sp)
+  bnez  t0, then_6
+  j     else_6
+end_5:
+
+  # jump
+  j     end_4
+then_6:
+
+  # load
+  lw t0, 8(sp)
+  sw t0, 44(sp)
+
+  # store
+  lw t0, 44(sp)
+  sw t0, 12(sp)
+
+  # jump
+  j     end_6
+else_6:
+
+  # store
+  li t0, 8
+  sw t0, 12(sp)
+
+  # jump
+  j     end_6
+end_6:
+
+  # jump
+  j     end_5

@@ -95,14 +95,14 @@ void Prologue(const koopa_raw_function_t &func)
     }
     stack_size=(stack_size+15)&(~15);
     stack_frame.set_stack_size(stack_size);
-    if(stack_size<=MAX_IMMEDIATE_VAL)
+    if(stack_size<MAX_IMMEDIATE_VAL)
     {
         std::cout<<"  addi sp, sp, "<<-stack_size<<std::endl;
     }
     else
     {
-        std::cout<<"  li t0, "<<-stack_size<<std::endl;
-        std::cout<<"  addi sp, sp, t0"<<std::endl;
+        std::cout<<"  li s11, "<<-stack_size<<std::endl;
+        std::cout<<"  addi sp, sp, s11"<<std::endl;
     }
 
 }
@@ -209,8 +209,8 @@ void Epilogue()
     }
     else
     {
-        std::cout << "  li t0, " << stack_size << std::endl;
-        std::cout << "  addi sp, sp, t0" << std::endl;
+        std::cout << "  li s11, " << stack_size << std::endl;
+        std::cout << "  addi sp, sp, s11" << std::endl;
     }
 }
 
