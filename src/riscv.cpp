@@ -101,8 +101,8 @@ void Prologue(const koopa_raw_function_t &func)
     }
     else
     {
-        std::cout<<"  li t0, "<<-stack_size<<std::endl;
-        std::cout<<"  addi sp, sp, t0"<<std::endl;
+        std::cout<<"  li s11, "<<-stack_size<<std::endl;
+        std::cout<<"  addi sp, sp, s11"<<std::endl;
     }
 
 }
@@ -201,8 +201,8 @@ void Epilogue()
     }
     else
     {
-        std::cout << "  li t0, " << stack_size << std::endl;
-        std::cout << "  addi sp, sp, t0" << std::endl;
+        std::cout << "  li s11, " << stack_size << std::endl;
+        std::cout << "  addi sp, sp, s11" << std::endl;
     }
 }
 
