@@ -123,6 +123,7 @@ void Visit(const koopa_raw_basic_block_t &bb)
 {
     dbg_rscv_printf("Visit basic block\n");
     // 访问所有指令
+    std::cout << bb->name + 1 << ":" << std::endl;
     Visit(bb->insts);
 }
 
@@ -151,6 +152,7 @@ var_info_t Visit(const koopa_raw_value_t &value)
     // 根据指令类型判断后续需要如何访问
     const auto &kind = value->kind;
     var_info_t vinfo;
+    
     switch (kind.tag)
     {
     case KOOPA_RVT_RETURN:
@@ -174,6 +176,12 @@ var_info_t Visit(const koopa_raw_value_t &value)
         vinfo.stack_location=stack_frame.push();
         is_visited[value]=vinfo;
         reg_manager.free_regs();
+        break;
+    case KOOPA_RVT_BRANCH:
+        Visit(kind.data.branch);
+        break;
+    case KOOPA_RVT_JUMP:
+        Visit(kind.data.jump);
         break;
     case KOOPA_RVT_STORE:
         Visit(kind.data.store);
@@ -340,4 +348,34 @@ var_info_t Visit(const koopa_raw_load_t &load)
     dst_var.stack_location=stack_frame.push();
     std::cout<<"  sw "<<gen_reg(src_var.reg_id)<<", "<<dst_var.stack_location<<"(sp)"<<std::endl;
     return dst_var;
+}
+
+void Visit(const koopa_raw_branch_t &branch)
+{
+    dbg_rscv_printf("Visit branch\n");
+    std::cout << std::endl
+              << "  # branch" << std::endl;
+    std::string label_true=branch.true_bb->name+1;
+    std::string label_false=branch.false_bb->name+1;
+    var_info_t var=Visit(branch.cond);
+    reg_manager.free_regs();
+    std::string var_name;
+    if(var.type==VAR_TYPE::ON_REG)
+        var_name=gen_reg(var.reg_id);
+    else
+        var_name=std::to_string(var.stack_location)+"(sp)";
+
+    std::cout << "  bnez  " << var_name << ", " << label_true
+              << std::endl;
+    std::cout << "  j     " << label_false << std::endl;
+}
+
+void Visit(const koopa_raw_jump_t &jump)
+{
+    dbg_rscv_printf("Visit jump\n");
+    std::cout << std::endl
+              << "  # jump" << std::endl;
+    std::string label_target = jump.target->name + 1;
+    std::cout << "  j     " << label_target << std::endl;
+    reg_manager.free_regs();
 }

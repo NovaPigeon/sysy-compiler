@@ -8,7 +8,7 @@
 #define MAX_IMMEDIATE_VAL 2048
 #define ZERO_REG_ID 15
 
-//#define RISCV_DEBUG
+#define RISCV_DEBUG
 #ifdef RISCV_DEBUG
 #define dbg_rscv_printf(...) fprintf(stderr, __VA_ARGS__)
 #else
@@ -94,6 +94,8 @@ void Visit(const koopa_raw_function_t &func);
 void Visit(const koopa_raw_basic_block_t &bb);
 void Visit(const koopa_raw_return_t &ret);
 void Visit(const koopa_raw_store_t &store);
+void Visit(const koopa_raw_branch_t &branch);
+void Visit(const koopa_raw_jump_t &jump);
 void Prologue(const koopa_raw_function_t &func);
 void Epilogue();
 var_info_t Visit(const koopa_raw_value_t &value);
