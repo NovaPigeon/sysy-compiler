@@ -136,6 +136,7 @@ static std::map<std::string, std::string> op_names = {
 static int symbol_cnt = 0;
 static int label_cnt=0;
 static bool is_ret=false;
+static int alloc_tmp=0;
 // static std::string get_var(std::string str);
 // static std::string get_IR(std::string str);
 
@@ -830,28 +831,51 @@ public:
         }
         else if (bnf_type == BianryOPExpType::EXPAND)
         {
-            
             land_exp->Eval();
+            if(land_exp->is_const && land_exp->val==0)
+            {
+                val=land_exp->val;
+                ident = std::to_string(val);
+                is_const=true;
+                is_evaled=true;
+                return;
+            }
+
+            std::string lable_then = "%then_" + std::to_string(label_cnt),
+                        lable_else = "%else_" + std::to_string(label_cnt),
+                        lable_end = "%end_" + std::to_string(label_cnt);
+            label_cnt++;
+
+            ident = "t" + std::to_string(alloc_tmp);
+            std::string ir_name = "@" + ident;
+            symbol_table_stack.Insert(ident, ir_name);
+            alloc_tmp++;
+            std::cout << "  " << ir_name << " = alloc i32" << std::endl;
+
+            std::string tmp_var1="%"+std::to_string(symbol_cnt);
+            symbol_cnt++;
+            std::cout<<"  "<<tmp_var1<<" = ne "<<land_exp->ident<<", 0"<<std::endl;
+            std::cout<<"  br "<<tmp_var1<<", "<<lable_then<<", "<<lable_else<<std::endl<<std::endl;
+            
+            std::cout<<lable_then<<":"<<std::endl;
             eq_exp->Eval();
-            is_const = eq_exp->is_const && land_exp->is_const;
-            if (is_const)
-            {
-                int val1 = land_exp->val, val2 = eq_exp->val;
-                val = (val1 && val2);
-                ident=std::to_string(val);
-            }
-            else
-            {
-                std::string tmp_var1="%"+std::to_string(symbol_cnt);
-                std::string tmp_var2 = "%" + std::to_string(symbol_cnt+1);
-                ident = "%" + std::to_string(symbol_cnt+2);
-                symbol_cnt+=3;
-                std::cout<<"  "<<tmp_var1<<" = ne "<<land_exp->ident<<", 0"<<std::endl;
-                std::cout<<"  "<<tmp_var2<<" = ne "<<eq_exp->ident<<", 0"<<std::endl;
-                std::cout<<"  "<<ident<<" = "<<op_names["&&"]<<" "<<tmp_var1<<", "<<tmp_var2<<std::endl;
-            }
+            std::string tmp_var2 = "%" + std::to_string(symbol_cnt);
+            symbol_cnt++;
+            std::cout<<"  "<<tmp_var2<<" = ne "<<eq_exp->ident<<", 0"<<std::endl;
+            std::cout << "  store " << tmp_var2 << ", " << ir_name<<std::endl;
+            std::cout<<"  jump "<<lable_end<<std::endl<<std::endl;
+
+            std::cout<<lable_else<<":"<<std::endl;
+            std::cout << "  store 0, " << ir_name<<std::endl;
+            std::cout << "  jump " << lable_end << std::endl
+                      << std::endl;
+
+            std::cout<<lable_end<<":"<<std::endl;
+            ident = "%" + std::to_string(symbol_cnt);
+            symbol_cnt++;
+            std::cout << "  " << ident << " = load " << ir_name << std::endl;
             dbg_ast_printf("LAndExp :: = LAndExp(%s) '&&' EqExp(%s);\n", land_exp->ident.c_str(), eq_exp->ident.c_str());
-                }
+        }
         else
             assert(false);
         
@@ -883,25 +907,52 @@ public:
         else if (bnf_type == BianryOPExpType::EXPAND)
         {
             lor_exp->Eval();
-            land_exp->Eval();
-            is_const = lor_exp->is_const && land_exp->is_const;
-            if (is_const)
+            if (lor_exp->is_const && lor_exp->val == 1)
             {
-                int val1 = lor_exp->val, val2 = land_exp->val;
-                val = (val1 || val2);
-                ident=std::to_string(val);
+                val = lor_exp->val;
+                ident = std::to_string(val);
+                is_const=true;
+                is_evaled = true;
+                return;
             }
-            else
-            {
-                std::string tmp_var1 = "%" + std::to_string(symbol_cnt);
-                std::string tmp_var2 = "%" + std::to_string(symbol_cnt + 1);
-                ident = "%" + std::to_string(symbol_cnt + 2);
-                symbol_cnt += 3;
-                std::cout <<"  "<< tmp_var1 << " = ne " << lor_exp->ident << ", 0" << std::endl;
-                std::cout <<"  "<< tmp_var2 << " = ne " << land_exp->ident << ", 0" << std::endl;
-                std::cout <<"  "<< ident << " = " << op_names["||"]<<" "<<tmp_var1 << ", " << tmp_var2 << std::endl;
-            }
+            std::string lable_then = "%then_" + std::to_string(label_cnt),
+                        lable_else = "%else_" + std::to_string(label_cnt),
+                        lable_end = "%end_" + std::to_string(label_cnt);
+            label_cnt++;
+
+            std::string ir_name = "@t" + std::to_string(alloc_tmp);
+            symbol_table_stack.Insert(ident, ir_name);
+            alloc_tmp++;
+            std::cout << "  " << ir_name << " = alloc i32" << std::endl;
+
+            std::string tmp_var1 = "%" + std::to_string(symbol_cnt);
+            symbol_cnt++;
+            std::cout << "  " << tmp_var1 << " = eq " << lor_exp->ident << ", 0" << std::endl;
+            std::cout << "  br " << tmp_var1 << ", " << lable_then << ", " << lable_else << std::endl
+                      << std::endl;
             
+            
+            std::cout << lable_then << ":" << std::endl;
+            land_exp->Eval();
+            std::string tmp_var2 = "%" + std::to_string(symbol_cnt);
+            symbol_cnt++;
+            std::cout << "  " << tmp_var2 << " = ne " << land_exp->ident << ", 0" << std::endl;
+            std::cout<<"  store "<< tmp_var2<<", "<<ir_name<<std::endl;
+            std::cout << "  jump " << lable_end << std::endl
+                      << std::endl;
+
+            std::cout << lable_else << ":" << std::endl;
+            std::cout << "  store 1, "<<ir_name<<std::endl;
+            std::cout << "  jump " << lable_end << std::endl
+                      << std::endl;
+
+            std::cout << lable_end << ":" << std::endl;
+            
+            ident = "%" + std::to_string(symbol_cnt);
+            symbol_cnt++;
+            std::cout<<"  "<<ident<<" = load "<<ir_name<<std::endl;
+
+            dbg_ast_printf("LOrExp :: = LOrExp(%s) || LAndExp(%s);\n",lor_exp->ident.c_str(),land_exp->ident.c_str());
         }
         else
             assert(false);
