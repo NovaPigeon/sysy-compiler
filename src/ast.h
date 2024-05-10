@@ -321,6 +321,7 @@ public:
         else if(bnf_type==OpenStmtType::OSTMT_ELSE)
         {
             dbg_ast_printf("OpenStmt :: = IF '(' Exp ')' ClosedStmt ELSE OpenStmt;\n");
+            bool total_ret=true;
             exp->Eval();
             std::cout << "  br " << exp->ident << ", " << lable_then << ", " << lable_else << std::endl
                       << std::endl;
@@ -328,6 +329,7 @@ public:
             std::cout << lable_then << ":" << std::endl;
             is_ret=false;
             closed_stmt->GenerateIR();
+            total_ret=total_ret&is_ret;
             if(is_ret==false)
                 std::cout << "  jump " << lable_end << std::endl;
             std::cout << std::endl;
@@ -335,12 +337,14 @@ public:
             std::cout<<lable_else<<":"<<std::endl;
             is_ret=false;
             open_stmt->GenerateIR();
+            total_ret = total_ret & is_ret;
             if(is_ret==false)
                 std::cout << "  jump " << lable_end << std::endl;
             std::cout << std::endl;
 
-            std::cout << lable_end << ":" << std::endl;
-            is_ret=false;
+            if(total_ret==false)
+                std::cout << lable_end << ":" << std::endl;
+            is_ret=total_ret;
         }
         else
             assert(false);
@@ -374,6 +378,7 @@ public:
                         lable_end = "%end_" + std::to_string(label_cnt);
             label_cnt++;
 
+            bool total_ret=true;
             exp->Eval();
             std::cout << "  br " << exp->ident << ", " << lable_then << ", " << lable_else << std::endl
                       << std::endl;
@@ -381,6 +386,7 @@ public:
             std::cout << lable_then << ":" << std::endl;
             is_ret=false;
             closed_stmt1->GenerateIR();
+            total_ret = total_ret & is_ret;
             if (is_ret == false)
                 std::cout << "  jump " << lable_end << std::endl;
             std::cout << std::endl;
@@ -388,12 +394,14 @@ public:
             std::cout << lable_else << ":" << std::endl;
             is_ret=false;
             closed_stmt2->GenerateIR();
+            total_ret = total_ret & is_ret;
             if (is_ret == false)
                 std::cout << "  jump " << lable_end << std::endl;
             std::cout << std::endl;
 
-            std::cout << lable_end << ":" << std::endl;
-            is_ret=false;
+            if(total_ret==false)
+                std::cout << lable_end << ":" << std::endl;
+            is_ret=total_ret;
         }
 
     }
