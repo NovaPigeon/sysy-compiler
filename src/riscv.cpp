@@ -1,381 +1,747 @@
-#include <cassert>
-#include <cstdio>
+#pragma once
 #include <iostream>
-#include <memory>
 #include <string>
-#include <string.h>
-#include <sstream>
+#include <cassert>
 #include <map>
+#include <cmath>
 #include "koopa.h"
-#include "riscv.h"
 
-
-static const std::string regs_name[REG_NUM+1]=
+struct Reg
 {
-    "t0","t1","t2","t3","t4","t5","t6",
-    "a0","a1","a2","a3","a4","a5","a6","a7","x0"
+    int reg_name;
+    int reg_offset;
 };
-static std::string gen_reg(int id)
-{
-    if (id <= REG_NUM)
-        return regs_name[id];
-    //assert(false);
-}
+std::string reg_names[16] = {"t0", "t1", "t2", "t3", "t4", "t5", "t6",
+                             "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7", "x0"};
+koopa_raw_value_t registers[16];
+int reg_stats[16] = {0};
+koopa_raw_value_t present_value = 0;
+std::map<const koopa_raw_value_t, Reg> value_map;
+int global_num = 0;
+std::map<const koopa_raw_value_t, std::string> global_values;
+int stack_size = 0, stack_top = 0;
+bool restore_ra = false;
 
-static std::map<koopa_raw_binary_op_t, std::string> op_names = 
-{
-    {KOOPA_RBO_GT, "sgt"},
-    {KOOPA_RBO_LT, "slt"},
-    {KOOPA_RBO_ADD, "add"},
-    {KOOPA_RBO_SUB, "sub"},
-    {KOOPA_RBO_MUL, "mul"},
-    {KOOPA_RBO_DIV, "div"},
-    {KOOPA_RBO_MOD, "rem"},
-    {KOOPA_RBO_AND, "and"},
-    {KOOPA_RBO_OR, "or"}
-};
+void Visit(const koopa_raw_program_t &program);
+void Visit(const koopa_raw_slice_t &slice);
+void Visit(const koopa_raw_function_t &func);
+void Visit(const koopa_raw_basic_block_t &bb);
+void Visit(const koopa_raw_return_t &ret);
+Reg Visit(const koopa_raw_value_t &value);
+Reg Visit(const koopa_raw_integer_t &integer);
+Reg Visit(const koopa_raw_binary_t &binary);
+Reg Visit(const koopa_raw_load_t &load);
+void Visit(const koopa_raw_store_t &store);
+void Visit(const koopa_raw_branch_t &branch);
+void Visit(const koopa_raw_jump_t &jump);
+Reg Visit(const koopa_raw_call_t &call);
+Reg Visit(const koopa_raw_get_elem_ptr_t &get_elem_ptr);
+Reg Visit(const koopa_raw_get_ptr_t &get_ptr);
+std::string Visit(const koopa_raw_global_alloc_t &global);
+int find_reg(int stat);
+void clear_registers(bool save_temps = true);
+int cal_size(const koopa_raw_type_t &ty);
+void init_aggregate(const koopa_raw_value_t &aggr);
 
-static std::map<koopa_raw_value_t,var_info_t> is_visited;
-static StackFrame stack_frame;
-static RegManager reg_manager;
-
-
-// 访问 raw program
 void Visit(const koopa_raw_program_t &program)
 {
-    dbg_rscv_printf("Visit program\n");
-    // 访问所有全局变量
     Visit(program.values);
-    std::cout << "  .text"<<std::endl;
-    // 访问所有函数
     Visit(program.funcs);
 }
 
-// 访问 raw slice
 void Visit(const koopa_raw_slice_t &slice)
 {
-    dbg_rscv_printf("Visit slice\n");
-    for (size_t i = 0; i < slice.len; ++i)
+    for (size_t i = 0; i < slice.len; i++)
     {
         auto ptr = slice.buffer[i];
-        // 根据 slice 的 kind 决定将 ptr 视作何种元素
         switch (slice.kind)
         {
         case KOOPA_RSIK_FUNCTION:
-            // 访问函数
             Visit(reinterpret_cast<koopa_raw_function_t>(ptr));
             break;
         case KOOPA_RSIK_BASIC_BLOCK:
-            // 访问基本块
             Visit(reinterpret_cast<koopa_raw_basic_block_t>(ptr));
             break;
         case KOOPA_RSIK_VALUE:
-            // 访问指令
             Visit(reinterpret_cast<koopa_raw_value_t>(ptr));
             break;
         default:
-            // 我们暂时不会遇到其他内容, 于是不对其做任何处理
             assert(false);
         }
     }
 }
-void Prologue(const koopa_raw_function_t &func)
-{
-    std::cout<<std::endl<<"  # prologue"<<std::endl;
-    int stack_size=0;
-    for(uint32_t i=0;i<func->bbs.len;++i)
-    {
-        koopa_raw_basic_block_t bb=reinterpret_cast<koopa_raw_basic_block_t>(func->bbs.buffer[i]);
-        for(uint32_t j=0;j<bb->insts.len;++j)
-        {
-            koopa_raw_value_t inst=reinterpret_cast<koopa_raw_value_t>(bb->insts.buffer[j]);
-            if(inst->ty->tag!=KOOPA_RTT_UNIT)
-                stack_size=stack_size+4;
-        }
-    }
-    stack_size=(stack_size+15)&(~15);
-    stack_frame.set_stack_size(stack_size);
-    if(stack_size<MAX_IMMEDIATE_VAL)
-    {
-        std::cout<<"  addi sp, sp, "<<-stack_size<<std::endl;
-    }
-    else
-    {
-        std::cout<<"  li t0, "<<-stack_size<<std::endl;
-        std::cout<<"  addi sp, sp, t0"<<std::endl;
-    }
 
-}
-// 访问函数
 void Visit(const koopa_raw_function_t &func)
 {
-    dbg_rscv_printf("Visit func\n");
-    std::string func_name = std::string(func->name + 1);
-    std::cout<< "  .globl " << func_name <<std::endl;
-    std::cout<< func_name <<":"<<std::endl;
-    Prologue(func);
-    // 访问所有基本块
+    if (func->bbs.len == 0)
+        return;
+    std::cout << "\t.text" << std::endl;
+    std::cout << "\t.globl " << (func->name + 1) << std::endl;
+    std::cout << (func->name + 1) << ":" << std::endl;
+    assert(stack_size == 0);
+    assert(stack_top == 0);
+    int max_arg_num = 0;
+    for (size_t i = 0; i < func->bbs.len; i++)
+    {
+        auto ptr = func->bbs.buffer[i];
+        koopa_raw_basic_block_t bb =
+            reinterpret_cast<koopa_raw_basic_block_t>(ptr);
+        for (size_t j = 0; j < bb->insts.len; j++)
+        {
+            ptr = bb->insts.buffer[j];
+            koopa_raw_value_t inst = reinterpret_cast<koopa_raw_value_t>(ptr);
+            if (inst->ty->tag != KOOPA_RTT_UNIT)
+            {
+                if (inst->kind.tag == KOOPA_RVT_ALLOC)
+                    stack_size += cal_size(inst->ty->data.pointer.base);
+                else
+                    stack_size += 4;
+            }
+            if (inst->kind.tag == KOOPA_RVT_CALL)
+            {
+                restore_ra = true;
+                int arg_num = inst->kind.data.call.args.len;
+                if (arg_num > max_arg_num)
+                    max_arg_num = arg_num;
+            }
+        }
+    }
+    int arg_stack_size = 0;
+    if (max_arg_num > 8)
+        arg_stack_size = (max_arg_num - 8) * 4;
+    stack_size += arg_stack_size;
+    stack_top += arg_stack_size;
+    if (restore_ra)
+        stack_size += 4;
+    stack_size = ceil(stack_size / 16.0) * 16;
+    if (stack_size > 0 && stack_size <= 2048)
+        std::cout << "\taddi  sp, sp, -" << stack_size << std::endl;
+    else if (stack_size > 2048)
+    {
+        std::cout << "\tli    s11, -" << stack_size << std::endl;
+        std::cout << "\tadd   sp, sp, s11" << std::endl;
+    }
+    if (restore_ra)
+    {
+        if (stack_size - 4 >= -2048 && stack_size - 4 <= 2047)
+            std::cout << "\tsw    ra, " << stack_size - 4 << "(sp)" << std::endl;
+        else
+        {
+            std::cout << "\tli    s11, " << stack_size - 4 << std::endl;
+            std::cout << "\tadd   s11, sp, s11" << std::endl;
+            std::cout << "\tsw    ra, (s11)" << std::endl;
+        }
+    }
+    for (size_t i = 0; i < func->params.len; i++)
+    {
+        auto ptr = func->params.buffer[i];
+        koopa_raw_value_t param = reinterpret_cast<koopa_raw_value_t>(ptr);
+        if (i < 8)
+        {
+            struct Reg param_var = {static_cast<int>(i + 7), -1};
+            value_map[param] = param_var;
+            // reg_stats[i + 7] = 1;
+            // registers[i + 7] = param;
+            // for now param will only be used once at the beginning of a
+            // function and never used again, so we don't need to maintain
+            // the correct register states for it
+        }
+        else
+        {
+            int offset = stack_size + (i - 8) * 4;
+            struct Reg param_var = {-1, offset};
+            value_map[param] = param_var;
+        }
+    }
     Visit(func->bbs);
+    stack_size = stack_top = 0;
+    for (int i = 0; i < 16; i++)
+        reg_stats[i] = 0;
+    value_map.clear();
+    restore_ra = false;
+    std::cout << std::endl;
 }
 
-// 访问基本块
 void Visit(const koopa_raw_basic_block_t &bb)
 {
-    dbg_rscv_printf("Visit basic block\n");
-    // 访问所有指令
     std::cout << bb->name + 1 << ":" << std::endl;
     Visit(bb->insts);
 }
 
-// 访问指令
-var_info_t Visit(const koopa_raw_value_t &value)
+Reg Visit(const koopa_raw_value_t &value)
 {
-    dbg_rscv_printf("Visit value\n");
-    if(is_visited.find(value)!=is_visited.end())
+    koopa_raw_value_t old_value = present_value;
+    present_value = value;
+    if (value_map.count(value))
     {
-        var_info_t info=is_visited[value];
-        if(info.type==VAR_TYPE::ON_REG)
-            return info;
-        else if(info.type==VAR_TYPE::ON_STACK)
+        if (value_map[value].reg_name == -1)
         {
-            int location=info.stack_location;
-            //assert(location>=0);
-            int reg_id=reg_manager.alloc_reg();
-            std::cout<<"  lw "<<gen_reg(reg_id)<<", "<<location<<"(sp)"<<std::endl;
-            info.type=VAR_TYPE::ON_REG;
-            info.reg_id=reg_id;
-            return info;
+            int reg_name = find_reg(1);
+            value_map[value].reg_name = reg_name;
+            int reg_offset = value_map[value].reg_offset;
+            if (reg_offset >= -2048 && reg_offset <= 2047)
+                std::cout << "\tlw    " << reg_names[reg_name] << ", " << reg_offset << "(sp)" << std::endl;
+            else
+            {
+                std::cout << "\tli    s11, " << reg_offset << std::endl;
+                std::cout << "\tadd   s11, sp, s11" << std::endl;
+                std::cout << "\tlw    " << reg_names[reg_name] << ", (s11)" << std::endl;
+            }
         }
-        
+        present_value = old_value;
+        return value_map[value];
     }
 
-    // 根据指令类型判断后续需要如何访问
     const auto &kind = value->kind;
-    var_info_t vinfo;
-    
+    struct Reg result_var = {-1, -1};
     switch (kind.tag)
     {
     case KOOPA_RVT_RETURN:
-        // 访问 return 指令
         Visit(kind.data.ret);
-        reg_manager.free_regs();
         break;
     case KOOPA_RVT_INTEGER:
-        // 访问 integer 指令
-        vinfo=Visit(kind.data.integer);
+        result_var = Visit(kind.data.integer);
         break;
     case KOOPA_RVT_BINARY:
-        // 访问 binary 指令
-        vinfo=Visit(kind.data.binary);
-        is_visited[value]=vinfo;
-        reg_manager.free_regs();
+        result_var = Visit(kind.data.binary);
+        value_map[value] = result_var;
+        assert(result_var.reg_name >= 0);
         break;
     case KOOPA_RVT_ALLOC:
-        std::cout <<std::endl<< "  # alloc" << std::endl;
-        vinfo.type=VAR_TYPE::ON_STACK;
-        vinfo.stack_location=stack_frame.push();
-        is_visited[value]=vinfo;
-        reg_manager.free_regs();
+        result_var.reg_offset = stack_top;
+        assert(value->ty->tag == KOOPA_RTT_POINTER);
+        stack_top += cal_size(value->ty->data.pointer.base);
+        value_map[value] = result_var;
+        break;
+    case KOOPA_RVT_GLOBAL_ALLOC:
+        global_values[value] = Visit(kind.data.global_alloc);
+        break;
+    case KOOPA_RVT_LOAD:
+        result_var = Visit(kind.data.load);
+        value_map[value] = result_var;
+        assert(result_var.reg_name >= 0);
+        break;
+    case KOOPA_RVT_STORE:
+        Visit(kind.data.store);
         break;
     case KOOPA_RVT_BRANCH:
         Visit(kind.data.branch);
         break;
+    case KOOPA_RVT_GET_ELEM_PTR:
+        result_var = Visit(kind.data.get_elem_ptr);
+        value_map[value] = result_var;
+        assert(result_var.reg_name >= 0);
+        break;
+    case KOOPA_RVT_GET_PTR:
+        result_var = Visit(kind.data.get_ptr);
+        value_map[value] = result_var;
+        assert(result_var.reg_name >= 0);
+        break;
     case KOOPA_RVT_JUMP:
         Visit(kind.data.jump);
         break;
-    case KOOPA_RVT_STORE:
-        Visit(kind.data.store);
-        reg_manager.free_regs();
-        break;
-    case KOOPA_RVT_LOAD:
-        vinfo = Visit(kind.data.load);
-        is_visited[value]=vinfo;
-        reg_manager.free_regs();
+    case KOOPA_RVT_CALL:
+        result_var = Visit(kind.data.call);
+        value_map[value] = result_var;
+        if (value->ty->tag != KOOPA_RTT_UNIT) // has ret
+        {
+            registers[result_var.reg_name] = value;
+            reg_stats[result_var.reg_name] = 1;
+        }
+        assert(result_var.reg_name >= 0);
         break;
     default:
-        // 其他类型暂时遇不到
         assert(false);
     }
-    return vinfo;
+    present_value = old_value;
+    return result_var;
 }
 
-void Epilogue()
-{
-    std::cout<<std::endl<<"  # epilogue"<<std::endl;
-    int stack_size=stack_frame.get_stack_size();
-    if (stack_size < MAX_IMMEDIATE_VAL)
-    {
-        std::cout << "  addi sp, sp, " << stack_size << std::endl;
-    }
-    else
-    {
-        std::cout << "  li t0, " << stack_size << std::endl;
-        std::cout << "  addi sp, sp, t0" << std::endl;
-    }
-}
-
-// 访问对应类型指令的函数定义略
-// 视需求自行实现
-// ...
-// 访问 return
 void Visit(const koopa_raw_return_t &ret)
 {
-    dbg_rscv_printf("Visit return\n");
-    std::cout << std::endl
-              << "  # ret" << std::endl;
-    koopa_raw_value_t val = ret.value;
-    var_info_t var=Visit(val);
-    //assert(var.type==VAR_TYPE::ON_REG);
-    std::cout<<"  mv a0, "<<gen_reg(var.reg_id)<<std::endl;
-    Epilogue();
-    std::cout<<"  ret"<<std::endl;
-    
+    koopa_raw_value_t ret_value = ret.value;
+    if (ret_value)
+    {
+        struct Reg result_var = Visit(ret_value);
+        assert(result_var.reg_name >= 0);
+        if (result_var.reg_name != 7)
+            std::cout << "\tmv    a0, " << reg_names[result_var.reg_name] << std::endl;
+    }
+    clear_registers(false);
+    if (restore_ra)
+    {
+        if (stack_size - 4 >= -2048 && stack_size - 4 <= 2047)
+            std::cout << "\tlw    ra, " << stack_size - 4 << "(sp)" << std::endl;
+        else
+        {
+            std::cout << "\tli    t0, " << stack_size - 4 << std::endl;
+            std::cout << "\tadd   t0, sp, t0" << std::endl;
+            std::cout << "\tlw    ra, (t0)" << std::endl;
+        }
+    }
+    if (stack_size > 0 && stack_size <= 2047)
+        std::cout << "\taddi  sp, sp, " << stack_size << std::endl;
+    else if (stack_size > 2047)
+    {
+        std::cout << "\tli    t0, " << stack_size << std::endl;
+        std::cout << "\tadd   sp, sp, t0" << std::endl;
+    }
+    std::cout << "\tret" << std::endl;
 }
 
-// 访问 integer 指令
-var_info_t Visit(const koopa_raw_integer_t &interger)
+Reg Visit(const koopa_raw_integer_t &integer)
 {
-    dbg_rscv_printf("Visit integer\n");
-    int32_t val = interger.value;
-    var_info_t vinfo;
-    vinfo.type=VAR_TYPE::ON_REG;
-    if(val==0)
+    int32_t int_val = integer.value;
+    struct Reg result_var = {-1, -1};
+    if (int_val == 0)
     {
-        vinfo.reg_id=ZERO_REG_ID;
-        return vinfo;
+        result_var.reg_name = 15;
+        return result_var;
     }
-    int new_reg_id=reg_manager.alloc_reg();
-    vinfo.reg_id=new_reg_id;
-    std::string reg = gen_reg(new_reg_id);
-    std::cout<<"  li "<<reg<<", "<<std::to_string(val)<<std::endl;
-    return vinfo;
+    result_var.reg_name = find_reg(0);
+    std::cout << "\tli    " << reg_names[result_var.reg_name] << ", " << int_val << std::endl;
+    return result_var;
 }
 
-var_info_t Visit(const koopa_raw_binary_t &binary)
+Reg Visit(const koopa_raw_binary_t &binary)
 {
-    dbg_rscv_printf("Visit binary\n");
-    std::cout << std::endl
-              << "  # binary" << std::endl;
+    struct Reg left_val = Visit(binary.lhs);
+    int left_reg = left_val.reg_name;
+    int old_stat = reg_stats[left_reg];
+    reg_stats[left_reg] = 2;
+    struct Reg right_val = Visit(binary.rhs);
+    int right_reg = right_val.reg_name;
+    reg_stats[left_reg] = old_stat;
+    old_stat = reg_stats[right_reg];
+    reg_stats[right_reg] = 2;
+    struct Reg result_var = {find_reg(1), -1};
+    reg_stats[right_reg] = old_stat;
+    std::string left_name = reg_names[left_reg];
+    std::string right_name = reg_names[right_reg];
+    std::string result_name = reg_names[result_var.reg_name];
+    switch (binary.op)
+    {
+    case 0: // ne
+        if (right_name == "x0")
+        {
+            std::cout << "\tsnez  " << result_name << ", " << left_name << std::endl;
+            break;
+        }
+        if (left_name == "x0")
+        {
+            std::cout << "\tsnez  " << result_name << ", " << right_name << std::endl;
+            break;
+        }
+        std::cout << "\txor   " << result_name << ", " << left_name << ", " << right_name << std::endl;
+        std::cout << "\tsnez  " << result_name << ", " << result_name << std::endl;
+        break;
+    case 1: // eq
+        if (right_name == "x0")
+        {
+            std::cout << "\tseqz  " << result_name << ", " << left_name << std::endl;
+            break;
+        }
+        if (left_name == "x0")
+        {
+            std::cout << "\tseqz  " << result_name << ", " << right_name << std::endl;
+            break;
+        }
+        std::cout << "\txor   " << result_name << ", " << left_name << ", " << right_name << std::endl;
+        std::cout << "\tseqz  " << result_name << ", " << result_name << std::endl;
+        break;
+    case 2: // gt
+        std::cout << "\tsgt   " << result_name << ", " << left_name << ", " << right_name << std::endl;
+        break;
+    case 3: // lt
+        std::cout << "\tslt   " << result_name << ", " << left_name << ", " << right_name << std::endl;
+        break;
+    case 4: // ge
+        std::cout << "\tslt   " << result_name << ", " << left_name << ", " << right_name << std::endl;
+        std::cout << "\txori  " << result_name << ", " << result_name << ", 1"
+                  << std::endl;
+        break;
+    case 5: // le
+        std::cout << "\tsgt   " << result_name << ", " << left_name << ", " << right_name << std::endl;
+        std::cout << "\txori  " << result_name << ", " << result_name << ", 1"
+                  << std::endl;
+        break;
+    case 6: // add
+        std::cout << "\tadd   " << result_name << ", " << left_name << ", " << right_name << std::endl;
+        break;
+    case 7: // sub
+        std::cout << "\tsub   " << result_name << ", " << left_name << ", " << right_name << std::endl;
+        break;
+    case 8: // mul
+        std::cout << "\tmul   " << result_name << ", " << left_name << ", " << right_name << std::endl;
+        break;
+    case 9: // div
+        std::cout << "\tdiv   " << result_name << ", " << left_name << ", " << right_name << std::endl;
+        break;
+    case 10: // mod
+        std::cout << "\trem   " << result_name << ", " << left_name << ", " << right_name << std::endl;
+        break;
+    case 11: // and
+        std::cout << "\tand   " << result_name << ", " << left_name << ", " << right_name << std::endl;
+        break;
+    case 12: // or
+        std::cout << "\tor    " << result_name << ", " << left_name << ", " << right_name << std::endl;
+        break;
+    default:
+        assert(false);
+    }
+    return result_var;
+}
 
-    var_info_t lvar=Visit(binary.lhs);
-    var_info_t rvar=Visit(binary.rhs);
-    
-    if(lvar.type==VAR_TYPE::ON_STACK)
+Reg Visit(const koopa_raw_load_t &load)
+{
+    koopa_raw_value_t src = load.src;
+    if (src->kind.tag == KOOPA_RVT_GLOBAL_ALLOC)
     {
-        lvar.type=VAR_TYPE::ON_REG;
-        lvar.reg_id=reg_manager.alloc_reg();
-        std::cout<<"  lw "<<gen_reg(lvar.reg_id)<<", "<<lvar.stack_location<<"(sp)"<<std::endl;
+        int reg_name = find_reg(1);
+        struct Reg result_var = {reg_name, -1};
+        std::cout << "\tla    " << reg_names[reg_name] << ", " << global_values[src] << std::endl;
+        std::cout << "\tlw    " << reg_names[reg_name] << ", 0(" << reg_names[reg_name] << ")" << std::endl;
+        return result_var;
     }
-    if (rvar.type == VAR_TYPE::ON_STACK)
+    else if (src->kind.tag == KOOPA_RVT_GET_ELEM_PTR ||
+             src->kind.tag == KOOPA_RVT_GET_PTR)
     {
-        rvar.type = VAR_TYPE::ON_REG;
-        rvar.reg_id = reg_manager.alloc_reg();
-        std::cout << "  lw " << gen_reg(rvar.reg_id) << ", " << lvar.stack_location << "(sp)" << std::endl;
+        struct Reg result_var = {find_reg(2), -1};
+        struct Reg src_var = Visit(load.src);
+        reg_stats[result_var.reg_name] = 1;
+        std::cout << "\tlw    " << reg_names[result_var.reg_name] << ", (" << reg_names[src_var.reg_name] << ")" << std::endl;
+        return result_var;
     }
-
-    var_info_t tmp_result;
-    tmp_result.type=VAR_TYPE::ON_REG;
-    tmp_result.reg_id=reg_manager.alloc_reg();
-    
-    std::string new_reg=gen_reg(tmp_result.reg_id),
-                l_reg=gen_reg(lvar.reg_id),
-                r_reg=gen_reg(rvar.reg_id);
-    koopa_raw_binary_op_t op = binary.op;
-    switch (op)
+    // we have to make sure one offset is at most loaded to one register
+    if (value_map[src].reg_name >= 0)
+        return value_map[src];
+    int reg_name = find_reg(1), reg_offset = value_map[src].reg_offset;
+    struct Reg result_var = {reg_name, reg_offset};
+    if (reg_offset >= -2048 && reg_offset <= 2047)
+        std::cout << "\tlw    " << reg_names[reg_name] << ", " << reg_offset << "(sp)" << std::endl;
+    else
     {
-    case KOOPA_RBO_GT:
-    case KOOPA_RBO_LT:
-    case KOOPA_RBO_ADD:
-    case KOOPA_RBO_SUB:
-    case KOOPA_RBO_MUL:
-    case KOOPA_RBO_DIV:
-    case KOOPA_RBO_MOD:
-    case KOOPA_RBO_AND:
-    case KOOPA_RBO_OR:
-        std::cout << "  " <<op_names[op] << " " <<new_reg<< ", " <<l_reg<< ", " << r_reg<<std::endl;
-        break;
-    case KOOPA_RBO_EQ:
-        std::cout<< "  xor " << new_reg << ", " << l_reg << ", " << r_reg << std::endl;
-        std::cout<< "  seqz " << new_reg << ", " << new_reg <<std::endl;
-        break;
-    case KOOPA_RBO_NOT_EQ:
-        std::cout<< "  xor " <<new_reg << ", " << l_reg << ", " << r_reg << std::endl;
-        std::cout<< "  snez " << new_reg << ", " << new_reg << std::endl;;
-        break;
-    case KOOPA_RBO_LE:  
-        std::cout<<"  sgt "<<new_reg<<", "<<l_reg<<", "<<r_reg<<std::endl;
-        std::cout<<"  xori "<<new_reg<<", "<<new_reg<<", 1"<<std::endl;
-        break;
-    case KOOPA_RBO_GE:
-        std::cout << "  slt " << new_reg << ", " << l_reg << ", " << r_reg << std::endl;
-        std::cout << "  xori " << new_reg << ", " << new_reg << ", 1" << std::endl;
+        std::cout << "\tli    s11, " << reg_offset << std::endl;
+        std::cout << "\tadd   s11, s11, sp" << std::endl;
+        std::cout << "\tlw    " << reg_names[reg_name] << ", (s11)" << std::endl;
     }
-    
-    var_info_t res;
-    res.type=VAR_TYPE::ON_STACK;
-    res.stack_location=stack_frame.push();
-    std::cout<<"  sw "<<new_reg<<", "<<res.stack_location<<"(sp)"<<std::endl;
-    return res;
+    return result_var;
 }
 
 void Visit(const koopa_raw_store_t &store)
 {
-    dbg_rscv_printf("Visit store\n");
-    std::cout << std::endl
-              << "  # store" << std::endl;
-    koopa_raw_value_t dst=store.dest;
-    //assert(is_visited.find(dst)!=is_visited.end());
-
-    var_info_t dst_var=is_visited[dst];
-    //assert(dst_var.type == VAR_TYPE::ON_STACK);
-    
-    var_info_t src_var=Visit(store.value);
-    //assert(src_var.type==VAR_TYPE::ON_REG);
-
-    std::cout<<"  sw "<<gen_reg(src_var.reg_id)<<", "<<dst_var.stack_location<<"(sp)"<<std::endl;
-
-}
-
-var_info_t Visit(const koopa_raw_load_t &load)
-{
-    dbg_rscv_printf("Visit load\n");
-    std::cout << std::endl
-              << "  # load" << std::endl;
-    var_info_t src_var=Visit(load.src);
-    //assert(src_var.type==VAR_TYPE::ON_REG);
-    var_info_t dst_var;
-    dst_var.type=VAR_TYPE::ON_STACK;
-    dst_var.stack_location=stack_frame.push();
-    std::cout<<"  sw "<<gen_reg(src_var.reg_id)<<", "<<dst_var.stack_location<<"(sp)"<<std::endl;
-    return dst_var;
+    struct Reg value = Visit(store.value);
+    koopa_raw_value_t dest = store.dest;
+    assert(value.reg_name >= 0);
+    if (dest->kind.tag == KOOPA_RVT_GLOBAL_ALLOC)
+    {
+        std::cout << "\tla    s11, " << global_values[dest] << std::endl;
+        std::cout << "\tsw    " << reg_names[value.reg_name] << ", 0(s11)" << std::endl;
+        return;
+    }
+    else if (dest->kind.tag == KOOPA_RVT_GET_ELEM_PTR ||
+             dest->kind.tag == KOOPA_RVT_GET_PTR)
+    {
+        int old_stat = reg_stats[value.reg_name];
+        reg_stats[value.reg_name] = 2;
+        struct Reg dest_var = Visit(dest);
+        assert(dest_var.reg_name >= 0);
+        reg_stats[value.reg_name] = old_stat;
+        std::cout << "\tsw    " << reg_names[value.reg_name] << ", (" << reg_names[dest_var.reg_name] << ")" << std::endl;
+        return;
+    }
+    assert(value_map.count(dest));
+    if (value_map[dest].reg_offset == -1)
+    {
+        value_map[dest].reg_offset = stack_top;
+        stack_top += 4;
+    }
+    else // old register loaded from reg_offset is outdated ...
+        for (int i = 0; i < 16; i++)
+            if (i == value.reg_name)
+                continue;
+            else if (reg_stats[i] > 0 && value_map[registers[i]].reg_offset ==
+                                             value_map[dest].reg_offset)
+            {
+                reg_stats[i] = 0; // ... so clear it and update value_map
+                value_map[registers[i]].reg_name = value.reg_name;
+            }
+    int reg_name = value.reg_name, reg_offset = value_map[dest].reg_offset;
+    if (reg_offset >= -2048 && reg_offset <= 2047)
+        std::cout << "\tsw    " << reg_names[reg_name] << ", " << reg_offset << "(sp)" << std::endl;
+    else
+    {
+        std::cout << "\tli    s11, " << reg_offset << std::endl;
+        std::cout << "\tadd   s11, s11, sp" << std::endl;
+        std::cout << "\tsw    " << reg_names[reg_name] << ", (s11)" << std::endl;
+    }
 }
 
 void Visit(const koopa_raw_branch_t &branch)
 {
-    dbg_rscv_printf("Visit branch\n");
-    std::cout << std::endl
-              << "  # branch" << std::endl;
-    std::string label_true=branch.true_bb->name+1;
-    std::string label_false=branch.false_bb->name+1;
-    var_info_t var=Visit(branch.cond);
-    reg_manager.free_regs();
-    std::string var_name;
-    if(var.type==VAR_TYPE::ON_REG)
-        var_name=gen_reg(var.reg_id);
-    else
-        var_name=std::to_string(var.stack_location)+"(sp)";
-
-    std::cout << "  bnez  " << var_name << ", " << label_true
+    std::string true_label = branch.true_bb->name + 1;
+    std::string false_label = branch.false_bb->name + 1;
+    int cond_reg = Visit(branch.cond).reg_name;
+    clear_registers(false);
+    std::cout << "\tbnez  " << reg_names[cond_reg] << ", " << true_label
               << std::endl;
-    std::cout << "  j     " << label_false << std::endl;
+    std::cout << "\tj     " << false_label << std::endl;
 }
 
 void Visit(const koopa_raw_jump_t &jump)
 {
-    dbg_rscv_printf("Visit jump\n");
-    std::cout << std::endl
-              << "  # jump" << std::endl;
-    std::string label_target = jump.target->name + 1;
-    std::cout << "  j     " << label_target << std::endl;
-    reg_manager.free_regs();
+    clear_registers(false);
+    std::string target_label = jump.target->name + 1;
+    std::cout << "\tj     " << target_label << std::endl;
+}
+
+Reg Visit(const koopa_raw_call_t &call)
+{
+    struct Reg result_var = {7, -1};
+    clear_registers();
+    std::vector<int> old_stats;
+    for (size_t i = 0; i < call.args.len; i++)
+    {
+        auto ptr = call.args.buffer[i];
+        koopa_raw_value_t arg = reinterpret_cast<koopa_raw_value_t>(ptr);
+        struct Reg arg_var = Visit(arg);
+        assert(arg_var.reg_name >= 0);
+        if (i < 8)
+        {
+            if (arg_var.reg_name != i + 7)
+                std::cout << "\tmv    " << reg_names[i + 7] << ", " << reg_names[arg_var.reg_name] << std::endl;
+            old_stats.push_back(reg_stats[i + 7]);
+            reg_stats[i + 7] = 2;
+        }
+        else if ((i - 8) * 4 >= -2048 && (i - 8) * 4 <= 2047)
+            std::cout << "\tsw    " << reg_names[arg_var.reg_name] << ", " << (i - 8) * 4 << "(sp)" << std::endl;
+        else
+        {
+            std::cout << "\tli    s11, " << (i - 8) * 4 << std::endl;
+            std::cout << "\tadd   s11, s11, sp" << std::endl;
+            std::cout << "\tsw    " << reg_names[arg_var.reg_name] << ", (s11)"
+                      << std::endl;
+        }
+    }
+    for (int i = 0; i < old_stats.size(); i++)
+        reg_stats[i + 7] = old_stats[i];
+    std::cout << "\tcall  " << call.callee->name + 1 << std::endl;
+    clear_registers(false);
+    return result_var;
+}
+
+std::string Visit(const koopa_raw_global_alloc_t &global)
+{
+    std::string name = "var_" + std::to_string(global_num++);
+    std::cout << "\t.data" << std::endl;
+    std::cout << "\t.globl " << name << std::endl;
+    std::cout << name << ":" << std::endl;
+    switch (global.init->kind.tag)
+    {
+    case KOOPA_RVT_ZERO_INIT:
+        std::cout << "\t.zero " << cal_size(global.init->ty) << std::endl
+                  << std::endl;
+        break;
+    case KOOPA_RVT_INTEGER:
+        std::cout << "\t.word " << global.init->kind.data.integer.value << std::endl
+                  << std::endl;
+        break;
+    case KOOPA_RVT_AGGREGATE:
+        init_aggregate(global.init);
+        std::cout << std::endl;
+        break;
+    default:
+        assert(false);
+    }
+    return name;
+}
+
+Reg Visit(const koopa_raw_get_elem_ptr_t &get_elem_ptr)
+{
+    if (get_elem_ptr.src->kind.tag == KOOPA_RVT_GLOBAL_ALLOC)
+    {
+        assert(global_values.count(get_elem_ptr.src));
+        struct Reg result_var = {find_reg(2), -1};
+        koopa_raw_type_t arr = get_elem_ptr.src->ty->data.pointer.base;
+        int total_size = cal_size(arr), len = arr->data.array.len;
+        assert(total_size % len == 0);
+        int elem_size = total_size / len;
+        struct Reg ind_var = Visit(get_elem_ptr.index);
+        int ind_reg = ind_var.reg_name;
+        reg_stats[result_var.reg_name] = 1;
+        std::cout << "\tla    " << reg_names[result_var.reg_name] << ", " << global_values[get_elem_ptr.src] << std::endl;
+        std::cout << "\tli    s11, " << elem_size << std::endl;
+        std::cout << "\tmul   s11, s11, " << reg_names[ind_reg] << std::endl;
+        std::cout << "\tadd   " << reg_names[result_var.reg_name] << ", " << reg_names[result_var.reg_name] << ", s11" << std::endl;
+        return result_var;
+    }
+    struct Reg src_var = value_map[get_elem_ptr.src];
+    koopa_raw_type_t arr = get_elem_ptr.src->ty->data.pointer.base;
+    struct Reg result_var = {find_reg(2), -1};
+    int src_reg, src_old_stat;
+    if (get_elem_ptr.src->name && get_elem_ptr.src->name[0] == '@')
+    {
+        int offset = src_var.reg_offset;
+        assert(offset >= 0); // variables have positive offset
+        if (offset >= -2048 && offset <= 2047)
+            std::cout << "\taddi  " << reg_names[result_var.reg_name] << ", sp, " << offset << std::endl;
+        else
+        {
+            std::cout << "\tli    s11, " << offset << std::endl;
+            std::cout << "\tadd   " << reg_names[result_var.reg_name] << ", sp, s11" << std::endl;
+        }
+    }
+    else
+    {
+        src_var = Visit(get_elem_ptr.src);
+        src_reg = src_var.reg_name;
+        assert(src_reg >= 0);
+        src_old_stat = reg_stats[src_reg];
+        reg_stats[src_reg] = 2;
+    }
+    int total_size = cal_size(arr), len = arr->data.array.len;
+    assert(total_size % len == 0);
+    int elem_size = total_size / len;
+    struct Reg ind_var = Visit(get_elem_ptr.index), tmp_var;
+    if (elem_size != 0 && ind_var.reg_name != 15)
+    {
+        int ind_reg = ind_var.reg_name;
+        int ind_old_stat = reg_stats[ind_reg];
+        reg_stats[ind_reg] = 2;
+        tmp_var = {find_reg(0), -1};
+        reg_stats[ind_reg] = ind_old_stat;
+        std::cout << "\tli    " << reg_names[tmp_var.reg_name] << ", " << elem_size << std::endl;
+        std::cout << "\tmul   " << reg_names[tmp_var.reg_name] << ", " << reg_names[tmp_var.reg_name] << ", " << reg_names[ind_reg] << std::endl;
+    }
+    else
+        tmp_var = {15, -1};
+    reg_stats[result_var.reg_name] = 1;
+    if (get_elem_ptr.src->name && get_elem_ptr.src->name[0] == '@')
+        std::cout << "\tadd   " << reg_names[result_var.reg_name] << ", " << reg_names[result_var.reg_name] << ", " << reg_names[tmp_var.reg_name] << std::endl;
+    else
+    {
+        std::cout << "\tadd   " << reg_names[result_var.reg_name] << ", " << reg_names[src_reg] << ", " << reg_names[tmp_var.reg_name]
+                  << std::endl;
+        reg_stats[src_reg] = src_old_stat;
+    }
+    return result_var;
+}
+
+Reg Visit(const koopa_raw_get_ptr_t &get_ptr)
+{
+    struct Reg src_var = value_map[get_ptr.src];
+    koopa_raw_type_t arr = get_ptr.src->ty->data.pointer.base;
+    struct Reg result_var = {find_reg(2), -1};
+    int elem_size = cal_size(arr);
+    struct Reg ind_var = Visit(get_ptr.index), tmp_var;
+    if (elem_size != 0 && ind_var.reg_name != 15)
+    {
+        int ind_reg = ind_var.reg_name;
+        int ind_old_stat = reg_stats[ind_reg];
+        reg_stats[ind_reg] = 2;
+        tmp_var = {find_reg(0), -1};
+        reg_stats[ind_reg] = ind_old_stat;
+        std::cout << "\tli    " << reg_names[tmp_var.reg_name] << ", " << elem_size << std::endl;
+        std::cout << "\tmul   " << reg_names[tmp_var.reg_name] << ", " << reg_names[tmp_var.reg_name] << ", " << reg_names[ind_reg] << std::endl;
+    }
+    else
+        tmp_var = {15, -1};
+    reg_stats[result_var.reg_name] = 1;
+    std::cout << "\tadd   " << reg_names[result_var.reg_name] << ", " << reg_names[src_var.reg_name] << ", " << reg_names[tmp_var.reg_name] << std::endl;
+    return result_var;
+}
+
+int find_reg(int stat)
+{
+    for (int i = 0; i < 15; i++)
+        if (reg_stats[i] == 0)
+        {
+            registers[i] = present_value;
+            reg_stats[i] = stat;
+            return i;
+        }
+    for (int i = 0; i < 15; i++)
+    {
+        if (reg_stats[i] == 1)
+        {
+            value_map[registers[i]].reg_name = -1;
+            int offset = value_map[registers[i]].reg_offset;
+            if (offset == -1)
+            {
+                offset = stack_top;
+                stack_top += 4;
+                value_map[registers[i]].reg_offset = offset;
+            }
+            if (offset >= -2048 && offset <= 2047)
+                std::cout << "\tsw    " << reg_names[i] << ", " << offset << "(sp)" << std::endl;
+            else
+            {
+                std::cout << "\tli    s11, " << offset << std::endl;
+                std::cout << "\tadd   s11, s11, sp" << std::endl;
+                std::cout << "\tsw    " << reg_names[i] << ", (s11)" << std::endl;
+            }
+            registers[i] = present_value;
+            reg_stats[i] = stat;
+            return i;
+        }
+    }
+    assert(false);
+    return -1;
+}
+
+void clear_registers(bool save_temps)
+{
+    for (int i = 0; i < 15; i++)
+        if (reg_stats[i] > 0)
+        {
+            value_map[registers[i]].reg_name = -1;
+            int offset = value_map[registers[i]].reg_offset;
+            if (offset == -1)
+            {
+                offset = stack_top;
+                stack_top += 4;
+                value_map[registers[i]].reg_offset = offset;
+                if (save_temps)
+                {
+                    if (offset >= -2048 && offset <= 2047)
+                        std::cout << "\tsw    " << reg_names[i] << ", " << offset << "(sp)" << std::endl;
+                    else
+                    {
+                        std::cout << "\tli    s11, " << offset << std::endl;
+                        std::cout << "\tadd   s11, s11, sp" << std::endl;
+                        std::cout << "\tsw    " << reg_names[i] << ", (s11)" << std::endl;
+                    }
+                }
+            }
+            reg_stats[i] = 0;
+        }
+}
+
+int cal_size(const koopa_raw_type_t &ty)
+{
+    assert(ty->tag != KOOPA_RTT_UNIT);
+    if (ty->tag == KOOPA_RTT_ARRAY)
+    {
+        int prev = cal_size(ty->data.array.base);
+        int len = ty->data.array.len;
+        return len * prev;
+    }
+    return 4;
+}
+
+void init_aggregate(const koopa_raw_value_t &aggr)
+{
+    koopa_raw_slice_t elems = aggr->kind.data.aggregate.elems;
+    for (size_t i = 0; i < elems.len; i++)
+    {
+        auto ptr = elems.buffer[i];
+        assert(elems.kind == KOOPA_RSIK_VALUE);
+        auto value = reinterpret_cast<koopa_raw_value_t>(ptr);
+        if (value->kind.tag == KOOPA_RVT_INTEGER)
+            std::cout << "\t.word " << value->kind.data.integer.value << std::endl;
+        else if (value->kind.tag == KOOPA_RVT_AGGREGATE)
+            init_aggregate(value);
+        else
+            assert(false);
+    }
 }
