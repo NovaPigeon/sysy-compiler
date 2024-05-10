@@ -40,7 +40,7 @@ using namespace std;
 
 // lexer 返回的所有 token 种类的声明
 // 注意 IDENT 和 INT_CONST 会返回 token 的值, 分别对应 str_val 和 int_val
-%token INT RETURN CONST
+%token INT RETURN CONST IF ELSE
 %token <str_val> IDENT
 %token <int_val> INT_CONST
 %token <str_val> LE GE EQ NEQ AND OR
@@ -54,6 +54,7 @@ using namespace std;
 %type <vec_val> BlockItems ConstDefs VarDefs
 %type <str_val> UnaryOP MulOP AddOP RelOP EqOP
 %type <int_val> Number
+%type <ast_val> OpenStmt ClosedStmt SimpleStmt
 
 
 
@@ -145,39 +146,54 @@ BlockItem
   ;
 
 Stmt
-  : RETURN Exp ';' {
+  : OpenStmt {
     auto stmt=new StmtAST();
-    stmt->bnf_type=StmtType::STMT_RETURN;
+    stmt->bnf_type=StmtType::STMT_OPEN;
+    stmt->open_stmt=unique_ptr<BaseAST>($1);
+    $$=stmt;
+  }
+  | ClosedStmt {
+    auto stmt=new StmtAST();
+    stmt->bnf_type=StmtType::STMT_CLOSED;
+    stmt->closed_stmt=unique_ptr<BaseAST>($1);
+    $$=stmt;
+  }
+  ;
+
+SimpleStmt
+  : RETURN Exp ';' {
+    auto stmt=new SimpleStmtAST();
+    stmt->bnf_type=SimpleStmtType::SSTMT_RETURN;
     stmt->exp=unique_ptr<BaseExpAST>($2);
     $$=stmt;
   }
   | LVal '=' Exp ';' {
-    auto stmt=new StmtAST();
-    stmt->bnf_type=StmtType::STMT_ASSIGN;
+    auto stmt=new SimpleStmtAST();
+    stmt->bnf_type=SimpleStmtType::SSTMT_ASSIGN;
     stmt->lval=unique_ptr<BaseExpAST>($1);
     stmt->exp=unique_ptr<BaseExpAST>($3);
     $$=stmt;
   }
   | ';' {
-    auto stmt=new StmtAST();
-    stmt->bnf_type=StmtType::STMT_EMPTY_EXP;
+    auto stmt=new SimpleStmtAST();
+    stmt->bnf_type=SimpleStmtType::SSTMT_EMPTY_EXP;
     $$=stmt;
   }
   | Exp ';' {
-    auto stmt=new StmtAST();
-    stmt->bnf_type=StmtType::STMT_EXP;
+    auto stmt=new SimpleStmtAST();
+    stmt->bnf_type=SimpleStmtType::SSTMT_EXP;
     stmt->exp=unique_ptr<BaseExpAST>($1);
     $$=stmt;
   }
   | Block {
-    auto stmt=new StmtAST();
-    stmt->bnf_type=StmtType::STMT_BLK;
+    auto stmt=new SimpleStmtAST();
+    stmt->bnf_type=SimpleStmtType::SSTMT_BLK;
     stmt->block=unique_ptr<BaseAST>($1);
     $$=stmt;
   }
   | RETURN ';' {
-    auto stmt=new StmtAST();
-    stmt->bnf_type=StmtType::STMT_EMPTY_RET;
+    auto stmt=new SimpleStmtAST();
+    stmt->bnf_type=SimpleStmtType::SSTMT_EMPTY_RET;
     $$=stmt;
   }
   ;
@@ -534,6 +550,48 @@ InitVal
     auto init_val=new InitValAST();
     init_val->exp=unique_ptr<BaseExpAST>($1);
     $$=init_val;
+  }
+  ;
+
+OpenStmt
+  : IF '(' Exp ')' ClosedStmt {
+    auto open_stmt=new OpenStmtAST();
+    open_stmt->bnf_type=OpenStmtType::OSTMT_CLOSED;
+    open_stmt->exp=unique_ptr<BaseExpAST>($3);
+    open_stmt->closed_stmt=unique_ptr<BaseAST>($5);
+    $$=open_stmt;
+  }
+  | IF '(' Exp ')' OpenStmt {
+    auto open_stmt=new OpenStmtAST();
+    open_stmt->bnf_type=OpenStmtType::OSTMT_OPEN;
+    open_stmt->exp=unique_ptr<BaseExpAST>($3);
+    open_stmt->open_stmt=unique_ptr<BaseAST>($5);
+    $$=open_stmt;
+  }
+  | IF '(' Exp ')' ClosedStmt ELSE OpenStmt{
+    auto open_stmt=new OpenStmtAST();
+    open_stmt->bnf_type=OpenStmtType::OSTMT_ELSE;
+    open_stmt->exp=unique_ptr<BaseExpAST>($3);
+    open_stmt->closed_stmt=unique_ptr<BaseAST>($5);
+    open_stmt->open_stmt=unique_ptr<BaseAST>($7);
+    $$=open_stmt;
+  }
+  ;
+
+ClosedStmt
+  : SimpleStmt {
+    auto closed_stmt=new ClosedStmtAST();
+    closed_stmt->bnf_type=ClosedStmtType::CSTMT_SIMPLE;
+    closed_stmt->simple_stmt=unique_ptr<BaseAST>($1);
+    $$=closed_stmt;
+  }
+  | IF '(' Exp ')' ClosedStmt ELSE ClosedStmt {
+    auto closed_stmt=new ClosedStmtAST();
+    closed_stmt->bnf_type=ClosedStmtType::CSTMT_ELSE;
+    closed_stmt->exp=unique_ptr<BaseExpAST>($3);
+    closed_stmt->closed_stmt1=unique_ptr<BaseAST>($5);
+    closed_stmt->closed_stmt2=unique_ptr<BaseAST>($7);
+    $$=closed_stmt;
   }
   ;
 

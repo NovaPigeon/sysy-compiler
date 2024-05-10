@@ -10,7 +10,7 @@
 
 #include "symbol_table.h"
 
-//#define DEBUG_AST
+// #define DEBUG_AST
 #ifdef DEBUG_AST
 #define dbg_ast_printf(...) fprintf(stderr, __VA_ARGS__)
 #else
@@ -49,6 +49,9 @@ class VarDeclAST;
 class VarDefAST;
 class InitVal;
 
+class OpenStmtAST;
+class ClosedStmtAST;
+class SimpleStmtAST;
 
 
 // enums
@@ -85,14 +88,33 @@ enum BlockItemType
     BLK_STMT
 };
 
+enum SimpleStmtType
+{
+    SSTMT_ASSIGN,
+    SSTMT_EMPTY_RET,
+    SSTMT_RETURN,
+    SSTMT_EMPTY_EXP,
+    SSTMT_EXP,
+    SSTMT_BLK
+};
+
 enum StmtType
 {
-    STMT_ASSIGN,
-    STMT_EMPTY_RET,
-    STMT_RETURN,
-    STMT_EMPTY_EXP,
-    STMT_EXP,
-    STMT_BLK
+    STMT_OPEN,
+    STMT_CLOSED
+};
+
+enum OpenStmtType
+{
+    OSTMT_CLOSED,
+    OSTMT_OPEN,
+    OSTMT_ELSE
+};
+
+enum ClosedStmtType
+{
+    CSTMT_SIMPLE,
+    CSTMT_ELSE
 };
 
 
@@ -112,6 +134,7 @@ static std::map<std::string, std::string> op_names = {
     {"||", "or"}};
 
 static int symbol_cnt = 0;
+static int label_cnt=0;
 static bool is_ret=false;
 // static std::string get_var(std::string str);
 // static std::string get_IR(std::string str);
@@ -215,39 +238,194 @@ public:
         for(auto &item:block_items->vec)
         {  
             if(is_ret==true)
-                break;
+               break;
             item->GenerateIR();
         }
     }
 };
 
-// Stmt :: = LVal "=" Exp ";" | [Exp] ";" | Block | "return" [Exp] ";";
-
-class StmtAST : public BaseAST
+// Stmt :: = OpenStmt | ClosedStmt;
+class StmtAST: public BaseAST
 {
 public:
     StmtType bnf_type;
+    std::unique_ptr<BaseAST> open_stmt;
+    std::unique_ptr<BaseAST> closed_stmt;
+    void GenerateIR() override
+    {
+        if(bnf_type==StmtType::STMT_CLOSED)
+        {
+            dbg_ast_printf("Stmt ::= OpenStmt;\n");
+            closed_stmt->GenerateIR();
+        }
+        else if(bnf_type==StmtType::STMT_OPEN)
+        {
+            dbg_ast_printf("SimpleStmt ::= ClosedStmt;\n");
+            open_stmt->GenerateIR();
+        }
+        else
+            assert(false);
+    }
+
+};
+
+// OpenStmt :: = IF '(' Exp ')' ClosedStmt | 
+//               IF '(' Exp ')' OpenStmt | 
+//               IF '(' Exp ')' ClosedStmt ELSE OpenStmt;
+
+class OpenStmtAST: public BaseAST
+{
+public:
+    OpenStmtType bnf_type;
+    std::unique_ptr<BaseExpAST> exp;
+    std::unique_ptr<BaseAST> open_stmt;
+    std::unique_ptr<BaseAST> closed_stmt;
+    void GenerateIR() override
+    {
+        std::string lable_then = "%then_" + std::to_string(label_cnt),
+                    lable_else = "%else_" + std::to_string(label_cnt),
+                    lable_end = "%end_" + std::to_string(label_cnt);
+        label_cnt++;
+        if(bnf_type==OpenStmtType::OSTMT_CLOSED)
+        {
+            dbg_ast_printf("OpenStmt :: = IF '(' Exp ')' ClosedStmt;\n");
+            exp->Eval();
+            std::cout<<"  br "<<exp->ident<<", "<<lable_then<<", "<<lable_end<<std::endl<<std::endl;
+            std::cout<<lable_then<<":"<<std::endl;
+            is_ret=false;
+            closed_stmt->GenerateIR();
+            if(is_ret==false)
+                std::cout<<"  jump "<<lable_end<<std::endl;
+            std::cout << std::endl;
+
+            std::cout<<lable_end<<":"<<std::endl;
+            is_ret=false;
+        }
+        else if (bnf_type==OpenStmtType::OSTMT_OPEN)
+        {
+            dbg_ast_printf("OpenStmt :: = IF '(' Exp ')' OpenStmt;\n");
+            exp->Eval();
+            std::cout << "  br " << exp->ident << ", " << lable_then << ", " << lable_end << std::endl
+                      << std::endl;
+            std::cout << lable_then << ":" << std::endl;
+
+            is_ret=false;
+            open_stmt->GenerateIR();
+            if(is_ret==false)
+                std::cout << "  jump " << lable_end << std::endl;
+            std::cout << std::endl;
+
+            std::cout << lable_end << ":" << std::endl;
+            is_ret=false;
+        }
+        else if(bnf_type==OpenStmtType::OSTMT_ELSE)
+        {
+            dbg_ast_printf("OpenStmt :: = IF '(' Exp ')' ClosedStmt ELSE OpenStmt;\n");
+            exp->Eval();
+            std::cout << "  br " << exp->ident << ", " << lable_then << ", " << lable_else << std::endl
+                      << std::endl;
+            
+            std::cout << lable_then << ":" << std::endl;
+            is_ret=false;
+            closed_stmt->GenerateIR();
+            if(is_ret==false)
+                std::cout << "  jump " << lable_end << std::endl;
+            std::cout << std::endl;
+
+            std::cout<<lable_else<<":"<<std::endl;
+            is_ret=false;
+            open_stmt->GenerateIR();
+            if(is_ret==false)
+                std::cout << "  jump " << lable_end << std::endl;
+            std::cout << std::endl;
+
+            std::cout << lable_end << ":" << std::endl;
+            is_ret=false;
+        }
+        else
+            assert(false);
+        
+    }
+};
+
+// ClosedStmt : SimpleStmt | 
+//              IF '(' Exp ')' ClosedStmt ELSE ClosedStmt
+
+class ClosedStmtAST: public BaseAST
+{
+public:
+    ClosedStmtType bnf_type;
+    std::unique_ptr<BaseExpAST> exp;
+    std::unique_ptr<BaseAST> closed_stmt1;
+    std::unique_ptr<BaseAST> closed_stmt2;
+    std::unique_ptr<BaseAST> simple_stmt;
+    void GenerateIR() override
+    {
+        if(bnf_type==ClosedStmtType::CSTMT_SIMPLE)
+        {
+            dbg_ast_printf("ClosedStmt ::= SimpleStmt;\n");
+            simple_stmt->GenerateIR();
+        }
+        else if(bnf_type==ClosedStmtType::CSTMT_ELSE)
+        {
+            dbg_ast_printf("ClosedStmt ::= IF '(' Exp ')' ClosedStmt ELSE ClosedStmt;\n");
+            std::string lable_then = "%then_" + std::to_string(label_cnt),
+                        lable_else = "%else_" + std::to_string(label_cnt),
+                        lable_end = "%end_" + std::to_string(label_cnt);
+            label_cnt++;
+
+            exp->Eval();
+            std::cout << "  br " << exp->ident << ", " << lable_then << ", " << lable_else << std::endl
+                      << std::endl;
+
+            std::cout << lable_then << ":" << std::endl;
+            is_ret=false;
+            closed_stmt1->GenerateIR();
+            if (is_ret == false)
+                std::cout << "  jump " << lable_end << std::endl;
+            std::cout << std::endl;
+
+            std::cout << lable_else << ":" << std::endl;
+            is_ret=false;
+            closed_stmt2->GenerateIR();
+            if (is_ret == false)
+                std::cout << "  jump " << lable_end << std::endl;
+            std::cout << std::endl;
+
+            std::cout << lable_end << ":" << std::endl;
+            is_ret=false;
+        }
+
+    }
+};
+
+// SimpleStmt :: = LVal "=" Exp ";" | [Exp] ";" | Block | "return" [Exp] ";";
+
+class SimpleStmtAST : public BaseAST
+{
+public:
+    SimpleStmtType bnf_type;
     std::unique_ptr<BaseExpAST> lval;
     std::unique_ptr<BaseExpAST> exp;
     std::unique_ptr<BaseAST> block;
     void GenerateIR()  override
     {
-        if(bnf_type==StmtType::STMT_RETURN)
+        if(bnf_type==SimpleStmtType::SSTMT_RETURN)
         {
-            dbg_ast_printf("Stmt ::= 'return' Exp ';';\n");
+            dbg_ast_printf("SimpleStmt ::= 'return' Exp ';';\n");
             exp->Eval();
             std::cout << "  ret " << exp->ident << std::endl;
             is_ret = true;
         }
-        else if(bnf_type==StmtType::STMT_EMPTY_RET)
+        else if(bnf_type==SimpleStmtType::SSTMT_EMPTY_RET)
         {
-            dbg_ast_printf("Stmt ::= 'return' ';';\n");
+            dbg_ast_printf("SimpleStmt ::= 'return' ';';\n");
             std::cout << "  ret 0" << std::endl;
             is_ret = true;
         }
-        else if(bnf_type==StmtType::STMT_ASSIGN)
+        else if(bnf_type==SimpleStmtType::SSTMT_ASSIGN)
         {
-            dbg_ast_printf("Stmt :: = LVal '=' Exp ';'\n");
+            dbg_ast_printf("SimpleStmt :: = LVal '=' Exp ';'\n");
             exp->Eval();
             lval->is_left=true;
             lval->Eval();
@@ -257,20 +435,20 @@ public:
             std::cout<<"  store "<<exp->ident<<", "<<info->ir_name<<std::endl;
             
         }
-        else if(bnf_type==StmtType::STMT_BLK)
+        else if(bnf_type==SimpleStmtType::SSTMT_BLK)
         {
-            dbg_ast_printf("Stmt :: = Block\n");
+            dbg_ast_printf("SimpleStmt :: = Block\n");
             symbol_table_stack.PushScope();
             block->GenerateIR();
             symbol_table_stack.PopScope();
         }
-        else if(bnf_type==StmtType::STMT_EMPTY_EXP)
+        else if(bnf_type==SimpleStmtType::SSTMT_EMPTY_EXP)
         {
-            dbg_ast_printf("Stmt :: = ';'\n");
+            dbg_ast_printf("SimpleStmt :: = ';'\n");
         }
-        else if (bnf_type == StmtType::STMT_EXP)
+        else if (bnf_type == SimpleStmtType::SSTMT_EXP)
         {
-            dbg_ast_printf("Stmt :: = EXP ';'\n");
+            dbg_ast_printf("SimpleStmt :: = EXP ';'\n");
             exp->Eval();
             exp->GenerateIR();
         }
@@ -660,9 +838,9 @@ public:
                 std::string tmp_var2 = "%" + std::to_string(symbol_cnt+1);
                 ident = "%" + std::to_string(symbol_cnt+2);
                 symbol_cnt+=3;
-                std::cout<<tmp_var1<<" = ne "<<land_exp->ident<<", 0"<<std::endl;
-                std::cout<<tmp_var2<<" = ne"<<eq_exp->ident<<", 0"<<std::endl;
-                std::cout<<ident<<" = "<<op_names["&&"]+tmp_var1<<", "<<tmp_var2<<std::endl;
+                std::cout<<"  "<<tmp_var1<<" = ne "<<land_exp->ident<<", 0"<<std::endl;
+                std::cout<<"  "<<tmp_var2<<" = ne "<<eq_exp->ident<<", 0"<<std::endl;
+                std::cout<<"  "<<ident<<" = "<<op_names["&&"]<<" "<<tmp_var1<<", "<<tmp_var2<<std::endl;
             }
             dbg_ast_printf("LAndExp :: = LAndExp(%s) '&&' EqExp(%s);\n", land_exp->ident.c_str(), eq_exp->ident.c_str());
                 }
@@ -711,9 +889,9 @@ public:
                 std::string tmp_var2 = "%" + std::to_string(symbol_cnt + 1);
                 ident = "%" + std::to_string(symbol_cnt + 2);
                 symbol_cnt += 3;
-                std::cout << tmp_var1 << " = ne " << lor_exp->ident << ", 0" << std::endl;
-                std::cout << tmp_var2 << " = ne" << land_exp->ident << ", 0" << std::endl;
-                std::cout << ident << " = " << op_names["||"] + tmp_var1 << ", " << tmp_var2 << std::endl;
+                std::cout <<"  "<< tmp_var1 << " = ne " << lor_exp->ident << ", 0" << std::endl;
+                std::cout <<"  "<< tmp_var2 << " = ne " << land_exp->ident << ", 0" << std::endl;
+                std::cout <<"  "<< ident << " = " << op_names["||"]<<" "<<tmp_var1 << ", " << tmp_var2 << std::endl;
             }
             
         }
@@ -951,7 +1129,7 @@ public:
             return;
         exp->Eval();
         Copy(exp);
-        dbg_ast_printf("InitExp :: = Exp(%s);\n", exp->ident.c_str());
+        dbg_ast_printf("InitVal :: = Exp(%s);\n", exp->ident.c_str());
         is_evaled = true;
     }
 
