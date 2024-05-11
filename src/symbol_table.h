@@ -91,4 +91,8 @@ public:
     }
 };
 
+void initSysyRuntimeLib();
+
+extern std::unordered_map<std::string,std::string> func_map;
 extern SymbolTableStack symbol_table_stack;
+

@@ -1,10 +1,13 @@
 #include "symbol_table.h"
+#include <iostream>
 #ifdef DEBUG_SYMTAB
 #define dbg_sym_printf(...) fprintf(stderr, __VA_ARGS__)
 #else
 #define dbg_sym_printf(...)
 #endif
+
 SymbolTableStack symbol_table_stack;
+std::unordered_map<std::string, std::string> func_map;
 
 std::string SymbolTable::Insert(std::string symbol,int val)
 {
@@ -58,4 +61,25 @@ SymbolTable *SymbolTable::PopScope()
     dbg_sym_printf("pop scope.\n");
     SymbolTable *sym_tab=this->parent;
     return sym_tab;
+}
+
+void initSysyRuntimeLib()
+{
+    func_map["getint"]="i32";
+    func_map["getch"]="i32";
+    func_map["getarray"]="i32";
+    func_map["putint"]="void";
+    func_map["putch"]="void";
+    func_map["putarray"]="void";
+    func_map["starttime"]="void";
+    func_map["stoptime"]="void";
+    std::cout<<"decl @getint(): i32"<<std::endl;
+    std::cout<<"decl @getch(): i32"<<std::endl;
+    std::cout<<"decl @getarray(*i32): i32"<<std::endl;
+    std::cout<<"decl @putint(i32)"<<std::endl;
+    std::cout<<"decl @putch(i32)"<<std::endl;
+    std::cout<<"decl @putarray(i32, *i32)"<<std::endl;
+    std::cout<<"decl @starttime()"<<std::endl;
+    std::cout<<"decl @stoptime()"<<std::endl;
+
 }

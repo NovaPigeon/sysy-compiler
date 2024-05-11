@@ -35,19 +35,20 @@ using namespace std;
   BaseAST *ast_val;
   BaseExpAST *exp_val;
   VecAST *vec_val;
+  ExpVecAST *exp_vec_val;
 }
 
 
 // lexer 返回的所有 token 种类的声明
 // 注意 IDENT 和 INT_CONST 会返回 token 的值, 分别对应 str_val 和 int_val
-%token INT RETURN CONST IF ELSE WHILE BREAK CONTINUE
+%token INT VOID RETURN CONST IF ELSE WHILE BREAK CONTINUE
 %token <str_val> IDENT
 %token <int_val> INT_CONST
 %token <str_val> LE GE EQ NEQ AND OR
 
 // 非终结符的类型定义
-%type <ast_val> FuncDef FuncType Block Stmt
-%type <ast_val> Decl ConstDecl BType ConstDef BlockItem VarDef VarDecl
+%type <ast_val> FuncDef Type Block Stmt
+%type <ast_val> Decl ConstDecl ConstDef BlockItem VarDef VarDecl
 %type <exp_val> Exp PrimaryExp UnaryExp MulExp 
 %type <exp_val> AddExp RelExp EqExp LAndExp LOrExp
 %type <exp_val> ConstInitVal LVal ConstExp InitVal
@@ -55,6 +56,9 @@ using namespace std;
 %type <str_val> UnaryOP MulOP AddOP RelOP EqOP
 %type <int_val> Number
 %type <ast_val> OpenStmt ClosedStmt SimpleStmt
+%type <vec_val> FuncFParams CompUnits
+%type <exp_vec_val> FuncRParams
+%type <ast_val> FuncFParam
 
 
 
@@ -66,38 +70,103 @@ using namespace std;
 // 此时我们应该把 FuncDef 返回的结果收集起来, 作为 AST 传给调用 parser 的函数
 // $1 指代规则里第一个符号的返回值, 也就是 FuncDef 的返回值
 CompUnit
-  : FuncDef {
-    auto comp_unit = make_unique<CompUnitAST>();
-    comp_unit->func_def = unique_ptr<BaseAST>($1);
-    ast = move(comp_unit);
+  : CompUnits {
+    auto comp_unit=make_unique<CompUnitAST>();
+    comp_unit->comp_units=unique_ptr<VecAST>($1);
+    ast=move(comp_unit);
   }
   ;
 
-// FuncDef ::= FuncType IDENT '(' ')' Block;
+CompUnits 
+  : FuncDef {
+    auto comp_units = new VecAST();
+    auto func_def=unique_ptr<BaseAST>($1);
+    comp_units->push_back(func_def);
+    $$=comp_units;
+  }
+  | Decl {
+    auto comp_units = new VecAST();
+    auto decl=unique_ptr<BaseAST>($1);
+    comp_units->push_back(decl);
+    $$=comp_units;
+  }
+  | CompUnits FuncDef {
+    auto comp_units = ($1);
+    auto func_def=unique_ptr<BaseAST>($2);
+    comp_units->push_back(func_def);
+    $$=comp_units;
+  }
+  | CompUnits Decl {
+    auto comp_units = ($1);
+    auto decl=unique_ptr<BaseAST>($2);
+    comp_units->push_back(decl);
+    $$=comp_units;
+  }
+  ;
+
+// FuncDef ::= Type IDENT '(' ')' Block;
 // 我们这里可以直接写 '(' 和 ')', 因为之前在 lexer 里已经处理了单个字符的情况
 // 解析完成后, 把这些符号的结果收集起来, 然后拼成一个新的字符串, 作为结果返回
 // $$ 表示非终结符的返回值, 我们可以通过给这个符号赋值的方法来返回结果
-// 你可能会问, FuncType, IDENT 之类的结果已经是字符串指针了
+// 你可能会问, Type, IDENT 之类的结果已经是字符串指针了
 // 为什么还要用 unique_ptr 接住它们, 然后再解引用, 把它们拼成另一个字符串指针呢
 // 因为所有的字符串指针都是我们 new 出来的, new 出来的内存一定要 delete
 // 否则会发生内存泄漏, 而 unique_ptr 这种智能指针可以自动帮我们 delete
 // 虽然此处你看不出用 unique_ptr 和手动 delete 的区别, 但当我们定义了 AST 之后
 // 这种写法会省下很多内存管理的负担
 FuncDef
-  : FuncType IDENT '(' ')' Block {
+  : Type IDENT '(' ')' Block {
     auto funcdef = new FuncDefAST();
     funcdef->func_type = unique_ptr<BaseAST>($1);
     funcdef->ident = *unique_ptr<string>($2);
     funcdef->block = unique_ptr<BaseAST>($5);
+    funcdef->func_fparams=unique_ptr<VecAST>(new VecAST());
+    $$ = funcdef;
+  }
+  | Type IDENT '(' FuncFParams ')' Block {
+    auto funcdef = new FuncDefAST();
+    funcdef->func_type = unique_ptr<BaseAST>($1);
+    funcdef->ident = *unique_ptr<string>($2);
+    funcdef->block = unique_ptr<BaseAST>($6);
+    funcdef->func_fparams=unique_ptr<VecAST>($4);
     $$ = funcdef;
   }
   ;
 
+FuncFParams
+  : FuncFParam {
+    auto params=new VecAST();
+    auto func_fparam=unique_ptr<BaseAST>($1);
+    params->push_back(func_fparam);
+    $$=params;
+  }
+  | FuncFParams ',' FuncFParam {
+    auto params=($1);
+    auto func_fparam=unique_ptr<BaseAST>($3);
+    params->push_back(func_fparam);
+    $$=params;
+  }
+  ;
+
+FuncFParam
+  : Type IDENT {
+    auto func_fparam=new FuncFParamAST();
+    func_fparam->btype=unique_ptr<BaseAST>($1);
+    func_fparam->ident=*unique_ptr<string>($2);
+    $$=func_fparam;
+  }
+  ;
+
 // 同上, 不再解释
-FuncType
+Type
   : INT {
-    auto functype=new FuncTypeAST();
+    auto functype=new TypeAST();
     functype->type="int";
+    $$ = functype;
+  }
+  | VOID {
+    auto functype=new TypeAST();
+    functype->type="void";
     $$ = functype;
   }
   ;
@@ -116,31 +185,31 @@ Block
   ;
 
 BlockItems
-  : BlockItems BlockItem {
-    auto items=($1);
-    auto block_item=unique_ptr<BaseAST>($2);
+  : BlockItem {
+    auto items=new VecAST();
+    auto block_item=unique_ptr<BaseAST>($1);
     items->push_back(block_item);
     $$=items;
   }
-  | BlockItem {
-    auto items=new VecAST();
-    auto block_item=unique_ptr<BaseAST>($1);
+  | BlockItems BlockItem {
+    auto items=($1);
+    auto block_item=unique_ptr<BaseAST>($2);
     items->push_back(block_item);
     $$=items;
   }
   ;
 
 BlockItem
-  : Decl {
-    auto block_item=new BlockItemAST();
-    block_item->decl=unique_ptr<BaseAST>($1);
-    block_item->bnf_type=BlockItemType::BLK_DECL;
-    $$=block_item;
-  }
-  | Stmt {
+  : Stmt {
     auto block_item=new BlockItemAST();
     block_item->stmt=unique_ptr<BaseAST>($1);;
     block_item->bnf_type=BlockItemType::BLK_STMT;
+    $$=block_item;
+  }
+  | Decl {
+    auto block_item=new BlockItemAST();
+    block_item->decl=unique_ptr<BaseAST>($1);
+    block_item->bnf_type=BlockItemType::BLK_DECL;
     $$=block_item;
   }
   ;
@@ -252,6 +321,35 @@ UnaryExp
     unary_exp->unary_exp=unique_ptr<BaseExpAST>($2);
     unary_exp->bnf_type=UnaryExpType::UNARY;
     $$=unary_exp;
+  }
+  | IDENT '(' ')' {
+    auto unary_exp=new UnaryExpAST();
+    unary_exp->func_name=*unique_ptr<string>($1);
+    unary_exp->func_rparams=unique_ptr<ExpVecAST>(new ExpVecAST());
+    unary_exp->bnf_type=UnaryExpType::CALL;
+    $$=unary_exp;
+  }
+  | IDENT '(' FuncRParams ')' {
+    auto unary_exp=new UnaryExpAST();
+    unary_exp->func_name=*unique_ptr<string>($1);
+    unary_exp->func_rparams=unique_ptr<ExpVecAST>($3);
+    unary_exp->bnf_type=UnaryExpType::CALL;
+    $$=unary_exp;
+  }
+  ;
+
+FuncRParams
+  : FuncRParams ',' Exp {
+    auto params=($1);
+    auto exp=unique_ptr<BaseExpAST>($3);
+    params->push_back(exp);
+    $$=params;
+  }
+  | Exp {
+    auto params=new ExpVecAST();
+    auto exp=unique_ptr<BaseExpAST>($1);
+    params->push_back(exp);
+    $$=params;
   }
   ;
 
@@ -449,19 +547,11 @@ Decl
   ;
 
 ConstDecl
-  : CONST BType ConstDefs ';' {
+  : CONST Type ConstDefs ';' {
     auto const_decl=new ConstDeclAST();
     const_decl->btype=unique_ptr<BaseAST>($2);
     const_decl->const_defs=unique_ptr<VecAST>($3);
     $$=const_decl;
-  }
-  ;
-
-BType
-  : INT {
-    auto btype=new BTypeAST();
-    btype->type="int";
-    $$=btype;
   }
   ;
 
@@ -515,7 +605,7 @@ LVal
   ;
 
 VarDecl
-  : BType VarDefs ';' {
+  : Type VarDefs ';' {
     auto var_decl=new VarDeclAST();
     var_decl->btype=unique_ptr<BaseAST>($1);
     var_decl->var_defs=unique_ptr<VecAST>($2);

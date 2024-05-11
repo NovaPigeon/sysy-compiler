@@ -10,7 +10,7 @@
 
 #include "symbol_table.h"
 
-//#define DEBUG_AST
+#define DEBUG_AST
 #ifdef DEBUG_AST
 #define dbg_ast_printf(...) fprintf(stderr, __VA_ARGS__)
 #else
@@ -19,11 +19,11 @@
 
 class BaseAST;
 class VecAST;
+class ExpVecAST;
 class BaseExpAST;
 
 class CompUnitAST;
 class FuncDefAST;
-class FuncTypeAST;
 class BlockAST;
 class StmtAST;
 
@@ -39,7 +39,7 @@ class LOrExpAST;
 
 class DeclAST;
 class ConstDeclAST;
-class BTypeAST;
+class TypeAST;
 class ConstDefAST;
 class ConstInitValAST;
 class BlockItemAST;
@@ -53,6 +53,8 @@ class OpenStmtAST;
 class ClosedStmtAST;
 class SimpleStmtAST;
 
+class FuncFParamAST;
+
 
 // enums
 enum PrimaryExpType
@@ -64,7 +66,8 @@ enum PrimaryExpType
 enum UnaryExpType
 {
     PRIMARY,
-    UNARY
+    UNARY,
+    CALL
 };
 enum BianryOPExpType
 {
@@ -156,11 +159,22 @@ public:
 
 };
 
+class ExpVecAST
+{
+public:
+    std::vector<std::unique_ptr<BaseExpAST>> vec;
+    void push_back(std::unique_ptr<BaseExpAST> &ast)
+    {
+        vec.push_back(std::move(ast));
+    }
+};
+
 // 所有 AST 的基类
 class BaseAST
 {
 public:
     std::string ident = "";
+    bool is_global=false;
     virtual ~BaseAST() = default;
     virtual void GenerateIR() = 0;
 };
@@ -187,51 +201,99 @@ public:
 };
 
 // CompUnit 是 BaseAST
-// CompUnit :: = FuncDef;
+// CompUnit ::= [CompUnit] FuncDef | Decl;
 class CompUnitAST : public BaseAST
 {
 public:
     // 用智能指针管理对象
-    std::unique_ptr<BaseAST> func_def;
+    std::unique_ptr<VecAST> comp_units;
     void GenerateIR()  override
-    {   
-        dbg_ast_printf("CompUnit :: = FuncDef;\n");
-        func_def->GenerateIR();
+    {
+        dbg_ast_printf("CompUnit ::= [CompUnit] FuncDef;\n");
+        symbol_table_stack.PushScope();
+        initSysyRuntimeLib();
+        for(auto &item:comp_units->vec)
+        {
+            item->is_global=true;
+            item->GenerateIR();
+        }
+        symbol_table_stack.PopScope();
     }
 };
 
 // FuncDef 也是 BaseAST
-// FuncDef ::= FuncType IDENT "(" ")" Block;
+// FuncDef ::= FuncType IDENT "(" [FuncFParams] ")" Block;
 class FuncDefAST : public BaseAST
 {
 public:
     std::unique_ptr<BaseAST> func_type;
     std::unique_ptr<BaseAST> block;
+    std::unique_ptr<VecAST> func_fparams;
     void GenerateIR()  override
     {
         func_type->GenerateIR();
-        dbg_ast_printf("FuncDef ::= %s %s '(' ')' Block;\n",ident.c_str(),func_type->ident.c_str());
-        std::cout<<"fun @"
-                 <<ident
-                 <<"(): ";
-        std::cout<<func_type->ident;
+        dbg_ast_printf("FuncDef ::= %s %s '(' [FuncFParams] ')' Block;\n", 
+        ident.c_str(), 
+        func_type->ident.c_str());
+        
+        symbol_cnt=0;
+        assert(func_map.find(ident)==func_map.end());
+        func_map[ident]=func_type->ident;
+        symbol_table_stack.PushScope();
+        std::vector<std::string> params;
+        std::cout<<"fun @"<<ident<<"(";
+
+        int cnt=0;
+        for(auto &param: func_fparams->vec)
+        {
+            if(cnt!=0)
+                std::cout<<", ";
+            param->GenerateIR();
+            params.push_back(param->ident);
+            cnt++;
+        }
+
+        std::cout<<")";
+        if(func_type->ident=="i32")
+            std::cout<<": "<<func_type->ident;
         std::cout << " {" << std::endl;
         std::cout << "%entry:" << std::endl;
+
+        for(auto& param: params)
+        {
+            symbol_table_stack.Insert(param, "%" + param);
+            symbol_info_t* info=symbol_table_stack.LookUp(param);
+            std::cout<<"  "<<info->ir_name<<" = alloc i32"<<std::endl;
+            std::cout<<"  store @"<<param<<", "<<info->ir_name<<std::endl;
+        }
         block->GenerateIR();
         if(is_ret==false)
-            std::cout<<"  ret 0"<<std::endl;
+        {
+            if (func_type->ident == "i32")
+                std::cout << "  ret 0" << std::endl;
+            else if(func_type->ident=="void")
+                std::cout<<"  ret"<<std::endl;
+        }
+                
+        
         std::cout << "}" << std::endl;
+        symbol_table_stack.PopScope();
+        is_ret=false;
     }
 };
 
-// FuncType ::= "int";
-class FuncTypeAST : public BaseAST
+// Type ::= "int" | "void";
+class TypeAST : public BaseAST
 {
 public:
     std::string type;
     void GenerateIR() override
-    {
-        ident= "i32";
+    {   if(type=="int")
+            ident= "i32";
+        else if(type=="void")
+            ident="void";
+        else
+            assert(false);
     }
 };
 
@@ -556,11 +618,12 @@ public:
     }
     void Eval() override
     {
+
         if(is_evaled)
             return;
+        dbg_ast_printf("Exp ::= LOrExp;\n");
         lor_exp->Eval();
         Copy(lor_exp);
-        dbg_ast_printf("Exp ::= LOrExp(%s);\n",ident.c_str());
         is_evaled=true;
     }
 };
@@ -579,9 +642,9 @@ public:
             return;
         if (bnf_type == PrimaryExpType::EXP)
         {
+            dbg_ast_printf("PrimaryExp :: = '(' Exp ')'\n");
             exp->Eval();
             Copy(exp);
-            dbg_ast_printf("PrimaryExp :: = '(' Exp(%s) ')'\n", ident.c_str());
         }
         else if (bnf_type == PrimaryExpType::NUMBER)
         {
@@ -592,9 +655,9 @@ public:
         }
         else if(bnf_type==PrimaryExpType::LVAL)
         {
+            dbg_ast_printf("PrimaryExp :: = LVal\n");
             lval->Eval();
             Copy(lval);
-            dbg_ast_printf("PrimaryExp :: = LVal(%s)\n", ident.c_str());
         }
         else
             assert(false);
@@ -606,23 +669,25 @@ public:
     }
 };
 
-// UnaryExp :: = PrimaryExp | UnaryOp UnaryExp;
+// UnaryExp :: = PrimaryExp | IDENT "(" [FuncRParams] ")" | UnaryOp UnaryExp;
 class UnaryExpAST : public BaseExpAST
 {
 public:
     UnaryExpType bnf_type;
     std::unique_ptr<BaseExpAST> primary_exp;
     std::unique_ptr<BaseExpAST> unary_exp;
+    std::unique_ptr<ExpVecAST> func_rparams;
     std::string unary_op;
+    std::string func_name;
     void Eval() override
     {
         if(is_evaled)
             return;
         if (bnf_type == UnaryExpType::PRIMARY)
         {
+            dbg_ast_printf("UnaryExp :: = PrimaryExp\n");
             primary_exp->Eval();
             Copy(primary_exp);
-            dbg_ast_printf("UnaryExp :: = PrimaryExp(%s)\n", ident.c_str());
         }
         else if (bnf_type == UnaryExpType::UNARY)
         {
@@ -630,6 +695,7 @@ public:
             Copy(unary_exp);
             if(unary_exp->is_const)
             {
+                dbg_ast_printf("UnaryExp :: = %s UnaryExp\n", unary_op.c_str());
                 if (unary_op == "+")
                 {
                     val=unary_exp->val;
@@ -645,10 +711,10 @@ public:
                 else
                     assert(false);
                 ident=std::to_string(val);
-                dbg_ast_printf("UnaryExp :: = %s UnaryExp(%d)\n",unary_op.c_str(),unary_exp->val);
             }
             else
-            {   
+            {
+                dbg_ast_printf("UnaryExp :: = %s UnaryExp\n", unary_op.c_str());
                 if (unary_op == "-")
                 {
                     ident = "%" + std::to_string(symbol_cnt);
@@ -662,10 +728,37 @@ public:
                     std::cout << "  " << ident << " = eq " << unary_exp->ident <<", 0"<< std::endl;
                 }
                 
-                dbg_ast_printf("UnaryExp :: = %s UnaryExp(%s)\n",unary_op.c_str(),unary_exp->ident.c_str());
-                
             }
             is_evaled = true;
+        }
+        else if(bnf_type==UnaryExpType::CALL)
+        {
+            dbg_ast_printf("UnaryExp :: = IDENT '(' [FuncRParams] ')'\n");
+            for(auto &param: func_rparams->vec)
+                param->Eval();
+            
+            assert(func_map.find(func_name)!=func_map.end());
+            std::string ret_type=func_map[func_name];
+            if(ret_type=="i32")
+            {
+                ident="%"+std::to_string(symbol_cnt);
+                symbol_cnt++;
+                std::cout<<"  "<<ident<<" = ";
+            }
+            else if(ret_type=="void")
+                std::cout<<"  ";
+            else
+                assert(false);
+            std::cout<<"call @"<<func_name<<"(";
+            int cnt=0;
+            for (auto &param : func_rparams->vec)
+            {
+                if(cnt!=0)
+                    std::cout<<", ";
+                std::cout<<param->ident;
+                cnt++;
+            }
+            std::cout<<")"<<std::endl;
         }
     }
     void GenerateIR()  override
@@ -688,12 +781,13 @@ public:
             return;
         if (bnf_type == BianryOPExpType::INHERIT)
         {
+            dbg_ast_printf("MulExp :: = UnaryExp;\n");
             unary_exp->Eval();
             Copy(unary_exp);
-            dbg_ast_printf("MulExp :: = UnaryExp(%s);\n", ident.c_str());
         }
         else if (bnf_type == BianryOPExpType::EXPAND)
         {
+            dbg_ast_printf("MulExp :: = MulExp %s UnaryExp;\n", op.c_str());
             mul_exp->Eval();
             unary_exp->Eval();
             is_const=mul_exp->is_const && unary_exp->is_const;
@@ -716,7 +810,6 @@ public:
                 symbol_cnt++;
                 std::cout<<"  "<<ident<<" = "<<op_names[op]<<" "<<mul_exp->ident<<", "<<unary_exp->ident<<std::endl;
             }
-            dbg_ast_printf("MulExp :: = MulExp(%s) %s UnaryExp(%s);\n", mul_exp->ident.c_str(), op.c_str(), unary_exp->ident.c_str());
         }
         else
             assert(false);
@@ -741,13 +834,13 @@ public:
             return;
         if (bnf_type == BianryOPExpType::INHERIT)
         {
-            
+            dbg_ast_printf("AddExp :: = MulExp;\n");
             mul_exp->Eval();
             Copy(mul_exp);
-            dbg_ast_printf("AddExp :: = MulExp(%d);\n",val);
         }
         else if (bnf_type == BianryOPExpType::EXPAND)
         {
+            dbg_ast_printf("AddExp :: = AddExp %s MulExp;\n",  op.c_str());
             add_exp->Eval();
             mul_exp->Eval();
             is_const=add_exp->is_const&&mul_exp->is_const;
@@ -768,7 +861,6 @@ public:
                 symbol_cnt++;
                 std::cout << "  " << ident << " = " << op_names[op] << " " << add_exp->ident << ", " << mul_exp->ident << std::endl;
             }
-            dbg_ast_printf("AddExp :: = AddExp(%s) %s MulExp(%s);\n", add_exp->ident.c_str(), op.c_str(), mul_exp->ident.c_str());
         }
         else
             assert(false);
@@ -794,12 +886,13 @@ public:
             return;
         if (bnf_type == BianryOPExpType::INHERIT)
         {
+            dbg_ast_printf("RelExp :: = AddExp;\n");
             add_exp->Eval();
             Copy(add_exp);
-            dbg_ast_printf("RelExp :: = AddExp(%d);\n",val);
         }
         else if (bnf_type == BianryOPExpType::EXPAND)
         {
+            dbg_ast_printf("RelExp :: = RelExp %s AddExp;\n",op.c_str());
             rel_exp->Eval();
             add_exp->Eval();
             is_const=rel_exp->is_const&&add_exp->is_const;
@@ -824,7 +917,6 @@ public:
                 symbol_cnt++;
                 std::cout << "  " << ident << " = " << op_names[op] << " " << rel_exp->ident << ", " << add_exp->ident << std::endl;
             }
-            dbg_ast_printf("RelExp :: = RelExp(%s) %s AddExp(%s);\n", rel_exp->ident.c_str(), op.c_str(), add_exp->ident.c_str());
         }
         else
             assert(false);
@@ -851,14 +943,13 @@ public:
             return;
         if (bnf_type == BianryOPExpType::INHERIT)
         {
-            
+            dbg_ast_printf("EqExp :: = RelExp;\n");
             rel_exp->Eval();
             Copy(rel_exp);
-            dbg_ast_printf("EqExp :: = RelExp(%s);\n",ident.c_str());
         }
         else if (bnf_type == BianryOPExpType::EXPAND)
         {
-            
+            dbg_ast_printf("EqExp :: = EqExp %s RelExp;\n", op.c_str());
             eq_exp->Eval();
             rel_exp->Eval();
             is_const=eq_exp->is_const&&rel_exp->is_const;
@@ -879,7 +970,6 @@ public:
                 symbol_cnt++;
                 std::cout << "  " << ident << " = " << op_names[op] << " " << eq_exp->ident << ", " << rel_exp->ident << std::endl;
             }
-            dbg_ast_printf("EqExp :: = EqExp(%s) %s RelExp(%s);\n", eq_exp->ident.c_str(),op.c_str(),rel_exp->ident.c_str());
         }
         else
             assert(false);
@@ -904,12 +994,13 @@ public:
             return;
         if (bnf_type == BianryOPExpType::INHERIT)
         {
+            dbg_ast_printf("LAndExp :: = EqExp;\n");
             eq_exp->Eval();
             Copy(eq_exp);
-            dbg_ast_printf("LAndExp :: = EqExp(%s);\n",ident.c_str());
         }
         else if (bnf_type == BianryOPExpType::EXPAND)
         {
+            dbg_ast_printf("LAndExp :: = LAndExp '&&' EqExp;\n");
             land_exp->Eval();
             if(land_exp->is_const && land_exp->val==0)
             {
@@ -959,7 +1050,6 @@ public:
                 ident = std::to_string(val);
                 is_const = true;
             }
-            dbg_ast_printf("LAndExp :: = LAndExp(%s) '&&' EqExp(%s);\n", land_exp->ident.c_str(), eq_exp->ident.c_str());
         }
         else
             assert(false);
@@ -985,12 +1075,13 @@ public:
             return;
         if (bnf_type == BianryOPExpType::INHERIT)
         {
+            dbg_ast_printf("LOrExp :: = LAndExp;\n");
             land_exp->Eval();
             Copy(land_exp);
-            dbg_ast_printf("LOrExp :: = LAndExp(%s);\n",ident.c_str());
         }
         else if (bnf_type == BianryOPExpType::EXPAND)
         {
+            dbg_ast_printf("LOrExp :: = LOrExp || LAndExp;\n");
             lor_exp->Eval();
             if (lor_exp->is_const && lor_exp->val == 1)
             {
@@ -1043,7 +1134,6 @@ public:
                 ident=std::to_string(val);
                 is_const=true;
             }
-            dbg_ast_printf("LOrExp :: = LOrExp(%s) || LAndExp(%s);\n",lor_exp->ident.c_str(),land_exp->ident.c_str());
         }
         else
             assert(false);
@@ -1067,11 +1157,13 @@ public:
         if(bnf_type==DeclType::CONST_DECL)
         {
             dbg_ast_printf("Decl :: = ConstDecl\n");
+            const_decl->is_global=is_global;
             const_decl->GenerateIR();
         }
         else if(bnf_type==DeclType::VAR_DECL)
         {
             dbg_ast_printf("Decl :: = VarDecl\n");
+            var_decl->is_global = is_global;
             var_decl->GenerateIR();
         }
         else
@@ -1093,19 +1185,9 @@ public:
         dbg_ast_printf("ConstDecl :: = 'const' i32 ConstDef { ',' ConstDef } ';'\n");
         for(auto& def: const_defs->vec)
         {
+            def->is_global = is_global;
             def->GenerateIR();
         }
-    }
-};
-
-// BType :: = "int";
-class BTypeAST: public BaseAST
-{
-public:
-    std::string type;
-    void GenerateIR()  override
-    {
-        ident="i32";
     }
 };
 
@@ -1137,9 +1219,9 @@ public:
     {
         if(is_evaled)
             return;
+        dbg_ast_printf("ConstInitVal :: = ConstExp;\n");
         const_exp->Eval();
         Copy(const_exp);
-        dbg_ast_printf("ConstInitVal :: = ConstExp(%s);\n",const_exp->ident.c_str());
         is_evaled=true;
     }
 };
@@ -1176,7 +1258,7 @@ public:
     {
         if(is_evaled)
             return;
-        
+        dbg_ast_printf("LVal :: = IDENT;\n");
         symbol_info_t *info=symbol_table_stack.LookUp(ident);
         assert(info!=nullptr);
         if(!is_left)
@@ -1195,7 +1277,6 @@ public:
             }
         }
 
-        dbg_ast_printf("LVal :: = IDENT(%s);\n", info->ir_name.c_str());
 
         is_evaled=true;
     }
@@ -1215,9 +1296,9 @@ public:
     {
         if(is_evaled)
             return;
+        dbg_ast_printf("ConstExp :: = Exp;\n");
         exp->Eval();
         Copy(exp);
-        dbg_ast_printf("ConstExp :: = Exp(%s);\n",ident.c_str());
         is_evaled=true;
 
     }
@@ -1238,6 +1319,7 @@ public:
         dbg_ast_printf("VarDecl :: = BType VarDef { ',' VarDef } ';';\n");
         for(auto& def: var_defs->vec)
         {
+            def->is_global=is_global;
             def->GenerateIR();
         }
     }
@@ -1247,23 +1329,31 @@ public:
 class VarDefAST: public BaseAST
 {
 public:
-    
     VarDefType bnf_type;
     std::unique_ptr<BaseExpAST> init_val;
     void GenerateIR() override
     {
+        if(is_global)
+            std::cout<<"global ";
         std::string ir_name="@"+ident;
         ir_name=symbol_table_stack.Insert(ident,ir_name);
-        std::cout<<"  "<<ir_name<<" = alloc i32"<<std::endl;
+        std::cout<<"  "<<ir_name<<" = alloc i32";
+        if(!is_global)
+            std::cout << std::endl;
         if(bnf_type==VarDefType::VAR_ASSIGN)
         {
             dbg_ast_printf("VarDef :: IDENT '=' InitVal;\n");
             init_val->Eval();
-            std::cout<<"  "<<"store "<<init_val->ident<<", "<<ir_name<<std::endl;
+            if(is_global)
+                std::cout<<", "<<init_val->ident<<std::endl;
+            else
+                std::cout<<"  "<<"store "<<init_val->ident<<", "<<ir_name<<std::endl;
         }
         else
         {
             dbg_ast_printf("VarDef :: IDENT\n");
+            if(is_global)
+                std::cout<<", zeroinit"<<std::endl;
         }
     }
 };
@@ -1285,5 +1375,21 @@ public:
 
     void GenerateIR()  override
     {
+    }
+};
+
+// FuncFParam :: = BType IDENT;
+class FuncFParamAST: public BaseAST
+{
+public:
+    std::unique_ptr<BaseAST> btype;
+    void GenerateIR() override
+    {
+        btype->GenerateIR();
+        dbg_ast_printf("FuncFParam ::= BType(%s) IDENT(%s)\n;",
+                        btype->ident.c_str(),
+                        ident.c_str());
+        std::cout<<"@"<<ident<<": "<<btype->ident;
+        
     }
 };
