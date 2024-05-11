@@ -210,12 +210,14 @@ public:
     void GenerateIR()  override
     {
         dbg_ast_printf("CompUnit ::= [CompUnit] FuncDef;\n");
-        initSysyRuntimeLib();
+        symbol_table_stack.PushScope();
+        //initSysyRuntimeLib();
         for(auto &item:comp_units->vec)
         {
             item->is_global=true;
             item->GenerateIR();
         }
+        symbol_table_stack.PopScope();
     }
 };
 
