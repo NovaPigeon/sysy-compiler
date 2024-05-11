@@ -218,6 +218,8 @@ public:
         std::cout << " {" << std::endl;
         std::cout << "%entry:" << std::endl;
         block->GenerateIR();
+        if(is_ret==false)
+            std::cout<<"  ret 0"<<std::endl;
         std::cout << "}" << std::endl;
     }
 };
