@@ -1,9 +1,58 @@
   .text
+  .globl getint
+getint:
+
+  # prologue
+  li t0, 0
+  addi sp, sp, t0
+  .globl getch
+getch:
+
+  # prologue
+  li t0, 0
+  addi sp, sp, t0
+  .globl getarray
+getarray:
+
+  # prologue
+  li t0, 0
+  addi sp, sp, t0
+  .globl putint
+putint:
+
+  # prologue
+  li t0, 0
+  addi sp, sp, t0
+  .globl putch
+putch:
+
+  # prologue
+  li t0, 0
+  addi sp, sp, t0
+  .globl putarray
+putarray:
+
+  # prologue
+  li t0, 0
+  addi sp, sp, t0
+  .globl starttime
+starttime:
+
+  # prologue
+  li t0, 0
+  addi sp, sp, t0
+  .globl stoptime
+stoptime:
+
+  # prologue
+  li t0, 0
+  addi sp, sp, t0
   .globl main
 main:
 
   # prologue
-  addi sp, sp, -176
+  li t0, -32
+  addi sp, sp, t0
 entry:
 
   # alloc
@@ -14,325 +63,27 @@ entry:
   # alloc
 
   # store
-  li t0, 2
-  sw t0, 4(sp)
+  sw x0, 4(sp)
 
-  # alloc
-
-  # store
-  li t0, 3
+  # load
+  lw t0, 0(sp)
   sw t0, 8(sp)
 
-  # alloc
-
-  # store
-  li t0, 3
+  # load
+  lw t0, 4(sp)
   sw t0, 12(sp)
 
-  # alloc
-
-  # store
-  li t0, 4
-  sw t0, 16(sp)
-
-  # load
-  lw t0, 4(sp)
-  sw t0, 20(sp)
-
-  # load
+  # binary
   lw t0, 8(sp)
-  sw t0, 24(sp)
-
-  # binary
-  lw t0, 20(sp)
-  lw t1, 24(sp)
-  sgt t2, t0, t1
-  sw t2, 28(sp)
-
-  # branch
-  lw t0, 28(sp)
-  bnez  t0, then_0
-  j     end_0
-then_0:
-
-  # load
-  lw t0, 0(sp)
-  sw t0, 32(sp)
-
-  # binary
-  lw t0, 32(sp)
-  li t1, 1
+  lw t1, 12(sp)
   add t2, t0, t1
-  sw t2, 36(sp)
-
-  # store
-  lw t0, 36(sp)
-  sw t0, 0(sp)
-
-  # jump
-  j     end_0
-end_0:
-
-  # load
-  lw t0, 4(sp)
-  sw t0, 40(sp)
-
-  # load
-  lw t0, 12(sp)
-  sw t0, 44(sp)
-
-  # binary
-  lw t0, 40(sp)
-  lw t1, 44(sp)
-  slt t2, t0, t1
-  sw t2, 48(sp)
-
-  # branch
-  lw t0, 48(sp)
-  bnez  t0, then_1
-  j     end_1
-then_1:
-
-  # load
-  lw t0, 0(sp)
-  sw t0, 52(sp)
-
-  # binary
-  lw t0, 52(sp)
-  li t1, 2
-  add t2, t0, t1
-  sw t2, 56(sp)
-
-  # store
-  lw t0, 56(sp)
-  sw t0, 0(sp)
-
-  # jump
-  j     end_1
-end_1:
-
-  # load
-  lw t0, 12(sp)
-  sw t0, 60(sp)
-
-  # load
-  lw t0, 16(sp)
-  sw t0, 64(sp)
-
-  # binary
-  lw t0, 60(sp)
-  lw t1, 64(sp)
-  slt t2, t0, t1
-  xori t2, t2, 1
-  sw t2, 68(sp)
-
-  # branch
-  lw t0, 68(sp)
-  bnez  t0, then_2
-  j     end_2
-then_2:
-
-  # load
-  lw t0, 0(sp)
-  sw t0, 72(sp)
-
-  # binary
-  lw t0, 72(sp)
-  li t1, 4
-  add t2, t0, t1
-  sw t2, 76(sp)
-
-  # store
-  lw t0, 76(sp)
-  sw t0, 0(sp)
-
-  # jump
-  j     end_2
-end_2:
-
-  # load
-  lw t0, 8(sp)
-  sw t0, 80(sp)
-
-  # load
-  lw t0, 12(sp)
-  sw t0, 84(sp)
-
-  # binary
-  lw t0, 80(sp)
-  lw t1, 84(sp)
-  sgt t2, t0, t1
-  xori t2, t2, 1
-  sw t2, 88(sp)
-
-  # branch
-  lw t0, 88(sp)
-  bnez  t0, then_3
-  j     end_3
-then_3:
-
-  # load
-  lw t0, 0(sp)
-  sw t0, 92(sp)
-
-  # binary
-  lw t0, 92(sp)
-  li t1, 8
-  add t2, t0, t1
-  sw t2, 96(sp)
-
-  # store
-  lw t0, 96(sp)
-  sw t0, 0(sp)
-
-  # jump
-  j     end_3
-end_3:
-
-  # load
-  lw t0, 8(sp)
-  sw t0, 100(sp)
-
-  # load
-  lw t0, 12(sp)
-  sw t0, 104(sp)
-
-  # binary
-  lw t0, 100(sp)
-  lw t1, 104(sp)
-  xor t2, t0, t1
-  seqz t2, t2
-  sw t2, 108(sp)
-
-  # branch
-  lw t0, 108(sp)
-  bnez  t0, then_4
-  j     end_4
-then_4:
-
-  # load
-  lw t0, 0(sp)
-  sw t0, 112(sp)
-
-  # binary
-  lw t0, 112(sp)
-  li t1, 16
-  add t2, t0, t1
-  sw t2, 116(sp)
-
-  # store
-  lw t0, 116(sp)
-  sw t0, 0(sp)
-
-  # jump
-  j     end_4
-end_4:
-
-  # load
-  lw t0, 8(sp)
-  sw t0, 120(sp)
-
-  # load
-  lw t0, 12(sp)
-  sw t0, 124(sp)
-
-  # binary
-  lw t0, 120(sp)
-  lw t1, 124(sp)
-  xor t2, t0, t1
-  snez t2, t2
-  sw t2, 128(sp)
-
-  # branch
-  lw t0, 128(sp)
-  bnez  t0, then_5
-  j     end_5
-then_5:
-
-  # load
-  lw t0, 0(sp)
-  sw t0, 132(sp)
-
-  # binary
-  lw t0, 132(sp)
-  li t1, 32
-  add t2, t0, t1
-  sw t2, 136(sp)
-
-  # store
-  lw t0, 136(sp)
-  sw t0, 0(sp)
-
-  # jump
-  j     end_5
-end_5:
-
-  # load
-  lw t0, 16(sp)
-  sw t0, 140(sp)
-
-  # binary
-  lw t0, 140(sp)
-  li t1, -5
-  sgt t2, t0, t1
-  sw t2, 144(sp)
-
-  # branch
-  lw t0, 144(sp)
-  bnez  t0, then_6
-  j     end_6
-then_6:
-
-  # load
-  lw t0, 0(sp)
-  sw t0, 148(sp)
-
-  # binary
-  lw t0, 148(sp)
-  li t1, 64
-  add t2, t0, t1
-  sw t2, 152(sp)
-
-  # store
-  lw t0, 152(sp)
-  sw t0, 0(sp)
-
-  # jump
-  j     end_6
-end_6:
-
-  # branch
-  li t0, 1
-  bnez  t0, then_7
-  j     end_7
-then_7:
-
-  # load
-  lw t0, 0(sp)
-  sw t0, 156(sp)
-
-  # binary
-  lw t0, 156(sp)
-  li t1, 128
-  add t2, t0, t1
-  sw t2, 160(sp)
-
-  # store
-  lw t0, 160(sp)
-  sw t0, 0(sp)
-
-  # jump
-  j     end_7
-end_7:
-
-  # load
-  lw t0, 0(sp)
-  sw t0, 164(sp)
+  sw t2, 16(sp)
 
   # ret
-  lw t0, 164(sp)
+  lw t0, 16(sp)
   mv a0, t0
 
   # epilogue
-  addi sp, sp, 176
+  li t0, 32
+  addi sp, sp, t0
   ret

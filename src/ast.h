@@ -210,7 +210,7 @@ public:
     void GenerateIR()  override
     {
         dbg_ast_printf("CompUnit ::= [CompUnit] FuncDef;\n");
-        initSysyRuntimeLib();
+        //initSysyRuntimeLib();
         for(auto &item:comp_units->vec)
         {
             item->is_global=true;
