@@ -1,89 +1,16 @@
   .text
-  .globl getint
-getint:
-
-  # prologue
-  li t0, 0
-  addi sp, sp, t0
-  .globl getch
-getch:
-
-  # prologue
-  li t0, 0
-  addi sp, sp, t0
-  .globl getarray
-getarray:
-
-  # prologue
-  li t0, 0
-  addi sp, sp, t0
-  .globl putint
-putint:
-
-  # prologue
-  li t0, 0
-  addi sp, sp, t0
-  .globl putch
-putch:
-
-  # prologue
-  li t0, 0
-  addi sp, sp, t0
-  .globl putarray
-putarray:
-
-  # prologue
-  li t0, 0
-  addi sp, sp, t0
-  .globl starttime
-starttime:
-
-  # prologue
-  li t0, 0
-  addi sp, sp, t0
-  .globl stoptime
-stoptime:
-
-  # prologue
-  li t0, 0
-  addi sp, sp, t0
   .globl main
 main:
 
   # prologue
-  li t0, -32
+  li t0, 0
   addi sp, sp, t0
 entry:
 
-  # alloc
-
-  # store
-  sw x0, 0(sp)
-
-  # alloc
-
-  # store
-  sw x0, 4(sp)
-
-  # load
-  lw t0, 0(sp)
-  sw t0, 8(sp)
-
-  # load
-  lw t0, 4(sp)
-  sw t0, 12(sp)
-
-  # binary
-  lw t0, 8(sp)
-  lw t1, 12(sp)
-  add t2, t0, t1
-  sw t2, 16(sp)
-
   # ret
-  lw t0, 16(sp)
-  mv a0, t0
+  mv a0, x0
 
   # epilogue
-  li t0, 32
+  li t0, 0
   addi sp, sp, t0
   ret
