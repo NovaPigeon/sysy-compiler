@@ -40,7 +40,7 @@ using namespace std;
 
 // lexer 返回的所有 token 种类的声明
 // 注意 IDENT 和 INT_CONST 会返回 token 的值, 分别对应 str_val 和 int_val
-%token INT RETURN CONST IF ELSE
+%token INT RETURN CONST IF ELSE WHILE BREAK CONTINUE
 %token <str_val> IDENT
 %token <int_val> INT_CONST
 %token <str_val> LE GE EQ NEQ AND OR
@@ -194,6 +194,16 @@ SimpleStmt
   | RETURN ';' {
     auto stmt=new SimpleStmtAST();
     stmt->bnf_type=SimpleStmtType::SSTMT_EMPTY_RET;
+    $$=stmt;
+  }
+  | BREAK ';' {
+    auto stmt=new SimpleStmtAST();
+    stmt->bnf_type=SimpleStmtType::SSTMT_BREAK;
+    $$=stmt;
+  }
+  | CONTINUE ';' {
+     auto stmt=new SimpleStmtAST();
+    stmt->bnf_type=SimpleStmtType::SSTMT_CONTINUE;
     $$=stmt;
   }
   ;
@@ -576,6 +586,13 @@ OpenStmt
     open_stmt->open_stmt=unique_ptr<BaseAST>($7);
     $$=open_stmt;
   }
+  | WHILE '(' Exp ')' OpenStmt {
+    auto open_stmt=new OpenStmtAST();
+    open_stmt->bnf_type=OpenStmtType::OSTMT_WHILE;
+    open_stmt->exp=unique_ptr<BaseExpAST>($3);
+    open_stmt->open_stmt=unique_ptr<BaseAST>($5);
+    $$=open_stmt;
+  }
   ;
 
 ClosedStmt
@@ -591,6 +608,13 @@ ClosedStmt
     closed_stmt->exp=unique_ptr<BaseExpAST>($3);
     closed_stmt->closed_stmt1=unique_ptr<BaseAST>($5);
     closed_stmt->closed_stmt2=unique_ptr<BaseAST>($7);
+    $$=closed_stmt;
+  }
+  | WHILE '(' Exp ')' ClosedStmt {
+    auto closed_stmt=new ClosedStmtAST();
+    closed_stmt->bnf_type=ClosedStmtType::CSTMT_WHILE;
+    closed_stmt->exp=unique_ptr<BaseExpAST>($3);
+    closed_stmt->closed_stmt1=unique_ptr<BaseAST>($5);
     $$=closed_stmt;
   }
   ;

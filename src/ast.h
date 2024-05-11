@@ -95,7 +95,9 @@ enum SimpleStmtType
     SSTMT_RETURN,
     SSTMT_EMPTY_EXP,
     SSTMT_EXP,
-    SSTMT_BLK
+    SSTMT_BLK,
+    SSTMT_BREAK,
+    SSTMT_CONTINUE
 };
 
 enum StmtType
@@ -108,13 +110,15 @@ enum OpenStmtType
 {
     OSTMT_CLOSED,
     OSTMT_OPEN,
-    OSTMT_ELSE
+    OSTMT_ELSE,
+    OSTMT_WHILE
 };
 
 enum ClosedStmtType
 {
     CSTMT_SIMPLE,
-    CSTMT_ELSE
+    CSTMT_ELSE,
+    CSTMT_WHILE
 };
 
 
@@ -137,6 +141,7 @@ static int symbol_cnt = 0;
 static int label_cnt=0;
 static bool is_ret=false;
 static int alloc_tmp=0;
+static std::vector<int> while_stack;
 // static std::string get_var(std::string str);
 // static std::string get_IR(std::string str);
 
@@ -272,7 +277,8 @@ public:
 
 // OpenStmt :: = IF '(' Exp ')' ClosedStmt | 
 //               IF '(' Exp ')' OpenStmt | 
-//               IF '(' Exp ')' ClosedStmt ELSE OpenStmt;
+//               IF '(' Exp ')' ClosedStmt ELSE OpenStmt |
+//               WHILE '(' Exp ')' OpenStmt
 
 class OpenStmtAST: public BaseAST
 {
@@ -285,8 +291,11 @@ public:
     {
         std::string lable_then = "%then_" + std::to_string(label_cnt),
                     lable_else = "%else_" + std::to_string(label_cnt),
-                    lable_end = "%end_" + std::to_string(label_cnt);
+                    lable_end = "%end_" + std::to_string(label_cnt),
+                    lable_while_entry = "%while_entry_" + std::to_string(label_cnt),
+                    lable_while_body = "%while_body_" + std::to_string(label_cnt);
         label_cnt++;
+        
         if(bnf_type==OpenStmtType::OSTMT_CLOSED)
         {
             dbg_ast_printf("OpenStmt :: = IF '(' Exp ')' ClosedStmt;\n");
@@ -347,8 +356,30 @@ public:
                 std::cout << lable_end << ":" << std::endl;
             is_ret=total_ret;
         }
+        else if(bnf_type==OpenStmtType::OSTMT_WHILE)
+        {
+            dbg_ast_printf("OpenStmt :: = WHILE '(' Exp ')' OpenStmt;\n");
+            while_stack.push_back(label_cnt-1);
+            std::cout<<"  jump "<<lable_while_entry<<std::endl<<std::endl;
+
+            std::cout<<lable_while_entry<<":"<<std::endl;
+            exp->Eval();
+            std::cout<<"  br "<<exp->ident<<", "<<lable_while_body<<", "<<lable_end<<std::endl<<std::endl;
+
+            std::cout<<lable_while_body<<":"<<std::endl;
+            is_ret=false;
+            open_stmt->GenerateIR();
+            if(is_ret==false)
+                std::cout<<"  jump "<<lable_while_entry<<std::endl;
+            std::cout<<std::endl;
+
+            std::cout<<lable_end<<":"<<std::endl;
+            is_ret = false;
+            while_stack.pop_back();
+        }
         else
             assert(false);
+        
         
     }
 };
@@ -404,6 +435,35 @@ public:
                 std::cout << lable_end << ":" << std::endl;
             is_ret=total_ret;
         }
+        else if(bnf_type==ClosedStmtType::CSTMT_WHILE)
+        {
+            std::string lable_end = "%end_" + std::to_string(label_cnt),
+                        lable_while_entry = "%while_entry_" + std::to_string(label_cnt),
+                        lable_while_body = "%while_body_" + std::to_string(label_cnt);
+            while_stack.push_back(label_cnt);
+            label_cnt++;
+            dbg_ast_printf("ClosedStmt :: = WHILE '(' Exp ')' ClosedStmt;\n");
+            std::cout << "  jump " << lable_while_entry << std::endl
+                      << std::endl;
+
+            std::cout << lable_while_entry << ":" << std::endl;
+            exp->Eval();
+            std::cout << "  br " << exp->ident << ", " << lable_while_body << ", " << lable_end << std::endl
+                      << std::endl;
+
+            std::cout << lable_while_body << ":" << std::endl;
+            is_ret = false;
+            closed_stmt1->GenerateIR();
+            if (is_ret == false)
+                std::cout << "  jump " << lable_while_entry << std::endl;
+            std::cout << std::endl;
+
+            std::cout << lable_end << ":" << std::endl;
+            is_ret=false;
+            while_stack.pop_back();
+        }
+        else
+            assert(false);
 
     }
 };
@@ -460,6 +520,23 @@ public:
             dbg_ast_printf("SimpleStmt :: = EXP ';'\n");
             exp->Eval();
             exp->GenerateIR();
+        }
+        else if(bnf_type==SimpleStmtType::SSTMT_BREAK)
+        {
+            dbg_ast_printf("SimpleStmt :: = BREAK ';'\n");
+            assert(!while_stack.empty());
+            int label_num=while_stack.back();
+            std::cout<<"  jump %end_"<<std::to_string(label_num)<<std::endl<<std::endl;
+            is_ret=true;
+        }
+        else if(bnf_type==SimpleStmtType::SSTMT_CONTINUE)
+        {
+            dbg_ast_printf("SimpleStmt :: = CONTINUE ';'\n");
+            assert(!while_stack.empty());
+            int label_num = while_stack.back();
+            std::cout << "  jump %while_entry_" << std::to_string(label_num) << std::endl
+                      << std::endl;
+            is_ret=true;
         }
         else
             assert(false);
@@ -924,6 +1001,7 @@ public:
             std::string lable_then = "%then_" + std::to_string(label_cnt),
                         lable_else = "%else_" + std::to_string(label_cnt),
                         lable_end = "%end_" + std::to_string(label_cnt);
+            
             label_cnt++;
 
             std::string ir_name = "@t" + std::to_string(alloc_tmp);
