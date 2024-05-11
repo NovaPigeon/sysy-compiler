@@ -95,15 +95,9 @@ void Prologue(const koopa_raw_function_t &func)
     }
     stack_size=(stack_size+15)&(~15);
     stack_frame.set_stack_size(stack_size);
-    if(stack_size<MAX_IMMEDIATE_VAL)
-    {
-        std::cout<<"  addi sp, sp, "<<-stack_size<<std::endl;
-    }
-    else
-    {
-        std::cout<<"  li t0, "<<-stack_size<<std::endl;
-        std::cout<<"  addi sp, sp, t0"<<std::endl;
-    }
+    
+    std::cout<<"  li t0, "<<-stack_size<<std::endl;
+    std::cout<<"  addi sp, sp, t0"<<std::endl;
 
 }
 // 访问函数
@@ -203,15 +197,9 @@ void Epilogue()
 {
     std::cout<<std::endl<<"  # epilogue"<<std::endl;
     int stack_size=stack_frame.get_stack_size();
-    if (stack_size < MAX_IMMEDIATE_VAL)
-    {
-        std::cout << "  addi sp, sp, " << stack_size << std::endl;
-    }
-    else
-    {
-        std::cout << "  li t0, " << stack_size << std::endl;
-        std::cout << "  addi sp, sp, t0" << std::endl;
-    }
+    
+    std::cout << "  li t0, " << stack_size << std::endl;
+    std::cout << "  addi sp, sp, t0" << std::endl;
 }
 
 // 访问对应类型指令的函数定义略

@@ -6,15 +6,24 @@ decl @putch(i32)
 decl @putarray(i32, *i32)
 decl @starttime()
 decl @stoptime()
-global   @x_0 = alloc i32, 0
+global @x = alloc i32, 3
+global @y = alloc i32, 1
+global @z = alloc i32, 3
+global @f = alloc i32, 2
+fun @f(): i32 {
+%entry:
+  @x_0 = alloc i32
+  store 1, @x_0
+  ret 0
+}
 fun @main(): i32 {
 %entry:
-  @x_0_0 = alloc i32
-  store 0, @x_0_0
-  @init_0_0 = alloc i32
-  store 0, @init_0_0
-  %0 = load @x_0_0
-  %1 = load @init_0_0
+  @x_1 = alloc i32
+  store 0, @x_1
+  @init_1 = alloc i32
+  store 0, @init_1
+  %0 = load @x_1
+  %1 = load @init_1
   %2 = add %0, %1
   ret %2
 }

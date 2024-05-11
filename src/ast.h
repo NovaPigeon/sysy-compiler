@@ -210,14 +210,12 @@ public:
     void GenerateIR()  override
     {
         dbg_ast_printf("CompUnit ::= [CompUnit] FuncDef;\n");
-        symbol_table_stack.PushScope();
         initSysyRuntimeLib();
         for(auto &item:comp_units->vec)
         {
             item->is_global=true;
             item->GenerateIR();
         }
-        symbol_table_stack.PopScope();
     }
 };
 
@@ -1337,7 +1335,9 @@ public:
             std::cout<<"global ";
         std::string ir_name="@"+ident;
         ir_name=symbol_table_stack.Insert(ident,ir_name);
-        std::cout<<"  "<<ir_name<<" = alloc i32";
+        if(!is_global)
+            std::cout<<"  ";
+        std::cout<<ir_name<<" = alloc i32";
         if(!is_global)
             std::cout << std::endl;
         if(bnf_type==VarDefType::VAR_ASSIGN)
