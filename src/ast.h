@@ -211,7 +211,7 @@ public:
     {
         dbg_ast_printf("CompUnit ::= [CompUnit] FuncDef;\n");
         symbol_table_stack.PushScope();
-        //initSysyRuntimeLib();
+        initSysyRuntimeLib();
         for(auto &item:comp_units->vec)
         {
             item->is_global=true;
