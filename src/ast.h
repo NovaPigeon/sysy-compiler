@@ -145,8 +145,7 @@ static int label_cnt=0;
 static bool is_ret=false;
 static int alloc_tmp=0;
 static std::vector<int> while_stack;
-// static std::string get_var(std::string str);
-// static std::string get_IR(std::string str);
+static std::string current_func;
 
 class VecAST
 {
@@ -231,6 +230,7 @@ public:
     std::unique_ptr<VecAST> func_fparams;
     void GenerateIR()  override
     {
+        current_func=ident;
         func_type->GenerateIR();
         dbg_ast_printf("FuncDef ::= %s %s '(' [FuncFParams] ')' Block;\n", 
         ident.c_str(), 
@@ -553,7 +553,11 @@ public:
         else if(bnf_type==SimpleStmtType::SSTMT_EMPTY_RET)
         {
             dbg_ast_printf("SimpleStmt ::= 'return' ';';\n");
-            std::cout << "  ret 0" << std::endl;
+            std::string ret_type=func_map[current_func];
+            if(ret_type=="i32")
+                std::cout << "  ret 0" << std::endl;
+            else
+                std::cout<<"  ret"<<std::endl;
             is_ret = true;
         }
         else if(bnf_type==SimpleStmtType::SSTMT_ASSIGN)
