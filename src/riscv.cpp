@@ -39,6 +39,21 @@ static std::map<koopa_raw_value_t,var_info_t> is_visited;
 static StackFrame stack_frame;
 static RegManager reg_manager;
 
+static void GenLoadStoreInst(std::string op,std::string reg1,int imm,std::string reg2)
+{
+    if(imm<MAX_IMMEDIATE_VAL)
+    {
+        std::cout<<"  "<<op<<" "<<reg1<<", "<<imm<<"("<<reg2<<")"<<std::endl;
+    }
+    else
+    {
+        int reg_id=reg_manager.alloc_reg();
+        std::string reg_tmp=gen_reg(reg_id);
+        std::cout<<"  li "<<reg_tmp<<", "<<imm<<std::endl;
+        std::cout<<"  add "<<reg_tmp<<", "<<reg_tmp<<", "<<reg2<<std::endl;
+        std::cout << "  " << op << " " << reg1 << ", " << 0 << "(" << reg_tmp << ")" << std::endl;
+    }
+}
 
 // 访问 raw program
 void Visit(const koopa_raw_program_t &program)
@@ -95,11 +110,11 @@ void Prologue(const koopa_raw_function_t &func)
     }
     stack_size=(stack_size+15)&(~15);
     stack_frame.set_stack_size(stack_size);
-    // if(stack_size<MAX_IMMEDIATE_VAL)
-    // {
-    //     std::cout<<"  addi sp, sp, "<<-stack_size<<std::endl;
-    // }
-    // else
+    if(stack_size<MAX_IMMEDIATE_VAL)
+    {
+        std::cout<<"  addi sp, sp, "<<-stack_size<<std::endl;
+    }
+    else
     {
         std::cout<<"  li t0, "<<-stack_size<<std::endl;
         std::cout<<"  add sp, sp, t0"<<std::endl;
@@ -141,7 +156,8 @@ var_info_t Visit(const koopa_raw_value_t &value)
             int location=info.stack_location;
             assert(location>=0);
             int reg_id=reg_manager.alloc_reg();
-            std::cout<<"  lw "<<gen_reg(reg_id)<<", "<<location<<"(sp)"<<std::endl;
+            GenLoadStoreInst("lw", gen_reg(reg_id), location, "sp");
+            
             info.type=VAR_TYPE::ON_REG;
             info.reg_id=reg_id;
             return info;
@@ -203,11 +219,11 @@ void Epilogue()
 {
     std::cout<<std::endl<<"  # epilogue"<<std::endl;
     int stack_size=stack_frame.get_stack_size();
-    // if (stack_size < MAX_IMMEDIATE_VAL)
-    // {
-    //     std::cout << "  addi sp, sp, " << stack_size << std::endl;
-    // }
-    // else
+    if (stack_size < MAX_IMMEDIATE_VAL)
+    {
+        std::cout << "  addi sp, sp, " << stack_size << std::endl;
+    }
+    else
     {
         std::cout << "  li t0, " << stack_size << std::endl;
         std::cout << "  add sp, sp, t0" << std::endl;
@@ -264,13 +280,13 @@ var_info_t Visit(const koopa_raw_binary_t &binary)
     {
         lvar.type=VAR_TYPE::ON_REG;
         lvar.reg_id=reg_manager.alloc_reg();
-        std::cout<<"  lw "<<gen_reg(lvar.reg_id)<<", "<<lvar.stack_location<<"(sp)"<<std::endl;
+        GenLoadStoreInst("lw", gen_reg(lvar.reg_id),lvar.stack_location,"sp");
     }
     if (rvar.type == VAR_TYPE::ON_STACK)
     {
         rvar.type = VAR_TYPE::ON_REG;
         rvar.reg_id = reg_manager.alloc_reg();
-        std::cout << "  lw " << gen_reg(rvar.reg_id) << ", " << lvar.stack_location << "(sp)" << std::endl;
+        GenLoadStoreInst("lw", gen_reg(rvar.reg_id), rvar.stack_location, "sp");
     }
 
     var_info_t tmp_result;
@@ -314,7 +330,7 @@ var_info_t Visit(const koopa_raw_binary_t &binary)
     var_info_t res;
     res.type=VAR_TYPE::ON_STACK;
     res.stack_location=stack_frame.push();
-    std::cout<<"  sw "<<new_reg<<", "<<res.stack_location<<"(sp)"<<std::endl;
+    GenLoadStoreInst("sw",new_reg,res.stack_location,"sp");
     return res;
 }
 
@@ -332,8 +348,7 @@ void Visit(const koopa_raw_store_t &store)
     var_info_t src_var=Visit(store.value);
     assert(src_var.type==VAR_TYPE::ON_REG);
 
-    std::cout<<"  sw "<<gen_reg(src_var.reg_id)<<", "<<dst_var.stack_location<<"(sp)"<<std::endl;
-
+    GenLoadStoreInst("sw", gen_reg(src_var.reg_id),dst_var.stack_location,"sp");
 }
 
 var_info_t Visit(const koopa_raw_load_t &load)
@@ -346,7 +361,7 @@ var_info_t Visit(const koopa_raw_load_t &load)
     var_info_t dst_var;
     dst_var.type=VAR_TYPE::ON_STACK;
     dst_var.stack_location=stack_frame.push();
-    std::cout<<"  sw "<<gen_reg(src_var.reg_id)<<", "<<dst_var.stack_location<<"(sp)"<<std::endl;
+    GenLoadStoreInst("sw", gen_reg(src_var.reg_id), dst_var.stack_location, "sp");
     return dst_var;
 }
 
