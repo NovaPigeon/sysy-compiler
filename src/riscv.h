@@ -7,6 +7,7 @@
 #define REG_NUM 15
 #define MAX_IMMEDIATE_VAL 2048
 #define ZERO_REG_ID 15
+#define PARAM_REG_NUM 8
 
 #define RISCV_DEBUG
 #ifdef RISCV_DEBUG
@@ -19,12 +20,15 @@ class StackFrame
 {
 public:
     StackFrame(){top=0;}
-    void set_stack_size(int size)
+    void set_stack_size(int size,bool store_ra_,int max_args_num_)
     {
         assert(size%16==0);
         assert(size>=0);
         stack_size=size;
-        top=0;
+        top=(max_args_num_-8)*4;
+        if(top<0)
+            top=0;
+        store_ra=store_ra_;
     }
     int push()
     {
@@ -36,9 +40,15 @@ public:
     {
         return stack_size;
     }
+    bool is_store_ra() const
+    {
+        return store_ra;
+    }
+
 private:
     int stack_size;
     int top;
+    bool store_ra;
 };
 
 class RegManager
@@ -71,19 +81,32 @@ public:
         assert(ret!=-1);
         return ret;
     }
+    int alloc_reg(int i)
+    {
+        assert(regs_occupied[i]==false);
+        regs_occupied[i]=true;
+        return i;
+    }
+
+    void free(int i)
+    {
+        regs_occupied[i]=false;
+    }
 
 
 };
 enum VAR_TYPE
 {
     ON_STACK,
-    ON_REG
+    ON_REG,
+    ON_GLOBAL
 };
 typedef struct
 {
     VAR_TYPE type;
     int stack_location;
     int reg_id;
+    std::string global_name;
 
 } var_info_t;
 
@@ -102,4 +125,5 @@ var_info_t Visit(const koopa_raw_value_t &value);
 var_info_t Visit(const koopa_raw_integer_t &interger);
 var_info_t Visit(const koopa_raw_binary_t &binary);
 var_info_t Visit(const koopa_raw_load_t &load);
-
+var_info_t Visit(const koopa_raw_call_t &call,bool is_ret);
+var_info_t Visit(const koopa_raw_global_alloc_t &global_alloc);

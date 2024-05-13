@@ -10,7 +10,7 @@
 
 #include "symbol_table.h"
 
-#define DEBUG_AST
+//#define DEBUG_AST
 #ifdef DEBUG_AST
 #define dbg_ast_printf(...) fprintf(stderr, __VA_ARGS__)
 #else
@@ -257,7 +257,7 @@ public:
         if(func_type->ident=="i32")
             std::cout<<": "<<func_type->ident;
         std::cout << " {" << std::endl;
-        std::cout << "%entry:" << std::endl;
+        std::cout << "%entry_"<<ident<<":" << std::endl;
 
         for(auto& param: params)
         {
