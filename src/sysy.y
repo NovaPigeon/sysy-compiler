@@ -59,7 +59,7 @@ using namespace std;
 %type <vec_val> FuncFParams CompUnits
 %type <exp_vec_val> FuncRParams
 %type <ast_val> FuncFParam
-
+%type <exp_vec_val> ConstExpArrs ConstInitVals InitVals ExpArrs
 
 
 %%
@@ -576,7 +576,31 @@ ConstDef
     auto const_def=new ConstDefAST();
     const_def->ident=*unique_ptr<string>($1);
     const_def->const_init_val=unique_ptr<BaseExpAST>($3);
+    const_def->bnf_type=InitType::INIT_VAR;
     $$=const_def;
+  }
+  | IDENT ConstExpArrs '=' ConstInitVal {
+    auto const_def=new ConstDefAST();
+    const_def->ident=*unique_ptr<string>($1);
+    const_def->const_exps=unique_ptr<ExpVecAST>($2);
+    const_def->const_init_val=unique_ptr<BaseExpAST>($4);
+    const_def->bnf_type=InitType::INIT_ARRAY;
+    $$=const_def;
+  }
+  ;
+
+ConstExpArrs
+  : '[' ConstExp ']'{
+    auto const_exp=unique_ptr<BaseExpAST>($2);
+    auto const_exps=new ExpVecAST();
+    const_exps->push_back(const_exp);
+    $$=const_exps;
+  } 
+  | ConstExpArrs '[' ConstExp ']' {
+    auto const_exps=$1;
+    auto const_exp=unique_ptr<BaseExpAST>($3);
+    const_exps->push_back(const_exp);
+    $$=const_exps;
   }
   ;
 
@@ -584,9 +608,39 @@ ConstInitVal
   : ConstExp {
     auto const_init_val=new ConstInitValAST();
     const_init_val->const_exp=unique_ptr<BaseExpAST>($1);
+    const_init_val->bnf_type=InitType::INIT_VAR;
+    $$=const_init_val;
+  }
+  | '{' '}' {
+    auto const_init_val=new ConstInitValAST();
+    const_init_val->const_init_vals=unique_ptr<ExpVecAST>(new ExpVecAST());
+    const_init_val->bnf_type=InitType::INIT_ARRAY;
+    $$=const_init_val;
+  }
+  | '{' ConstInitVals '}' {
+    auto const_init_val=new ConstInitValAST();
+    const_init_val->const_init_vals=unique_ptr<ExpVecAST>($2);
+    const_init_val->bnf_type=InitType::INIT_ARRAY;
     $$=const_init_val;
   }
   ;
+
+ConstInitVals
+  : ConstInitVal {
+    auto const_init_val=unique_ptr<BaseExpAST>($1);
+    auto const_init_vals=new ExpVecAST();
+    const_init_vals->push_back(const_init_val);
+    $$=const_init_vals;
+  } 
+  | ConstInitVals ',' ConstInitVal {
+    auto const_init_vals=$1;
+    auto const_init_val=unique_ptr<BaseExpAST>($3);
+    const_init_vals->push_back(const_init_val);
+    $$=const_init_vals;
+  }
+  ;
+
+
 
 ConstExp
   : Exp {
@@ -600,9 +654,33 @@ LVal
   : IDENT {
     auto lval=new LValAST();
     lval->ident=*unique_ptr<string>($1);
+    lval->bnf_type=LValType::LVAL_VAR;
+    $$=lval;
+  }
+  | IDENT  ExpArrs {
+    auto lval=new LValAST();
+    lval->ident=*unique_ptr<string>($1);
+    lval->exps=unique_ptr<ExpVecAST>($2);
+    lval->bnf_type=LValType::LVAL_ARRAY;
     $$=lval;
   }
   ;
+
+ExpArrs
+  : '[' Exp ']'{
+    auto exp=unique_ptr<BaseExpAST>($2);
+    auto exps=new ExpVecAST();
+    exps->push_back(exp);
+    $$=exps;
+  } 
+  | ExpArrs '[' Exp ']' {
+    auto exps=$1;
+    auto exp=unique_ptr<BaseExpAST>($3);
+    exps->push_back(exp);
+    $$=exps;
+  }
+  ;
+
 
 VarDecl
   : Type VarDefs ';' {
@@ -638,9 +716,24 @@ VarDef
   }
   | IDENT '=' InitVal {
     auto var_def=new VarDefAST();
-    var_def->bnf_type=VarDefType::VAR_ASSIGN;
+    var_def->bnf_type=VarDefType::VAR_ASSIGN_VAR;
     var_def->ident=*unique_ptr<string>($1);
     var_def->init_val=unique_ptr<BaseExpAST>($3);
+    $$=var_def;
+  }
+  | IDENT  ConstExpArrs  {
+    auto var_def=new VarDefAST();
+    var_def->bnf_type=VarDefType::VAR_ARRAY;
+    var_def->ident=*unique_ptr<string>($1);
+    var_def->const_exps=unique_ptr<ExpVecAST>($2);
+    $$=var_def;
+  }
+  | IDENT  ConstExpArrs '=' InitVal{
+    auto var_def=new VarDefAST();
+    var_def->bnf_type=VarDefType::VAR_ASSIGN_ARRAY;
+    var_def->ident=*unique_ptr<string>($1);
+    var_def->const_exps=unique_ptr<ExpVecAST>($2);
+    var_def->init_val=unique_ptr<BaseExpAST>($4);
     $$=var_def;
   }
   ;
@@ -649,9 +742,39 @@ InitVal
   : Exp {
     auto init_val=new InitValAST();
     init_val->exp=unique_ptr<BaseExpAST>($1);
+    init_val->bnf_type=InitType::INIT_VAR;
+    $$=init_val;
+  }
+  | '{' InitVals '}' {
+    auto init_val=new InitValAST();
+    init_val->init_vals=unique_ptr<ExpVecAST>($2);
+    init_val->bnf_type=InitType::INIT_ARRAY;
+    $$=init_val;
+  }
+  | '{' '}' {
+    auto init_val=new InitValAST();
+    init_val->init_vals=unique_ptr<ExpVecAST>(new ExpVecAST());
+    init_val->bnf_type=InitType::INIT_ARRAY;
     $$=init_val;
   }
   ;
+
+InitVals
+  : InitVal {
+    auto init_val=unique_ptr<BaseExpAST>($1);
+    auto init_vals=new ExpVecAST();
+    init_vals->push_back(init_val);
+    $$=init_vals;
+  } 
+  | InitVals ',' InitVal {
+    auto init_vals=$1;
+    auto init_val=unique_ptr<BaseExpAST>($3);
+    init_vals->push_back(init_val);
+    $$=init_vals;
+  }
+  ;
+
+
 
 OpenStmt
   : IF '(' Exp ')' ClosedStmt {
@@ -708,9 +831,6 @@ ClosedStmt
     $$=closed_stmt;
   }
   ;
-
-
-
 
 %%
 

@@ -10,7 +10,7 @@
 
 #include "symbol_table.h"
 
-//#define DEBUG_AST
+#define DEBUG_AST
 #ifdef DEBUG_AST
 #define dbg_ast_printf(...) fprintf(stderr, __VA_ARGS__)
 #else
@@ -55,6 +55,8 @@ class SimpleStmtAST;
 
 class FuncFParamAST;
 
+class NDimArray;
+
 
 // enums
 enum PrimaryExpType
@@ -82,7 +84,9 @@ enum DeclType
 enum VarDefType
 {
     VAR,
-    VAR_ASSIGN
+    VAR_ARRAY,
+    VAR_ASSIGN_VAR,
+    VAR_ASSIGN_ARRAY
 };
 
 enum BlockItemType
@@ -124,6 +128,17 @@ enum ClosedStmtType
     CSTMT_WHILE
 };
 
+enum InitType
+{
+    INIT_VAR,
+    INIT_ARRAY
+};
+
+enum LValType
+{
+    LVAL_VAR,
+    LVAL_ARRAY
+};
 
 static std::map<std::string, std::string> op_names = {
     {"!=", "ne"},
@@ -146,6 +161,121 @@ static bool is_ret=false;
 static int alloc_tmp=0;
 static std::vector<int> while_stack;
 static std::string current_func;
+
+static void print_dims(const std::vector<int> &dims, int ndim)
+{
+    for (int i = 0; i < ndim; ++i)
+    {
+        std::cout << "[";
+    }
+    std::cout << "i32";
+    for (int i = ndim-1; i >= 0; i--)
+    {
+        std::cout << ", " << dims[i] << "]";
+    }
+}
+
+
+class NDimArray
+{
+private:
+    std::vector<int> dims;
+    std::vector<int> dims_size;
+    int ndim;
+    std::vector<std::string> vals;
+    int val_cnt;
+public:
+    NDimArray(std::vector<int> dims_,int ndim_)
+    {
+        dims=dims_;
+        ndim=ndim_;
+        for(int i=0;i<ndim;++i)
+        {
+            int size=1;
+            for(int j=i;j<ndim;++j)
+            {
+                size*=dims[j];
+            }
+            dims_size.push_back(size);
+        }
+        val_cnt=0;
+    }
+    void push(int val)
+    {
+        vals.push_back(std::to_string(val));
+        val_cnt++;
+    }
+    void push(std::string val)
+    {
+        vals.push_back(val);
+        val_cnt++;
+    }
+    int get_currcnt() const
+    {
+        return val_cnt;
+    }
+    int get_align()
+    {
+        if(val_cnt==0)
+            return dims_size[ndim-1];
+        for(int i=0;i<ndim;++i)
+        {
+            if(val_cnt%dims_size[i]==0)
+                return dims_size[i];
+        }
+        assert(false);
+    }
+    void generate_aggregate()
+    {
+        for(int i=val_cnt;i<dims_size[0];++i)
+            vals.push_back("0");
+
+        for(int i=0;i<ndim;++i)
+            std::cout<<"{";
+        
+        val_cnt=dims_size[0];
+        
+        for(int i=1;i<=val_cnt;++i)
+        {
+            if(i%dims[ndim-1]==1)
+            {
+                std::cout<<vals[i-1];
+            }
+            else if(i%dims[ndim-1]==0)
+            {
+                std::cout<<", "<<vals[i-1];
+                int align=0;
+                for(int j=0;j<ndim;++j)
+                {
+                    if(i%dims_size[j]==0)
+                    {
+                        align=j;
+                        break;
+                    }
+                }
+                for(int j=0;j<ndim-align;++j)
+                    std::cout<<"}";
+                
+                if(i==val_cnt)
+                    return;
+                std::cout<<", ";
+                for (int j = 0; j < ndim - align; ++j)
+                    std::cout << "{";
+            }
+            else
+                std::cout<<", "<<vals[i-1];
+        }
+
+    }
+    void generate_assign(std::string ir_name)
+    {
+        std::cout<<"  store ";
+        generate_aggregate();
+        std::cout<<", "<<ir_name<<std::endl;
+    }
+};
+
+static NDimArray *ndarr=nullptr;
 
 class VecAST
 {
@@ -188,6 +318,7 @@ public:
     bool is_evaled=false;
     bool is_left=false;
     int val=-1;
+    std::vector<int> vals;
     void Copy(std::unique_ptr<BaseExpAST>& exp)
     {
         is_const=exp->is_const;
@@ -209,14 +340,14 @@ public:
     void GenerateIR()  override
     {
         dbg_ast_printf("CompUnit ::= [CompUnit] FuncDef;\n");
-        symbol_table_stack.PushScope();
+        //symbol_table_stack.PushScope();
         initSysyRuntimeLib();
         for(auto &item:comp_units->vec)
         {
             item->is_global=true;
             item->GenerateIR();
         }
-        symbol_table_stack.PopScope();
+        //symbol_table_stack.PopScope();
     }
 };
 
@@ -569,8 +700,11 @@ public:
             assert(!lval->is_const);
             exp->GenerateIR();
             symbol_info_t *info=symbol_table_stack.LookUp(lval->ident);
-            std::cout<<"  store "<<exp->ident<<", "<<info->ir_name<<std::endl;
-            
+        
+            if(info!=nullptr)
+                std::cout<<"  store "<<exp->ident<<", "<<info->ir_name<<std::endl;
+            else
+                std::cout << "  store " << exp->ident << ", " << lval->ident << std::endl;
         }
         else if(bnf_type==SimpleStmtType::SSTMT_BLK)
         {
@@ -1022,7 +1156,7 @@ public:
 
             ident = "t" + std::to_string(alloc_tmp);
             std::string ir_name = "@" + ident;
-            symbol_table_stack.Insert(ident, ir_name);
+            ir_name=symbol_table_stack.Insert(ident, ir_name);
             alloc_tmp++;
             std::cout << "  " << ir_name << " = alloc i32" << std::endl;
 
@@ -1102,7 +1236,7 @@ public:
             label_cnt++;
 
             std::string ir_name = "@t" + std::to_string(alloc_tmp);
-            symbol_table_stack.Insert(ident, ir_name);
+            ir_name=symbol_table_stack.Insert(ident, ir_name);
             alloc_tmp++;
             std::cout << "  " << ir_name << " = alloc i32" << std::endl;
 
@@ -1195,25 +1329,78 @@ public:
     }
 };
 
-// ConstDef :: = IDENT "=" ConstInitVal;
+// ConstDef ::= IDENT {"[" ConstExp "]"} "=" ConstInitVal;
 class ConstDefAST: public BaseAST
 {
 public:
     std::unique_ptr<BaseExpAST> const_init_val;
+    std::unique_ptr<ExpVecAST> const_exps;
+    InitType bnf_type;
     
     void GenerateIR()  override
     {
-        dbg_ast_printf("ConstDef :: = IDENT '=' ConstInitVal;\n");
-        const_init_val->Eval();
-        symbol_table_stack.Insert(ident,const_init_val->val);
+        if(bnf_type==InitType::INIT_VAR)
+        {
+            dbg_ast_printf("ConstDef :: = IDENT '=' ConstInitVal;\n");
+            const_init_val->Eval();
+            symbol_table_stack.Insert(ident,const_init_val->val);
+        }
+        else if(bnf_type==InitType::INIT_ARRAY)
+        {
+            dbg_ast_printf("ConstDef :: = IDENT {'[' ConstExp ']'} '=' ConstInitVal;\n");
+            int ndim=0;
+            std::vector<int> dims;
+            for(auto &exp: const_exps->vec)
+            {
+                exp->Eval();
+                dims.push_back(exp->val);
+                ndim++;
+            }
+            ndarr=new NDimArray(dims,ndim);
+
+            
+            const_init_val->Eval();
+          
+            std::string ir_name=symbol_table_stack.Insert(ident,"@"+ident);
+            if(is_global)
+            {
+                std::cout<<"global "<<ir_name<<" = alloc ";
+                print_dims(dims,ndim);
+
+                if(ndarr->get_currcnt()==0)
+                {
+                    std::cout<<", zeroinit"<<std::endl;
+                }
+                else
+                {
+                    std::cout<<", ";
+                    ndarr->generate_aggregate();
+                    std::cout<<std::endl;
+                }
+
+            }
+            else
+            {
+                std::cout<<"  "<<ir_name<<" = alloc ";
+                print_dims(dims,ndim);
+                std::cout<<std::endl;
+                ndarr->generate_assign(ir_name);
+            }
+            
+            delete ndarr;
+            ndarr=nullptr;
+            
+        }
     }
 };
 
-// ConstInitVal :: = ConstExp;
+// ConstInitVal ::= ConstExp | "{" [ConstInitVal {"," ConstInitVal}] "}";
 class ConstInitValAST : public BaseExpAST
 {
 public:
     std::unique_ptr<BaseExpAST> const_exp;
+    InitType bnf_type;
+    std::unique_ptr<ExpVecAST> const_init_vals;
     
     void GenerateIR()  override
     {
@@ -1221,13 +1408,41 @@ public:
     }
     void Eval() override
     {
+        
         if(is_evaled)
             return;
-        dbg_ast_printf("ConstInitVal :: = ConstExp;\n");
-        const_exp->Eval();
-        Copy(const_exp);
-        is_evaled=true;
+        if(bnf_type==InitType::INIT_VAR)
+        {
+            dbg_ast_printf("ConstInitVal :: = ConstExp;\n");
+            const_exp->Eval();
+            Copy(const_exp);
+            is_evaled=true;
+            if(ndarr!=nullptr)
+                ndarr->push(const_exp->val);
+        }
+        else if(bnf_type==InitType::INIT_ARRAY)
+        {
+            dbg_ast_printf("ConstInitVal :: '{' [ConstInitVal {',' ConstInitVal}] '}'\n");
+            int align_size=ndarr->get_align();
+            int old_cnt=ndarr->get_currcnt();
+            for(auto& init:const_init_vals->vec)
+            {
+                init->Eval();
+            }
+            int zero_added=align_size-(ndarr->get_currcnt()-old_cnt);
+            
+            for(int i=0;i<zero_added;++i)
+                ndarr->push(0);
+            
+            is_evaled=true;
+            is_const=true;
+            
+        }
+        else
+            assert(false);
+        
     }
+    
 };
 
 // BlockItem :: = Decl | Stmt;
@@ -1254,35 +1469,77 @@ public:
     }
 };
 
-// LVal :: = IDENT;
+// LVal ::= IDENT {"[" Exp "]"};
 class LValAST : public BaseExpAST
 {
 public:
+    LValType bnf_type;
+    std::unique_ptr<ExpVecAST> exps;
     void Eval() override
     {
+        
         if(is_evaled)
             return;
-        dbg_ast_printf("LVal :: = IDENT;\n");
-        symbol_info_t *info=symbol_table_stack.LookUp(ident);
-        assert(info!=nullptr);
-        if(!is_left)
+        if(bnf_type==LValType::LVAL_VAR)
         {
-            if(info->type==SYMBOL_TYPE::CONST_SYMBOL)
+            dbg_ast_printf("LVal :: = IDENT;\n");
+            symbol_info_t *info=symbol_table_stack.LookUp(ident);
+            assert(info!=nullptr);
+            if(!is_left)
             {
-                val=info->val;
-                ident=std::to_string(val);
-                is_const=true;
+                if(info->type==SYMBOL_TYPE::CONST_SYMBOL)
+                {
+                    val=info->val;
+                    ident=std::to_string(val);
+                    is_const=true;
+                }
+                else if(info->type==SYMBOL_TYPE::VAR_SYMBOL)
+                {
+                    ident="%"+std::to_string(symbol_cnt);
+                    symbol_cnt++;
+                    std::cout<<"  "<<ident<<" = load "<<info->ir_name<<std::endl;
+                }
             }
-            else if(info->type==SYMBOL_TYPE::VAR_SYMBOL)
+        }
+        else if(bnf_type==LValType::LVAL_ARRAY)
+        {
+            dbg_ast_printf("LVal :: = IDENT {'[' Exp ']'};\n");
+            std::vector<std::string> dims;
+            int ndim=0;
+            for(auto &exp: exps->vec)
             {
-                ident="%"+std::to_string(symbol_cnt);
+                exp->Eval();
+                dims.push_back(exp->ident);
+                ndim++;
+            }
+            
+            symbol_info_t *info=symbol_table_stack.LookUp(ident);
+            std::string new_symbol;
+            std::string old_symbol=info->ir_name;
+            
+            for(int i=0;i<ndim;++i)
+            {
+                new_symbol="%"+std::to_string(symbol_cnt);
                 symbol_cnt++;
-                std::cout<<"  "<<ident<<" = load "<<info->ir_name<<std::endl;
+                std::cout<<"  "<<new_symbol<<" = getelemptr "<<old_symbol<<", "<<dims[i]<<std::endl;
+                old_symbol=new_symbol;
+
             }
+            ident=new_symbol;
+
+            if(!is_left)
+            {
+                std::string new_ident = "%" + std::to_string(symbol_cnt);
+                symbol_cnt++;
+                std::cout<<"  "<<new_ident<<" = load "<<ident<<std::endl;
+                ident=new_ident;
+            }
+            printf("%s\n",ident.c_str());
         }
 
 
         is_evaled=true;
+        
     }
     
     void GenerateIR() override
@@ -1329,54 +1586,146 @@ public:
     }
 };
 
-// VarDef :: = IDENT | IDENT "=" InitVal;
+// VarDef ::= IDENT {"[" ConstExp "]"}
+//          | IDENT {"[" ConstExp "]"} "=" InitVal;
 class VarDefAST: public BaseAST
 {
 public:
     VarDefType bnf_type;
     std::unique_ptr<BaseExpAST> init_val;
+    std::unique_ptr<ExpVecAST> const_exps;
     void GenerateIR() override
     {
+        
         if(is_global)
             std::cout<<"global ";
         std::string ir_name="@"+ident;
         ir_name=symbol_table_stack.Insert(ident,ir_name);
         if(!is_global)
             std::cout<<"  ";
-        std::cout<<ir_name<<" = alloc i32";
-        if(!is_global)
-            std::cout << std::endl;
-        if(bnf_type==VarDefType::VAR_ASSIGN)
+        if(bnf_type==VarDefType::VAR_ASSIGN_VAR)
         {
             dbg_ast_printf("VarDef :: IDENT '=' InitVal;\n");
+            std::cout << ir_name << " = alloc i32";
+            if (!is_global)
+                std::cout << std::endl;
             init_val->Eval();
             if(is_global)
                 std::cout<<", "<<init_val->ident<<std::endl;
             else
                 std::cout<<"  "<<"store "<<init_val->ident<<", "<<ir_name<<std::endl;
         }
-        else
+        else if(bnf_type==VarDefType::VAR)
         {
             dbg_ast_printf("VarDef :: IDENT\n");
+            std::cout << ir_name << " = alloc i32";
+            if (!is_global)
+                std::cout << std::endl;
             if(is_global)
                 std::cout<<", zeroinit"<<std::endl;
         }
+        else if(bnf_type==VarDefType::VAR_ASSIGN_ARRAY)
+        {
+            dbg_ast_printf("VarDef :: IDENT '[' ConstExp ']' '=' InitVal;\n");
+
+            std::vector<int> dims;
+            int ndim=0;
+            for(auto &exp: const_exps->vec)
+            {
+                exp->Eval();
+                dims.push_back(exp->val);
+                ndim++;
+            }
+            
+            std::cout<<ir_name<<" = alloc ";
+            print_dims(dims,ndim);
+
+            ndarr=new NDimArray(dims,ndim);
+            init_val->Eval();
+            int num_assigned = ndarr->get_currcnt();
+            if(is_global)
+            {
+                if(num_assigned==0)
+                    std::cout<<", zeroinit"<<std::endl;
+                else
+                {
+                    std::cout<<", ";
+                    ndarr->generate_aggregate();
+                    std::cout<<std::endl;
+                }
+            }
+            else
+            {
+
+                std::cout<<std::endl;
+                ndarr->generate_assign(ir_name);
+            }
+        }
+        else if(bnf_type==VarDefType::VAR_ARRAY)
+        {
+            dbg_ast_printf("VarDef :: IDENT '[' ConstExp ']';\n");
+            std::vector<int> dims;
+            int ndim=0;
+            for(auto &exp:const_exps->vec)
+            {
+                exp->Eval();
+                ndim++;
+                dims.push_back(exp->val);
+            }
+
+            std::cout << ir_name << " = alloc ";
+            print_dims(dims,ndim);
+            if(is_global)
+                std::cout<<", zeroinit";
+            std::cout<<std::endl;
+        }
+        else
+            assert(false);
+        
+        
+        delete ndarr;
+        ndarr=nullptr;
+        
+        
     }
 };
 
-// InitVal :: = Exp;
+// InitVal :: = Exp | "{"[InitVal{"," InitVal}] "}";
 class InitValAST: public BaseExpAST
 {
 public:
     std::unique_ptr<BaseExpAST> exp;
+    std::unique_ptr<ExpVecAST> init_vals;
+    InitType bnf_type;
     void Eval() override
     {
+        
         if (is_evaled)
             return;
-        exp->Eval();
-        Copy(exp);
-        dbg_ast_printf("InitVal :: = Exp(%s);\n", exp->ident.c_str());
-        is_evaled = true;
+        if(bnf_type==InitType::INIT_VAR)
+        {
+            dbg_ast_printf("InitVal :: = Exp;\n");
+            exp->Eval();
+            Copy(exp);
+            is_evaled = true;
+            if(ndarr!=nullptr)
+                ndarr->push(exp->ident);
+        }
+        else if(bnf_type==InitType::INIT_ARRAY)
+        {
+            dbg_ast_printf("InitVal :: = '{' [Exp {',' Exp}] '}';\n");
+            int align_size=ndarr->get_align();
+            int old_cnt=ndarr->get_currcnt();
+            for(auto& init: init_vals->vec)
+            {
+                init->Eval();
+            }
+            int zero_added=align_size-(ndarr->get_currcnt()-old_cnt);
+            for(int i=0;i<zero_added;++i)
+                ndarr->push(0);
+            is_evaled=true;
+        }
+        
     }
 
     void GenerateIR()  override
