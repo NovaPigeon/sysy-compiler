@@ -10,7 +10,7 @@
 
 #include "symbol_table.h"
 
-#define DEBUG_AST
+//#define DEBUG_AST
 #ifdef DEBUG_AST
 #define dbg_ast_printf(...) fprintf(stderr, __VA_ARGS__)
 #else
@@ -140,6 +140,11 @@ enum LValType
     LVAL_ARRAY
 };
 
+enum FuncFParamType
+{
+    FUNCF_VAR,
+    FUNCF_ARR
+};
 static std::map<std::string, std::string> op_names = {
     {"!=", "ne"},
     {"==", "eq"},
@@ -173,6 +178,21 @@ static void print_dims(const std::vector<int> &dims, int ndim)
     {
         std::cout << ", " << dims[i] << "]";
     }
+}
+
+static std::string get_arr_type(const std::vector<int> &dims,int ndim)
+{
+    std::string res="";
+    for (int i = 0; i < ndim; ++i)
+    {
+        res+="[";
+    }
+    res+= "i32";
+    for (int i = ndim - 1; i >= 0; i--)
+    {
+        res+=", "+std::to_string(dims[i])+"]";
+    }
+    return res;
 }
 
 
@@ -303,6 +323,8 @@ class BaseAST
 {
 public:
     std::string ident = "";
+    std::string var_type="";
+    int ndim=-1;
     bool is_global=false;
     virtual ~BaseAST() = default;
     virtual void GenerateIR() = 0;
@@ -372,6 +394,8 @@ public:
         func_map[ident]=func_type->ident;
         symbol_table_stack.PushScope();
         std::vector<std::string> params;
+        std::vector<std::string> types;
+        std::vector<int> ndims;
         std::cout<<"fun @"<<ident<<"(";
 
         int cnt=0;
@@ -381,6 +405,8 @@ public:
                 std::cout<<", ";
             param->GenerateIR();
             params.push_back(param->ident);
+            types.push_back(param->var_type);
+            ndims.push_back(param->ndim);
             cnt++;
         }
 
@@ -388,14 +414,22 @@ public:
         if(func_type->ident=="i32")
             std::cout<<": "<<func_type->ident;
         std::cout << " {" << std::endl;
-        std::cout << "%entry_"<<ident<<":" << std::endl;
+        std::cout << "%_entry_"<<ident<<":" << std::endl;
 
-        for(auto& param: params)
+        for(int i=0;i<params.size();++i)
         {
-            symbol_table_stack.Insert(param, "%" + param);
-            symbol_info_t* info=symbol_table_stack.LookUp(param);
-            std::cout<<"  "<<info->ir_name<<" = alloc i32"<<std::endl;
-            std::cout<<"  store @"<<param<<", "<<info->ir_name<<std::endl;
+            std::string t=types[i];
+            SYMBOL_TYPE st;
+            if(t=="i32")
+                st=SYMBOL_TYPE::VAR_SYMBOL;
+            else
+                st=SYMBOL_TYPE::PTR_SYMBOL;
+            
+            symbol_table_stack.Insert(params[i], "%" + params[i],st,ndims[i]+1);
+            symbol_info_t* info=symbol_table_stack.LookUp(params[i]);
+            symbol_info_t* ninfo=symbol_table_stack.LookUp("arg_"+params[i]);
+            std::cout<<"  "<<info->ir_name<<" = alloc "<<t<<std::endl;
+            std::cout<<"  store "<<ninfo->ir_name<<", "<<info->ir_name<<std::endl;
         }
         block->GenerateIR();
         if(is_ret==false)
@@ -484,11 +518,11 @@ public:
     std::unique_ptr<BaseAST> closed_stmt;
     void GenerateIR() override
     {
-        std::string lable_then = "%then_" + std::to_string(label_cnt),
-                    lable_else = "%else_" + std::to_string(label_cnt),
-                    lable_end = "%end_" + std::to_string(label_cnt),
-                    lable_while_entry = "%while_entry_" + std::to_string(label_cnt),
-                    lable_while_body = "%while_body_" + std::to_string(label_cnt);
+        std::string lable_then = "%_then_" + std::to_string(label_cnt),
+                    lable_else = "%_else_" + std::to_string(label_cnt),
+                    lable_end = "%_end_" + std::to_string(label_cnt),
+                    lable_while_entry = "%_while_entry_" + std::to_string(label_cnt),
+                    lable_while_body = "%_while_body_" + std::to_string(label_cnt);
         label_cnt++;
         
         if(bnf_type==OpenStmtType::OSTMT_CLOSED)
@@ -600,9 +634,9 @@ public:
         else if(bnf_type==ClosedStmtType::CSTMT_ELSE)
         {
             dbg_ast_printf("ClosedStmt ::= IF '(' Exp ')' ClosedStmt ELSE ClosedStmt;\n");
-            std::string lable_then = "%then_" + std::to_string(label_cnt),
-                        lable_else = "%else_" + std::to_string(label_cnt),
-                        lable_end = "%end_" + std::to_string(label_cnt);
+            std::string lable_then = "%_then_" + std::to_string(label_cnt),
+                        lable_else = "%_else_" + std::to_string(label_cnt),
+                        lable_end = "%_end_" + std::to_string(label_cnt);
             label_cnt++;
 
             bool total_ret=true;
@@ -632,9 +666,9 @@ public:
         }
         else if(bnf_type==ClosedStmtType::CSTMT_WHILE)
         {
-            std::string lable_end = "%end_" + std::to_string(label_cnt),
-                        lable_while_entry = "%while_entry_" + std::to_string(label_cnt),
-                        lable_while_body = "%while_body_" + std::to_string(label_cnt);
+            std::string lable_end = "%_end_" + std::to_string(label_cnt),
+                        lable_while_entry = "%_while_entry_" + std::to_string(label_cnt),
+                        lable_while_body = "%_while_body_" + std::to_string(label_cnt);
             while_stack.push_back(label_cnt);
             label_cnt++;
             dbg_ast_printf("ClosedStmt :: = WHILE '(' Exp ')' ClosedStmt;\n");
@@ -728,7 +762,7 @@ public:
             dbg_ast_printf("SimpleStmt :: = BREAK ';'\n");
             assert(!while_stack.empty());
             int label_num=while_stack.back();
-            std::cout<<"  jump %end_"<<std::to_string(label_num)<<std::endl<<std::endl;
+            std::cout<<"  jump %_end_"<<std::to_string(label_num)<<std::endl<<std::endl;
             is_ret=true;
         }
         else if(bnf_type==SimpleStmtType::SSTMT_CONTINUE)
@@ -736,7 +770,7 @@ public:
             dbg_ast_printf("SimpleStmt :: = CONTINUE ';'\n");
             assert(!while_stack.empty());
             int label_num = while_stack.back();
-            std::cout << "  jump %while_entry_" << std::to_string(label_num) << std::endl
+            std::cout << "  jump %_while_entry_" << std::to_string(label_num) << std::endl
                       << std::endl;
             is_ret=true;
         }
@@ -1149,14 +1183,14 @@ public:
                 return;
             }
 
-            std::string lable_then = "%then_" + std::to_string(label_cnt),
-                        lable_else = "%else_" + std::to_string(label_cnt),
-                        lable_end = "%end_" + std::to_string(label_cnt);
+            std::string lable_then = "%_then_" + std::to_string(label_cnt),
+                        lable_else = "%_else_" + std::to_string(label_cnt),
+                        lable_end = "%_end_" + std::to_string(label_cnt);
             label_cnt++;
 
             ident = "t" + std::to_string(alloc_tmp);
             std::string ir_name = "@" + ident;
-            ir_name=symbol_table_stack.Insert(ident, ir_name);
+            ir_name=symbol_table_stack.Insert(ident, ir_name,SYMBOL_TYPE::VAR_SYMBOL);
             alloc_tmp++;
             std::cout << "  " << ir_name << " = alloc i32" << std::endl;
 
@@ -1229,14 +1263,14 @@ public:
                 is_evaled = true;
                 return;
             }
-            std::string lable_then = "%then_" + std::to_string(label_cnt),
-                        lable_else = "%else_" + std::to_string(label_cnt),
-                        lable_end = "%end_" + std::to_string(label_cnt);
+            std::string lable_then = "%_then_" + std::to_string(label_cnt),
+                        lable_else = "%_else_" + std::to_string(label_cnt),
+                        lable_end = "%_end_" + std::to_string(label_cnt);
             
             label_cnt++;
 
             std::string ir_name = "@t" + std::to_string(alloc_tmp);
-            ir_name=symbol_table_stack.Insert(ident, ir_name);
+            ir_name=symbol_table_stack.Insert(ident, ir_name,SYMBOL_TYPE::VAR_SYMBOL);
             alloc_tmp++;
             std::cout << "  " << ir_name << " = alloc i32" << std::endl;
 
@@ -1361,7 +1395,7 @@ public:
             
             const_init_val->Eval();
           
-            std::string ir_name=symbol_table_stack.Insert(ident,"@"+ident);
+            std::string ir_name=symbol_table_stack.Insert(ident,"@"+ident,SYMBOL_TYPE::ARR_SYMBOL,ndim);
             if(is_global)
             {
                 std::cout<<"global "<<ir_name<<" = alloc ";
@@ -1499,6 +1533,19 @@ public:
                     symbol_cnt++;
                     std::cout<<"  "<<ident<<" = load "<<info->ir_name<<std::endl;
                 }
+                else if(info->type==SYMBOL_TYPE::ARR_SYMBOL)
+                {
+                    ident = "%" + std::to_string(symbol_cnt);
+                    symbol_cnt++;
+                    std::cout << "  " << ident << " = getelemptr " << info->ir_name << ", 0"<<std::endl;
+                }
+                else if(info->type==SYMBOL_TYPE::PTR_SYMBOL)
+                {
+                    ident = "%" + std::to_string(symbol_cnt);
+                    symbol_cnt++;
+                    std::cout << "  " << ident << " = load " << info->ir_name << std::endl;
+                }
+
             }
         }
         else if(bnf_type==LValType::LVAL_ARRAY)
@@ -1516,8 +1563,26 @@ public:
             symbol_info_t *info=symbol_table_stack.LookUp(ident);
             std::string new_symbol;
             std::string old_symbol=info->ir_name;
-            
-            for(int i=0;i<ndim;++i)
+            if(info->type==SYMBOL_TYPE::PTR_SYMBOL)
+            {
+                new_symbol = "%" + std::to_string(symbol_cnt);
+                symbol_cnt++;
+                std::cout<<"  "<<new_symbol<<" = load "<<info->ir_name<<std::endl;
+                old_symbol=new_symbol;
+                new_symbol = "%" + std::to_string(symbol_cnt);
+                symbol_cnt++;
+                std::cout << "  " << new_symbol << " = getptr " << old_symbol << ", " << dims[0] << std::endl;
+                old_symbol = new_symbol;
+            }
+            else if(info->type==SYMBOL_TYPE::ARR_SYMBOL)
+            {
+                new_symbol = "%" + std::to_string(symbol_cnt);
+                symbol_cnt++;
+                std::cout << "  " << new_symbol << " = getelemptr " << old_symbol << ", " << dims[0] << std::endl;
+                old_symbol = new_symbol;
+            }
+
+            for(int i=1;i<ndim;++i)
             {
                 new_symbol="%"+std::to_string(symbol_cnt);
                 symbol_cnt++;
@@ -1525,16 +1590,20 @@ public:
                 old_symbol=new_symbol;
 
             }
-            ident=new_symbol;
-
-            if(!is_left)
+        
+            if(!is_left and ndim==info->ndim)
             {
-                std::string new_ident = "%" + std::to_string(symbol_cnt);
+                new_symbol = "%" + std::to_string(symbol_cnt);
                 symbol_cnt++;
-                std::cout<<"  "<<new_ident<<" = load "<<ident<<std::endl;
-                ident=new_ident;
+                std::cout<<"  "<<new_symbol<<" = load "<<old_symbol<<std::endl;
             }
-            printf("%s\n",ident.c_str());
+            if(!is_left and ndim<info->ndim)
+            {
+                new_symbol = "%" + std::to_string(symbol_cnt);
+                symbol_cnt++;
+                std::cout << "  " << new_symbol << " = getelemptr " << old_symbol << ", " << 0 << std::endl;
+            }
+            ident = new_symbol;
         }
 
 
@@ -1600,12 +1669,12 @@ public:
         if(is_global)
             std::cout<<"global ";
         std::string ir_name="@"+ident;
-        ir_name=symbol_table_stack.Insert(ident,ir_name);
         if(!is_global)
             std::cout<<"  ";
         if(bnf_type==VarDefType::VAR_ASSIGN_VAR)
         {
             dbg_ast_printf("VarDef :: IDENT '=' InitVal;\n");
+            ir_name = symbol_table_stack.Insert(ident, ir_name, SYMBOL_TYPE::VAR_SYMBOL);
             std::cout << ir_name << " = alloc i32";
             if (!is_global)
                 std::cout << std::endl;
@@ -1618,6 +1687,7 @@ public:
         else if(bnf_type==VarDefType::VAR)
         {
             dbg_ast_printf("VarDef :: IDENT\n");
+            ir_name = symbol_table_stack.Insert(ident, ir_name, SYMBOL_TYPE::VAR_SYMBOL);
             std::cout << ir_name << " = alloc i32";
             if (!is_global)
                 std::cout << std::endl;
@@ -1627,15 +1697,15 @@ public:
         else if(bnf_type==VarDefType::VAR_ASSIGN_ARRAY)
         {
             dbg_ast_printf("VarDef :: IDENT '[' ConstExp ']' '=' InitVal;\n");
-
             std::vector<int> dims;
-            int ndim=0;
-            for(auto &exp: const_exps->vec)
+            int ndim = 0;
+            for (auto &exp : const_exps->vec)
             {
                 exp->Eval();
                 dims.push_back(exp->val);
                 ndim++;
             }
+            ir_name = symbol_table_stack.Insert(ident, ir_name, SYMBOL_TYPE::ARR_SYMBOL,ndim);
             
             std::cout<<ir_name<<" = alloc ";
             print_dims(dims,ndim);
@@ -1665,13 +1735,14 @@ public:
         {
             dbg_ast_printf("VarDef :: IDENT '[' ConstExp ']';\n");
             std::vector<int> dims;
-            int ndim=0;
-            for(auto &exp:const_exps->vec)
+            int ndim = 0;
+            for (auto &exp : const_exps->vec)
             {
                 exp->Eval();
                 ndim++;
                 dims.push_back(exp->val);
             }
+            ir_name = symbol_table_stack.Insert(ident, ir_name, SYMBOL_TYPE::ARR_SYMBOL,ndim);
 
             std::cout << ir_name << " = alloc ";
             print_dims(dims,ndim);
@@ -1733,18 +1804,44 @@ public:
     }
 };
 
-// FuncFParam :: = BType IDENT;
+// FuncFParam ::= BType IDENT ["[" "]" {"[" ConstExp "]"}];
 class FuncFParamAST: public BaseAST
 {
 public:
     std::unique_ptr<BaseAST> btype;
+    FuncFParamType bnf_type;
+    std::unique_ptr<ExpVecAST> const_exps;
     void GenerateIR() override
     {
-        btype->GenerateIR();
-        dbg_ast_printf("FuncFParam ::= BType(%s) IDENT(%s)\n;",
-                        btype->ident.c_str(),
-                        ident.c_str());
-        std::cout<<"@"<<ident<<": "<<btype->ident;
+        if(bnf_type==FuncFParamType::FUNCF_VAR)
+        {
+            btype->GenerateIR();
+            dbg_ast_printf("FuncFParam ::= BType(%s) IDENT(%s);\n",
+                            btype->ident.c_str(),
+                            ident.c_str());
+            var_type=btype->ident;
+            std::string ir_name=symbol_table_stack.Insert("arg_"+ident,"@"+ident,SYMBOL_TYPE::VAR_SYMBOL);
+            std::cout<<ir_name<<": "<<btype->ident;
+        }
+        else if(bnf_type==FuncFParamType::FUNCF_ARR)
+        {
+            btype->GenerateIR();
+            dbg_ast_printf("FuncFParam ::= BType IDENT(%s) '[ ]' { '[' ConstExp ']' };\n",
+                           ident.c_str());
+            std::vector<int> dims;
+            int ndim=0;
+            for(auto &exp : const_exps->vec)
+            {
+                exp->Eval();
+                dims.push_back(exp->val);
+                ndim++;
+            }
+            std::string ir_name = symbol_table_stack.Insert("arg_"+ident, "@" + ident, SYMBOL_TYPE::PTR_SYMBOL,ndim);
+            this->ndim=ndim;
+            this->var_type="*"+get_arr_type(dims,ndim);
+            std::cout<<ir_name<<": "<<this->var_type;
+            
+        }
         
     }
 };

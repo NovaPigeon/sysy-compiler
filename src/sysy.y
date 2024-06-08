@@ -153,6 +153,23 @@ FuncFParam
     auto func_fparam=new FuncFParamAST();
     func_fparam->btype=unique_ptr<BaseAST>($1);
     func_fparam->ident=*unique_ptr<string>($2);
+    func_fparam->bnf_type=FuncFParamType::FUNCF_VAR;
+    $$=func_fparam;
+  }
+  | Type IDENT '[' ']' ConstExpArrs {
+    auto func_fparam=new FuncFParamAST();
+    func_fparam->btype=unique_ptr<BaseAST>($1);
+    func_fparam->ident=*unique_ptr<string>($2);
+    func_fparam->const_exps=unique_ptr<ExpVecAST>($5);
+    func_fparam->bnf_type=FuncFParamType::FUNCF_ARR;
+    $$=func_fparam;
+  }
+  | Type IDENT '[' ']' {
+    auto func_fparam=new FuncFParamAST();
+    func_fparam->btype=unique_ptr<BaseAST>($1);
+    func_fparam->ident=*unique_ptr<string>($2);
+    func_fparam->const_exps=unique_ptr<ExpVecAST>(new ExpVecAST());
+    func_fparam->bnf_type=FuncFParamType::FUNCF_ARR;
     $$=func_fparam;
   }
   ;

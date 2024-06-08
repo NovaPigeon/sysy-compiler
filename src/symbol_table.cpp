@@ -1,5 +1,6 @@
 #include "symbol_table.h"
 #include <iostream>
+//#define DEBUG_SYMTAB
 #ifdef DEBUG_SYMTAB
 #define dbg_sym_printf(...) fprintf(stderr, __VA_ARGS__)
 #else
@@ -20,14 +21,15 @@ std::string SymbolTable::Insert(std::string symbol,int val)
     this->symbol_table[symbol]=info;
     return "";
 }
-std::string SymbolTable::Insert(std::string symbol, std::string ir_name)
+std::string SymbolTable::Insert(std::string symbol, std::string ir_name,SYMBOL_TYPE type,int ndim)
 {
     if (Exist(symbol))
         return "";
     symbol_info_t *info = new symbol_info_t;
-    info->type=SYMBOL_TYPE::VAR_SYMBOL;
     info->ir_name=ir_name+name;
-    dbg_sym_printf("insert var %s %s\n", symbol.c_str(), info->ir_name.c_str());
+    info->type = type;
+    info->ndim=ndim;
+    dbg_sym_printf("insert var %s %s %d\n", symbol.c_str(), info->ir_name.c_str(),info->type);
     this->symbol_table[symbol] = info;
     return info->ir_name;
 }

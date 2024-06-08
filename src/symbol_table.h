@@ -6,14 +6,18 @@
 enum SYMBOL_TYPE
 {
     CONST_SYMBOL,
-    VAR_SYMBOL
+    VAR_SYMBOL,
+    ARR_SYMBOL,
+    PTR_SYMBOL
 };
 typedef struct
 {
     SYMBOL_TYPE type;
     int val;
     int addr;
+    int ndim;
     std::string ir_name;
+    
 } symbol_info_t;
 
 
@@ -33,7 +37,7 @@ public:
     }
     SymbolTable(int depth,int id):stack_depth(depth),id(id),child_cnt(0){}
     std::string Insert(std::string symbol,int val);
-    std::string Insert(std::string symbol, std::string ir_name);
+    std::string Insert(std::string symbol, std::string ir_name,SYMBOL_TYPE type,int ndim);
     bool Exist(std::string symbol);
     symbol_info_t *LookUp(std::string symbol);
     SymbolTable *PopScope();
@@ -77,9 +81,9 @@ public:
     {
         return current_symtab->Insert(symbol,val);
     }
-    std::string Insert(std::string symbol, std::string ir_name)
+    std::string Insert(std::string symbol, std::string ir_name,SYMBOL_TYPE type,int ndim=-1)
     {
-        return current_symtab->Insert(symbol,ir_name);
+        return current_symtab->Insert(symbol,ir_name,type,ndim);
     }
     bool Exist(std::string symbol)
     {
