@@ -246,11 +246,10 @@ public:
     {
         return val_cnt;
     }
-    int get_align()
+    int get_align(int depth)
     {
-        if(val_cnt==0)
-            return dims_size[ndim-1];
-        for(int i=0;i<ndim;++i)
+        //printf("%d\n",depth);
+        for(int i=depth;i<ndim;++i)
         {
             if(val_cnt%dims_size[i]==0)
                 return dims_size[i];
@@ -376,6 +375,7 @@ public:
 };
 
 static NDimArray *ndarr=nullptr;
+static int dim_depth=0;
 
 class VecAST
 {
@@ -1472,7 +1472,7 @@ public:
             }
             ndarr=new NDimArray(dims,ndim);
 
-            
+            dim_depth=0;
             const_init_val->Eval();
           
             std::string ir_name=symbol_table_stack.Insert(ident,"@"+ident,SYMBOL_TYPE::ARR_SYMBOL,ndim);
@@ -1537,12 +1537,15 @@ public:
         else if(bnf_type==InitType::INIT_ARRAY)
         {
             dbg_ast_printf("ConstInitVal :: '{' [ConstInitVal {',' ConstInitVal}] '}'\n");
-            int align_size=ndarr->get_align();
+            int old_depth=dim_depth;
+            int align_size=ndarr->get_align(old_depth);
             int old_cnt=ndarr->get_currcnt();
+            dim_depth++;
             for(auto& init:const_init_vals->vec)
             {
                 init->Eval();
             }
+            dim_depth=old_depth;
             int zero_added=align_size-(ndarr->get_currcnt()-old_cnt);
             
             for(int i=0;i<zero_added;++i)
@@ -1781,6 +1784,7 @@ public:
         else if(bnf_type==VarDefType::VAR_ASSIGN_ARRAY)
         {
             dbg_ast_printf("VarDef :: IDENT '[' ConstExp ']' '=' InitVal;\n");
+            dim_depth=0;
             std::vector<int> dims;
             int ndim = 0;
             for (auto &exp : const_exps->vec)
@@ -1877,12 +1881,15 @@ public:
         else if(bnf_type==InitType::INIT_ARRAY)
         {
             dbg_ast_printf("InitVal :: = '{' [Exp {',' Exp}] '}';\n");
-            int align_size=ndarr->get_align();
-            int old_cnt=ndarr->get_currcnt();
+            int old_cnt = ndarr->get_currcnt();
+            int align_size=ndarr->get_align(dim_depth);
+            int old_depth=dim_depth;
+            dim_depth++;
             for(auto& init: init_vals->vec)
             {
                 init->Eval();
             }
+            dim_depth=old_depth;
             int zero_added=align_size-(ndarr->get_currcnt()-old_cnt);
             for(int i=0;i<zero_added;++i)
                 ndarr->push(0);
