@@ -254,6 +254,11 @@ public:
             std::cout<<"{";
         
         val_cnt=dims_size[0];
+        if(val_cnt==1)
+        {
+            std::cout<<vals[0]<<"}";
+            return;
+        }
         
         for(int i=1;i<=val_cnt;++i)
         {
@@ -1268,9 +1273,9 @@ public:
                         lable_end = "%_end_" + std::to_string(label_cnt);
             
             label_cnt++;
-
+            ident="t" + std::to_string(alloc_tmp);
             std::string ir_name = "@t" + std::to_string(alloc_tmp);
-            ir_name=symbol_table_stack.Insert(ident, ir_name,SYMBOL_TYPE::VAR_SYMBOL);
+            ir_name=symbol_table_stack.Insert(ident, "@"+ident,SYMBOL_TYPE::VAR_SYMBOL);
             alloc_tmp++;
             std::cout << "  " << ir_name << " = alloc i32" << std::endl;
 

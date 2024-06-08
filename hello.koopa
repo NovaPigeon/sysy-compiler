@@ -6,255 +6,94 @@ decl @putch(i32)
 decl @putarray(i32, *i32)
 decl @starttime()
 decl @stoptime()
-global @n = alloc i32, zeroinit
-fun @swap(@array_0: *i32, @i_0: i32, @j_0: i32): i32 {
-%entry_swap:
-  %array_0 = alloc *i32
-  store @array_0, %array_0
-  %i_0 = alloc i32
-  store @i_0, %i_0
-  %j_0 = alloc i32
-  store @j_0, %j_0
-  @temp_0 = alloc i32
-  %0 = load %i_0
-  %1 = load %array_0
-  %2 = getptr %1, %0
-  %3 = load %2
-  store %3, @temp_0
-  %4 = load %j_0
-  %5 = load %array_0
-  %6 = getptr %5, %4
-  %7 = load %6
-  %8 = load %i_0
-  %9 = load %array_0
-  %10 = getptr %9, %8
-  store %7, %10
-  %11 = load @temp_0
-  %12 = load %j_0
-  %13 = load %array_0
-  %14 = getptr %13, %12
-  store %11, %14
-  ret 0
-}
-fun @heap_ajust(@arr_1: *i32, @start_1: i32, @end_1: i32): i32 {
-%entry_heap_ajust:
-  %arr_1 = alloc *i32
-  store @arr_1, %arr_1
-  %start_1 = alloc i32
-  store @start_1, %start_1
-  %end_1 = alloc i32
-  store @end_1, %end_1
-  @dad_1 = alloc i32
-  %0 = load %start_1
-  store %0, @dad_1
-  @son_1 = alloc i32
-  %1 = load @dad_1
-  %2 = mul %1, 2
-  %3 = add %2, 1
-  store %3, @son_1
-  jump %while_entry_0
+fun @exgcd(@a_0: i32, @b_0: i32, @x_0: *i32, @y_0: *i32): i32 {
+%_entry_exgcd:
+  %a_0 = alloc i32
+  store @a_0, %a_0
+  %b_0 = alloc i32
+  store @b_0, %b_0
+  %x_0 = alloc *i32
+  store @x_0, %x_0
+  %y_0 = alloc *i32
+  store @y_0, %y_0
+  %0 = load %b_0
+  %1 = eq %0, 0
+  br %1, %_then_0, %_else_0
 
-%while_entry_0:
-  %4 = load @son_1
-  %5 = load %end_1
-  %6 = add %5, 1
-  %7 = lt %4, %6
-  br %7, %while_body_0, %end_0
+%_then_0:
+  %2 = load %x_0
+  %3 = getptr %2, 0
+  store 1, %3
+  %4 = load %y_0
+  %5 = getptr %4, 0
+  store 0, %5
+  %6 = load %a_0
+  ret %6
 
-%while_body_0:
-  %8 = load @son_1
-  %9 = load %end_1
-  %10 = lt %8, %9
-  @t0_1_0 = alloc i32
-  %11 = ne %10, 0
-  br %11, %then_2, %else_2
+%_else_0:
+  @r_0_1 = alloc i32
+  %7 = load %b_0
+  %8 = load %a_0
+  %9 = load %b_0
+  %10 = mod %8, %9
+  %11 = load %x_0
+  %12 = load %y_0
+  %13 = call @exgcd(%7, %10, %11, %12)
+  store %13, @r_0_1
+  @t_0_1 = alloc i32
+  %14 = load %x_0
+  %15 = getptr %14, 0
+  %16 = load %15
+  store %16, @t_0_1
+  %17 = load %y_0
+  %18 = getptr %17, 0
+  %19 = load %18
+  %20 = load %x_0
+  %21 = getptr %20, 0
+  store %19, %21
+  %22 = load @t_0_1
+  %23 = load %a_0
+  %24 = load %b_0
+  %25 = div %23, %24
+  %26 = load %y_0
+  %27 = getptr %26, 0
+  %28 = load %27
+  %29 = mul %25, %28
+  %30 = sub %22, %29
+  %31 = load %y_0
+  %32 = getptr %31, 0
+  store %30, %32
+  %33 = load @r_0_1
+  ret %33
 
-%then_2:
-  %12 = load @son_1
-  %13 = load %arr_1
-  %14 = getptr %13, %12
-  %15 = load %14
-  %16 = load @son_1
-  %17 = add %16, 1
-  %18 = load %arr_1
-  %19 = getptr %18, %17
-  %20 = load %19
-  %21 = lt %15, %20
-  %22 = ne %21, 0
-  store %22, @t0_1_0
-  jump %end_2
-
-%else_2:
-  store 0, @t0_1_0
-  jump %end_2
-
-%end_2:
-  %23 = load @t0_1_0
-  br %23, %then_1, %end_1
-
-%then_1:
-  %24 = load @son_1
-  %25 = add %24, 1
-  store %25, @son_1
-  jump %end_1
-
-%end_1:
-  %26 = load @dad_1
-  %27 = load %arr_1
-  %28 = getptr %27, %26
-  %29 = load %28
-  %30 = load @son_1
-  %31 = load %arr_1
-  %32 = getptr %31, %30
-  %33 = load %32
-  %34 = gt %29, %33
-  br %34, %then_3, %else_3
-
-%then_3:
-  ret 0
-
-%else_3:
-  %35 = load %arr_1
-  %36 = load @dad_1
-  %37 = load @son_1
-  %38 = call @swap(%35, %36, %37)
-  store %38, @dad_1
-  %39 = load @son_1
-  store %39, @dad_1
-  %40 = load @dad_1
-  %41 = mul %40, 2
-  %42 = add %41, 1
-  store %42, @son_1
-  jump %end_3
-
-%end_3:
-  jump %while_entry_0
-
-%end_0:
-  ret 0
-}
-fun @heap_sort(@arr_2: *i32, @len_2: i32): i32 {
-%entry_heap_sort:
-  %arr_2 = alloc *i32
-  store @arr_2, %arr_2
-  %len_2 = alloc i32
-  store @len_2, %len_2
-  @i_2 = alloc i32
-  @tmp_2 = alloc i32
-  %0 = load %len_2
-  %1 = div %0, 2
-  %2 = sub %1, 1
-  store %2, @i_2
-  jump %while_entry_4
-
-%while_entry_4:
-  %3 = load @i_2
-  %4 = gt %3, -1
-  br %4, %while_body_4, %end_4
-
-%while_body_4:
-  %5 = load %len_2
-  %6 = sub %5, 1
-  store %6, @tmp_2
-  %7 = load %arr_2
-  %8 = load @i_2
-  %9 = load @tmp_2
-  %10 = call @heap_ajust(%7, %8, %9)
-  store %10, @tmp_2
-  %11 = load @i_2
-  %12 = sub %11, 1
-  store %12, @i_2
-  jump %while_entry_4
-
-%end_4:
-  %13 = load %len_2
-  %14 = sub %13, 1
-  store %14, @i_2
-  jump %while_entry_5
-
-%while_entry_5:
-  %15 = load @i_2
-  %16 = gt %15, 0
-  br %16, %while_body_5, %end_5
-
-%while_body_5:
-  @tmp0_2_1 = alloc i32
-  store 0, @tmp0_2_1
-  %17 = load %arr_2
-  %18 = load @tmp0_2_1
-  %19 = load @i_2
-  %20 = call @swap(%17, %18, %19)
-  store %20, @tmp_2
-  %21 = load @i_2
-  %22 = sub %21, 1
-  store %22, @tmp_2
-  %23 = load %arr_2
-  %24 = load @tmp0_2_1
-  %25 = load @tmp_2
-  %26 = call @heap_ajust(%23, %24, %25)
-  store %26, @tmp_2
-  %27 = load @i_2
-  %28 = sub %27, 1
-  store %28, @i_2
-  jump %while_entry_5
-
-%end_5:
-  ret 0
 }
 fun @main(): i32 {
-%entry_main:
-  store 10, @n
-  @a_3 = alloc [i32, 10]
-  %0 = getelemptr @a_3, 0
-  store 4, %0
-  %1 = getelemptr @a_3, 1
-  store 3, %1
-  %2 = getelemptr @a_3, 2
-  store 9, %2
-  %3 = getelemptr @a_3, 3
-  store 2, %3
-  %4 = getelemptr @a_3, 4
-  store 0, %4
-  %5 = getelemptr @a_3, 5
-  store 1, %5
-  %6 = getelemptr @a_3, 6
-  store 6, %6
-  %7 = getelemptr @a_3, 7
-  store 5, %7
-  %8 = getelemptr @a_3, 8
-  store 7, %8
-  %9 = getelemptr @a_3, 9
-  store 8, %9
-  @i_3 = alloc i32
-  store 0, @i_3
-  %10 = getelemptr @a_3, 0
-  %11 = load @n
-  %12 = call @heap_sort(%10, %11)
-  store %12, @i_3
-  jump %while_entry_6
-
-%while_entry_6:
-  %13 = load @i_3
-  %14 = load @n
-  %15 = lt %13, %14
-  br %15, %while_body_6, %end_6
-
-%while_body_6:
-  @tmp_3_0 = alloc i32
-  %16 = load @i_3
-  %17 = getelemptr @a_3, %16
-  %18 = load %17
-  store %18, @tmp_3_0
-  %19 = load @tmp_3_0
-  call @putint(%19)
-  store 10, @tmp_3_0
-  %20 = load @tmp_3_0
-  call @putch(%20)
-  %21 = load @i_3
-  %22 = add %21, 1
-  store %22, @i_3
-  jump %while_entry_6
-
-%end_6:
+%_entry_main:
+  @a_1 = alloc i32
+  store 7, @a_1
+  @b_1 = alloc i32
+  store 15, @b_1
+  @x_1 = alloc [i32, 1]
+  store {1}, @x_1
+  @y_1 = alloc [i32, 1]
+  store {1}, @y_1
+  %0 = load @a_1
+  %1 = load @b_1
+  %2 = getelemptr @x_1, 0
+  %3 = getelemptr @y_1, 0
+  %4 = call @exgcd(%0, %1, %2, %3)
+  %5 = getelemptr @x_1, 0
+  %6 = load %5
+  %7 = load @b_1
+  %8 = mod %6, %7
+  %9 = load @b_1
+  %10 = add %8, %9
+  %11 = load @b_1
+  %12 = mod %10, %11
+  %13 = getelemptr @x_1, 0
+  store %12, %13
+  %14 = getelemptr @x_1, 0
+  %15 = load %14
+  call @putint(%15)
   ret 0
 }
