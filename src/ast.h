@@ -8,7 +8,7 @@
 #include <map>
 #include <vector>
 #include <stack>
-
+#include <algorithm>
 #include "symbol_table.h"
 
 //#define DEBUG_AST
@@ -168,6 +168,10 @@ static int alloc_tmp=0;
 static std::vector<int> while_stack;
 static std::string current_func;
 
+static bool isDigit(const std::string& str)
+{
+    return !str.empty() && std::all_of(str.begin(),str.end(),::isdigit);
+}
 static void print_dims(const std::vector<int> &dims, int ndim)
 {
     for (int i = 0; i < ndim; ++i)
@@ -298,13 +302,30 @@ public:
             else
                 std::cout<<", "<<vals[i-1];
         }
+        
 
+    }
+    bool is_all_const()
+    {
+        for(auto &val : vals)
+        {
+            if(!isDigit(val))
+                return false;
+        }
+        return true;
     }
     void generate_assign(std::string ir_name)
     {
         for (int i = val_cnt; i < dims_size[0]; ++i)
             vals.push_back("0");
         val_cnt=dims_size[0];
+        if(is_all_const())
+        {
+            std::cout<<"  store ";
+            generate_aggregate();
+            std::cout<<", "<<ir_name<<std::endl;
+            return;
+        }
         std::stack<std::string> base_ptrs;
         std::string last_symbol=ir_name;
         for(int i=0;i<ndim;++i)
@@ -335,7 +356,7 @@ public:
             symbol_cnt++;
             std::string old_symbol=base_ptrs.top();
             base_ptrs.pop();
-            std::cout<<"  "<<new_symbol<<" = getptr "<<old_symbol<<", "<<sub_dims_size[align_level]<<std::endl;
+            std::cout<<"  "<<new_symbol<<" = getptr "<<old_symbol<<", "<<1<<std::endl;
             base_ptrs.push(new_symbol);
             old_symbol=new_symbol;
             for(int j=0;j<ele_to_pop;++j)
@@ -351,6 +372,7 @@ public:
         }
         
     }
+
 };
 
 static NDimArray *ndarr=nullptr;
