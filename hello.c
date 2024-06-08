@@ -1,26 +1,10 @@
-int exgcd(int a, int b, int x[], int y[])
-{
-    if (b == 0)
-    {
-        x[0] = 1;
-        y[0] = 0;
-        return a;
-    }
-    else
-    {
-        int r = exgcd(b, a % b, x, y);
-        int t = x[0];
-        x[0] = y[0];
-        y[0] = (t - a / b * y[0]);
-        return r;
-    }
-}
-
+// test array define
 int main()
 {
-    int a = 7, b = 15, x[1] = {1}, y[1] = {1};
-    exgcd(a, b, x, y);
-    x[0] = (x[0] % b + b) % b;
-    putint(x[0]);
-    return 0;
+    int a[4][2] = {};
+    int b[4][2] = {1, 2, 3, 4, 5, 6, 7, 8};
+    int c[4][2] = {{1, 2}, {3, 4}, {5, 6}, {7, 8}};
+    int d[4][2] = {1, 2, {3}, {5}, 7, 8};
+    int e[4][2] = {{d[2][1], c[2][1]}, {3, 4}, {5, 6}, {7, 8}};
+    return e[3][1] + e[0][0] + e[0][1] + a[2][0];
 }

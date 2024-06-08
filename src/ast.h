@@ -7,6 +7,7 @@
 #include <sstream>
 #include <map>
 #include <vector>
+#include <stack>
 
 #include "symbol_table.h"
 
@@ -201,6 +202,7 @@ class NDimArray
 private:
     std::vector<int> dims;
     std::vector<int> dims_size;
+    std::vector<int> sub_dims_size;
     int ndim;
     std::vector<std::string> vals;
     int val_cnt;
@@ -212,11 +214,17 @@ public:
         for(int i=0;i<ndim;++i)
         {
             int size=1;
+            int sub_size=1;
             for(int j=i;j<ndim;++j)
             {
                 size*=dims[j];
             }
+            for (int j = i+1; j < ndim; ++j)
+            {
+                sub_size *= dims[j];
+            }
             dims_size.push_back(size);
+            sub_dims_size.push_back(sub_size);
         }
         val_cnt=0;
     }
@@ -294,9 +302,54 @@ public:
     }
     void generate_assign(std::string ir_name)
     {
-        std::cout<<"  store ";
-        generate_aggregate();
-        std::cout<<", "<<ir_name<<std::endl;
+        for (int i = val_cnt; i < dims_size[0]; ++i)
+            vals.push_back("0");
+        val_cnt=dims_size[0];
+        std::stack<std::string> base_ptrs;
+        std::string last_symbol=ir_name;
+        for(int i=0;i<ndim;++i)
+        {
+            std::string new_symbol="%"+std::to_string(symbol_cnt);
+            std::cout<<"  "<<new_symbol<<" = getelemptr "<<last_symbol<<", 0"<<std::endl;
+            last_symbol=new_symbol;
+            base_ptrs.push(new_symbol);
+            symbol_cnt++;
+        }
+        std::cout << "  store " << vals[0] << ", " << last_symbol << std::endl;
+        for(int i=1;i<val_cnt;++i)
+        {
+            
+            int align_level=0;
+            for(int j=0;j<ndim;++j)
+            {
+                if(i%sub_dims_size[j]==0)
+                {
+                    align_level=j;
+                    break;
+                }
+            }
+            int ele_to_pop=base_ptrs.size()-align_level-1;
+            for(int j=0;j<ele_to_pop;++j)
+                base_ptrs.pop();
+            std::string new_symbol="%"+std::to_string(symbol_cnt);
+            symbol_cnt++;
+            std::string old_symbol=base_ptrs.top();
+            base_ptrs.pop();
+            std::cout<<"  "<<new_symbol<<" = getptr "<<old_symbol<<", "<<sub_dims_size[align_level]<<std::endl;
+            base_ptrs.push(new_symbol);
+            old_symbol=new_symbol;
+            for(int j=0;j<ele_to_pop;++j)
+            {
+                new_symbol="%"+std::to_string(symbol_cnt);
+                symbol_cnt++;
+                std::cout << "  " << new_symbol << " = getelemptr " << old_symbol << ", " << 0 << std::endl;
+                old_symbol=new_symbol;
+                base_ptrs.push(new_symbol);
+            }
+            std::cout<<"  store "<<vals[i]<<", "<<new_symbol<<std::endl;
+            
+        }
+        
     }
 };
 
@@ -1671,15 +1724,15 @@ public:
     void GenerateIR() override
     {
         
-        if(is_global)
-            std::cout<<"global ";
         std::string ir_name="@"+ident;
-        if(!is_global)
-            std::cout<<"  ";
         if(bnf_type==VarDefType::VAR_ASSIGN_VAR)
         {
             dbg_ast_printf("VarDef :: IDENT '=' InitVal;\n");
             ir_name = symbol_table_stack.Insert(ident, ir_name, SYMBOL_TYPE::VAR_SYMBOL);
+            if (is_global)
+                std::cout << "global ";
+            else
+                std::cout<<"  ";
             std::cout << ir_name << " = alloc i32";
             if (!is_global)
                 std::cout << std::endl;
@@ -1693,6 +1746,10 @@ public:
         {
             dbg_ast_printf("VarDef :: IDENT\n");
             ir_name = symbol_table_stack.Insert(ident, ir_name, SYMBOL_TYPE::VAR_SYMBOL);
+            if (is_global)
+                std::cout << "global ";
+            else
+                std::cout << "  ";
             std::cout << ir_name << " = alloc i32";
             if (!is_global)
                 std::cout << std::endl;
@@ -1711,12 +1768,16 @@ public:
                 ndim++;
             }
             ir_name = symbol_table_stack.Insert(ident, ir_name, SYMBOL_TYPE::ARR_SYMBOL,ndim);
-            
+            ndarr = new NDimArray(dims, ndim);
+            init_val->Eval();
+
+            if (is_global)
+                std::cout << "global ";
+            else
+                std::cout << "  ";
             std::cout<<ir_name<<" = alloc ";
             print_dims(dims,ndim);
 
-            ndarr=new NDimArray(dims,ndim);
-            init_val->Eval();
             int num_assigned = ndarr->get_currcnt();
             if(is_global)
             {
@@ -1749,6 +1810,10 @@ public:
             }
             ir_name = symbol_table_stack.Insert(ident, ir_name, SYMBOL_TYPE::ARR_SYMBOL,ndim);
 
+            if (is_global)
+                std::cout << "global ";
+            else
+                std::cout << "  ";
             std::cout << ir_name << " = alloc ";
             print_dims(dims,ndim);
             if(is_global)

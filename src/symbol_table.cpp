@@ -1,6 +1,6 @@
 #include "symbol_table.h"
 #include <iostream>
-#define DEBUG_SYMTAB
+//#define DEBUG_SYMTAB
 #ifdef DEBUG_SYMTAB
 #define dbg_sym_printf(...) fprintf(stderr, __VA_ARGS__)
 #else

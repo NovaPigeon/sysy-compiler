@@ -6,94 +6,133 @@ decl @putch(i32)
 decl @putarray(i32, *i32)
 decl @starttime()
 decl @stoptime()
-fun @exgcd(@a_0: i32, @b_0: i32, @x_0: *i32, @y_0: *i32): i32 {
-%_entry_exgcd:
-  %a_0 = alloc i32
-  store @a_0, %a_0
-  %b_0 = alloc i32
-  store @b_0, %b_0
-  %x_0 = alloc *i32
-  store @x_0, %x_0
-  %y_0 = alloc *i32
-  store @y_0, %y_0
-  %0 = load %b_0
-  %1 = eq %0, 0
-  br %1, %_then_0, %_else_0
-
-%_then_0:
-  %2 = load %x_0
-  %3 = getptr %2, 0
-  store 1, %3
-  %4 = load %y_0
-  %5 = getptr %4, 0
-  store 0, %5
-  %6 = load %a_0
-  ret %6
-
-%_else_0:
-  @r_0_1 = alloc i32
-  %7 = load %b_0
-  %8 = load %a_0
-  %9 = load %b_0
-  %10 = mod %8, %9
-  %11 = load %x_0
-  %12 = load %y_0
-  %13 = call @exgcd(%7, %10, %11, %12)
-  store %13, @r_0_1
-  @t_0_1 = alloc i32
-  %14 = load %x_0
-  %15 = getptr %14, 0
-  %16 = load %15
-  store %16, @t_0_1
-  %17 = load %y_0
-  %18 = getptr %17, 0
-  %19 = load %18
-  %20 = load %x_0
-  %21 = getptr %20, 0
-  store %19, %21
-  %22 = load @t_0_1
-  %23 = load %a_0
-  %24 = load %b_0
-  %25 = div %23, %24
-  %26 = load %y_0
-  %27 = getptr %26, 0
-  %28 = load %27
-  %29 = mul %25, %28
-  %30 = sub %22, %29
-  %31 = load %y_0
-  %32 = getptr %31, 0
-  store %30, %32
-  %33 = load @r_0_1
-  ret %33
-
-}
 fun @main(): i32 {
 %_entry_main:
-  @a_1 = alloc i32
-  store 7, @a_1
-  @b_1 = alloc i32
-  store 15, @b_1
-  @x_1 = alloc [i32, 1]
-  store {1}, @x_1
-  @y_1 = alloc [i32, 1]
-  store {1}, @y_1
-  %0 = load @a_1
-  %1 = load @b_1
-  %2 = getelemptr @x_1, 0
-  %3 = getelemptr @y_1, 0
-  %4 = call @exgcd(%0, %1, %2, %3)
-  %5 = getelemptr @x_1, 0
-  %6 = load %5
-  %7 = load @b_1
-  %8 = mod %6, %7
-  %9 = load @b_1
-  %10 = add %8, %9
-  %11 = load @b_1
-  %12 = mod %10, %11
-  %13 = getelemptr @x_1, 0
-  store %12, %13
-  %14 = getelemptr @x_1, 0
-  %15 = load %14
-  call @putint(%15)
-  ret 0
+  @a_0 = alloc [[i32, 2], 4]
+  %0 = getelemptr @a_0, 0
+  %1 = getelemptr %0, 0
+  store 0, %1
+  %2 = getptr %1, 1
+  store 0, %2
+  %3 = getptr %0, 2
+  %4 = getptr %3, 0
+  store 0, %4
+  %5 = getptr %4, 1
+  store 0, %5
+  %6 = getptr %3, 2
+  %7 = getptr %6, 0
+  store 0, %7
+  %8 = getptr %7, 1
+  store 0, %8
+  %9 = getptr %6, 2
+  %10 = getptr %9, 0
+  store 0, %10
+  %11 = getptr %10, 1
+  store 0, %11
+  @b_0 = alloc [[i32, 2], 4]
+  %12 = getelemptr @b_0, 0
+  %13 = getelemptr %12, 0
+  store 1, %13
+  %14 = getptr %13, 1
+  store 2, %14
+  %15 = getptr %12, 2
+  %16 = getptr %15, 0
+  store 3, %16
+  %17 = getptr %16, 1
+  store 4, %17
+  %18 = getptr %15, 2
+  %19 = getptr %18, 0
+  store 5, %19
+  %20 = getptr %19, 1
+  store 6, %20
+  %21 = getptr %18, 2
+  %22 = getptr %21, 0
+  store 7, %22
+  %23 = getptr %22, 1
+  store 8, %23
+  @c_0 = alloc [[i32, 2], 4]
+  %24 = getelemptr @c_0, 0
+  %25 = getelemptr %24, 0
+  store 1, %25
+  %26 = getptr %25, 1
+  store 2, %26
+  %27 = getptr %24, 2
+  %28 = getptr %27, 0
+  store 3, %28
+  %29 = getptr %28, 1
+  store 4, %29
+  %30 = getptr %27, 2
+  %31 = getptr %30, 0
+  store 5, %31
+  %32 = getptr %31, 1
+  store 6, %32
+  %33 = getptr %30, 2
+  %34 = getptr %33, 0
+  store 7, %34
+  %35 = getptr %34, 1
+  store 8, %35
+  @d_0 = alloc [[i32, 2], 4]
+  %36 = getelemptr @d_0, 0
+  %37 = getelemptr %36, 0
+  store 1, %37
+  %38 = getptr %37, 1
+  store 2, %38
+  %39 = getptr %36, 2
+  %40 = getptr %39, 0
+  store 3, %40
+  %41 = getptr %40, 1
+  store 0, %41
+  %42 = getptr %39, 2
+  %43 = getptr %42, 0
+  store 5, %43
+  %44 = getptr %43, 1
+  store 0, %44
+  %45 = getptr %42, 2
+  %46 = getptr %45, 0
+  store 7, %46
+  %47 = getptr %46, 1
+  store 8, %47
+  %48 = getelemptr @d_0, 2
+  %49 = getelemptr %48, 1
+  %50 = load %49
+  %51 = getelemptr @c_0, 2
+  %52 = getelemptr %51, 1
+  %53 = load %52
+  @e_0 = alloc [[i32, 2], 4]
+  %54 = getelemptr @e_0, 0
+  %55 = getelemptr %54, 0
+  store %50, %55
+  %56 = getptr %55, 1
+  store %53, %56
+  %57 = getptr %54, 2
+  %58 = getptr %57, 0
+  store 3, %58
+  %59 = getptr %58, 1
+  store 4, %59
+  %60 = getptr %57, 2
+  %61 = getptr %60, 0
+  store 5, %61
+  %62 = getptr %61, 1
+  store 6, %62
+  %63 = getptr %60, 2
+  %64 = getptr %63, 0
+  store 7, %64
+  %65 = getptr %64, 1
+  store 8, %65
+  %66 = getelemptr @e_0, 3
+  %67 = getelemptr %66, 1
+  %68 = load %67
+  %69 = getelemptr @e_0, 0
+  %70 = getelemptr %69, 0
+  %71 = load %70
+  %72 = add %68, %71
+  %73 = getelemptr @e_0, 0
+  %74 = getelemptr %73, 1
+  %75 = load %74
+  %76 = add %72, %75
+  %77 = getelemptr @a_0, 2
+  %78 = getelemptr %77, 0
+  %79 = load %78
+  %80 = add %76, %79
+  ret %80
 }
