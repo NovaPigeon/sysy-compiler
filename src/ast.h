@@ -168,10 +168,6 @@ static int alloc_tmp=0;
 static std::vector<int> while_stack;
 static std::string current_func;
 
-static bool isDigit(const std::string& str)
-{
-    return !str.empty() && std::all_of(str.begin(),str.end(),::isdigit);
-}
 static void print_dims(const std::vector<int> &dims, int ndim)
 {
     for (int i = 0; i < ndim; ++i)
@@ -248,7 +244,6 @@ public:
     }
     int get_align(int depth)
     {
-        //printf("%d\n",depth);
         for(int i=depth;i<ndim;++i)
         {
             if(val_cnt%dims_size[i]==0)
@@ -304,72 +299,26 @@ public:
         
 
     }
-    bool is_all_const()
-    {
-        for(auto &val : vals)
-        {
-            if(!isDigit(val))
-                return false;
-        }
-        return true;
-    }
     void generate_assign(std::string ir_name)
     {
         for (int i = val_cnt; i < dims_size[0]; ++i)
             vals.push_back("0");
         val_cnt=dims_size[0];
-        // if(is_all_const())
-        // {
-        //     std::cout<<"  store ";
-        //     generate_aggregate();
-        //     std::cout<<", "<<ir_name<<std::endl;
-        //     return;
-        // }
-        std::stack<std::string> base_ptrs;
         std::string last_symbol=ir_name;
-        for(int i=0;i<ndim;++i)
+        for(int i=0;i<ndim-1;++i)
         {
             std::string new_symbol="%"+std::to_string(symbol_cnt);
             std::cout<<"  "<<new_symbol<<" = getelemptr "<<last_symbol<<", 0"<<std::endl;
             last_symbol=new_symbol;
-            base_ptrs.push(new_symbol);
             symbol_cnt++;
         }
-        std::cout << "  store " << vals[0] << ", " << last_symbol << std::endl;
-        for(int i=1;i<val_cnt;++i)
+        for(int i=0;i<val_cnt;++i)
         {
-            
-            int align_level=0;
-            for(int j=0;j<ndim;++j)
-            {
-                if(i%sub_dims_size[j]==0)
-                {
-                    align_level=j;
-                    break;
-                }
-            }
-            int ele_to_pop=base_ptrs.size()-align_level-1;
-            for(int j=0;j<ele_to_pop;++j)
-                base_ptrs.pop();
-            std::string new_symbol="%"+std::to_string(symbol_cnt);
+            std::string new_symbol = "%" + std::to_string(symbol_cnt);
             symbol_cnt++;
-            std::string old_symbol=base_ptrs.top();
-            base_ptrs.pop();
-            std::cout<<"  "<<new_symbol<<" = getptr "<<old_symbol<<", "<<1<<std::endl;
-            base_ptrs.push(new_symbol);
-            old_symbol=new_symbol;
-            for(int j=0;j<ele_to_pop;++j)
-            {
-                new_symbol="%"+std::to_string(symbol_cnt);
-                symbol_cnt++;
-                std::cout << "  " << new_symbol << " = getelemptr " << old_symbol << ", " << 0 << std::endl;
-                old_symbol=new_symbol;
-                base_ptrs.push(new_symbol);
-            }
-            std::cout<<"  store "<<vals[i]<<", "<<new_symbol<<std::endl;
-            
+            std::cout<<"  "<<new_symbol<<" = getelemptr "<<last_symbol<<", "<<i<<std::endl;
+            std::cout << "  store " << vals[i] << ", " << new_symbol << std::endl;
         }
-        
     }
 
 };
