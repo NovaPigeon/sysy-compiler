@@ -47,7 +47,7 @@ int main(int argc, const char *argv[])
   {
     ast->GenerateIR();
   }
-  else if(strcmp(mode,"-riscv")==0)
+  else if(strcmp(mode,"-riscv")==0 or strcmp(mode,"-perf")==0)
   {
     std::stringstream ss;
     std::cout.rdbuf(ss.rdbuf());
