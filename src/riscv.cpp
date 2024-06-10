@@ -41,6 +41,7 @@ static StackFrame stack_frame;
 static RegManager reg_manager;
 static int global_cnt=0;
 static std::vector<int> aggregate_vals;
+static int branch_cnt=0;
 
 
 static void GenLoadStoreInst(std::string op,std::string reg1,int imm,std::string reg2)
@@ -500,17 +501,28 @@ void Visit(const koopa_raw_branch_t &branch)
               << "  # branch" << std::endl;
     std::string label_true=branch.true_bb->name+1;
     std::string label_false=branch.false_bb->name+1;
+    std::string label_inter="inter_label_"+std::to_string(branch_cnt);
+    branch_cnt++;
     var_info_t var=Visit(branch.cond);
-    reg_manager.free_regs();
     std::string var_name;
     if(var.type==VAR_TYPE::ON_REG)
         var_name=gen_reg(var.reg_id);
     else
         var_name=std::to_string(var.stack_location)+"(sp)";
 
-    std::cout << "  bnez  " << var_name << ", " << label_true
+    std::cout << "  bnez  " << var_name << ", " << label_inter
               << std::endl;
-    std::cout << "  j     " << label_false << std::endl;
+    int new_reg = reg_manager.alloc_reg();
+    std::cout << "  la " << gen_reg(new_reg) << ", " << label_false << std::endl;
+    std::cout << "  jr " << gen_reg(new_reg) << std::endl;
+    
+    std::cout<<label_inter<<":"<<std::endl;
+
+    new_reg = reg_manager.alloc_reg();
+    std::cout << "  la " << gen_reg(new_reg) << ", " << label_true << std::endl;
+    std::cout << "  jr " << gen_reg(new_reg) << std::endl;
+
+    reg_manager.free_regs();
 }
 
 void Visit(const koopa_raw_jump_t &jump)
@@ -519,7 +531,9 @@ void Visit(const koopa_raw_jump_t &jump)
     std::cout << std::endl
               << "  # jump" << std::endl;
     std::string label_target = jump.target->name + 1;
-    std::cout << "  j     " << label_target << std::endl;
+    int new_reg = reg_manager.alloc_reg();
+    std::cout << "  la " << gen_reg(new_reg) << ", " << label_target << std::endl;
+    std::cout << "  jr " << gen_reg(new_reg) << std::endl;
     reg_manager.free_regs();
 }
 

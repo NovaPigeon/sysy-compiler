@@ -6,44 +6,5578 @@ decl @putch(i32)
 decl @putarray(i32, *i32)
 decl @starttime()
 decl @stoptime()
-fun @f(@a_0: *[i32, 2]): i32 {
-%_entry_f:
-  %a_0 = alloc *[i32, 2]
-  store @a_0, %a_0
-  %0 = load %a_0
-  %1 = getptr %0, 1
-  %2 = getelemptr %1, 0
-  %3 = load %2
-  ret %3
+global @SHIFT_TABLE = alloc [i32, 16], {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768}
+fun @long_func(): i32 {
+%_entry_long_func:
+  @ans_0 = alloc i32
+  @i_0 = alloc i32
+  @x_0 = alloc i32
+  @y_0 = alloc i32
+  @cur_0 = alloc i32
+  @pl_0_0 = alloc i32
+  store 2, @pl_0_0
+  @pr_0_0 = alloc i32
+  store 0, @pr_0_0
+  @pres_0_0 = alloc i32
+  store 1, @pres_0_0
+  jump %_while_entry_0
+
+%_while_entry_0:
+  %0 = load @pr_0_0
+  %1 = gt %0, 0
+  br %1, %_while_body_0, %_end_0
+
+%_while_body_0:
+  store 0, @ans_0
+  store 0, @i_0
+  %2 = load @pr_0_0
+  store %2, @x_0
+  store 1, @y_0
+  jump %_while_entry_1
+
+%_while_entry_1:
+  %3 = load @i_0
+  %4 = lt %3, 16
+  br %4, %_while_body_1, %_end_1
+
+%_while_body_1:
+  %5 = load @x_0
+  %6 = mod %5, 2
+  @t0_0_0_0_0 = alloc i32
+  %7 = ne %6, 0
+  br %7, %_then_3, %_else_3
+
+%_then_3:
+  %8 = load @y_0
+  %9 = mod %8, 2
+  %10 = ne %9, 0
+  store %10, @t0_0_0_0_0
+  jump %_end_3
+
+%_else_3:
+  store 0, @t0_0_0_0_0
+  jump %_end_3
+
+%_end_3:
+  %11 = load @t0_0_0_0_0
+  br %11, %_then_2, %_end_2
+
+%_then_2:
+  %12 = load @ans_0
+  %13 = load @i_0
+  %14 = getelemptr @SHIFT_TABLE, %13
+  %15 = load %14
+  %16 = mul 1, %15
+  %17 = add %12, %16
+  store %17, @ans_0
+  jump %_end_2
+
+%_end_2:
+  %18 = load @x_0
+  %19 = div %18, 2
+  store %19, @x_0
+  %20 = load @y_0
+  %21 = div %20, 2
+  store %21, @y_0
+  %22 = load @i_0
+  %23 = add %22, 1
+  store %23, @i_0
+  jump %_while_entry_1
+
+%_end_1:
+  %24 = load @ans_0
+  br %24, %_then_4, %_end_4
+
+%_then_4:
+  @ml_0_0_0_1_0 = alloc i32
+  %25 = load @pres_0_0
+  store %25, @ml_0_0_0_1_0
+  @mr_0_0_0_1_0 = alloc i32
+  %26 = load @pl_0_0
+  store %26, @mr_0_0_0_1_0
+  @mres_0_0_0_1_0 = alloc i32
+  store 0, @mres_0_0_0_1_0
+  jump %_while_entry_5
+
+%_while_entry_5:
+  %27 = load @mr_0_0_0_1_0
+  br %27, %_while_body_5, %_end_5
+
+%_while_body_5:
+  store 0, @ans_0
+  store 0, @i_0
+  %28 = load @mr_0_0_0_1_0
+  store %28, @x_0
+  store 1, @y_0
+  jump %_while_entry_6
+
+%_while_entry_6:
+  %29 = load @i_0
+  %30 = lt %29, 16
+  br %30, %_while_body_6, %_end_6
+
+%_while_body_6:
+  %31 = load @x_0
+  %32 = mod %31, 2
+  @t1_0_0_0_1_0_0_0 = alloc i32
+  %33 = ne %32, 0
+  br %33, %_then_8, %_else_8
+
+%_then_8:
+  %34 = load @y_0
+  %35 = mod %34, 2
+  %36 = ne %35, 0
+  store %36, @t1_0_0_0_1_0_0_0
+  jump %_end_8
+
+%_else_8:
+  store 0, @t1_0_0_0_1_0_0_0
+  jump %_end_8
+
+%_end_8:
+  %37 = load @t1_0_0_0_1_0_0_0
+  br %37, %_then_7, %_end_7
+
+%_then_7:
+  %38 = load @ans_0
+  %39 = load @i_0
+  %40 = getelemptr @SHIFT_TABLE, %39
+  %41 = load %40
+  %42 = mul 1, %41
+  %43 = add %38, %42
+  store %43, @ans_0
+  jump %_end_7
+
+%_end_7:
+  %44 = load @x_0
+  %45 = div %44, 2
+  store %45, @x_0
+  %46 = load @y_0
+  %47 = div %46, 2
+  store %47, @y_0
+  %48 = load @i_0
+  %49 = add %48, 1
+  store %49, @i_0
+  jump %_while_entry_6
+
+%_end_6:
+  %50 = load @ans_0
+  br %50, %_then_9, %_end_9
+
+%_then_9:
+  @al_0_0_0_1_0_0_1_0 = alloc i32
+  %51 = load @mres_0_0_0_1_0
+  store %51, @al_0_0_0_1_0_0_1_0
+  @c_0_0_0_1_0_0_1_0 = alloc i32
+  %52 = load @ml_0_0_0_1_0
+  store %52, @c_0_0_0_1_0_0_1_0
+  @sum_0_0_0_1_0_0_1_0 = alloc i32
+  jump %_while_entry_10
+
+%_while_entry_10:
+  %53 = load @c_0_0_0_1_0_0_1_0
+  br %53, %_while_body_10, %_end_10
+
+%_while_body_10:
+  store 0, @ans_0
+  store 0, @i_0
+  %54 = load @al_0_0_0_1_0_0_1_0
+  store %54, @x_0
+  %55 = load @c_0_0_0_1_0_0_1_0
+  store %55, @y_0
+  jump %_while_entry_11
+
+%_while_entry_11:
+  %56 = load @i_0
+  %57 = lt %56, 16
+  br %57, %_while_body_11, %_end_11
+
+%_while_body_11:
+  %58 = load @x_0
+  %59 = mod %58, 2
+  br %59, %_then_12, %_else_12
+
+%_then_12:
+  %60 = load @y_0
+  %61 = mod %60, 2
+  %62 = eq %61, 0
+  br %62, %_then_13, %_end_13
+
+%_then_13:
+  %63 = load @ans_0
+  %64 = load @i_0
+  %65 = getelemptr @SHIFT_TABLE, %64
+  %66 = load %65
+  %67 = mul 1, %66
+  %68 = add %63, %67
+  store %68, @ans_0
+  jump %_end_13
+
+%_end_13:
+  jump %_end_12
+
+%_else_12:
+  %69 = load @y_0
+  %70 = mod %69, 2
+  br %70, %_then_14, %_end_14
+
+%_then_14:
+  %71 = load @ans_0
+  %72 = load @i_0
+  %73 = getelemptr @SHIFT_TABLE, %72
+  %74 = load %73
+  %75 = mul 1, %74
+  %76 = add %71, %75
+  store %76, @ans_0
+  jump %_end_14
+
+%_end_14:
+  jump %_end_12
+
+%_end_12:
+  %77 = load @x_0
+  %78 = div %77, 2
+  store %78, @x_0
+  %79 = load @y_0
+  %80 = div %79, 2
+  store %80, @y_0
+  %81 = load @i_0
+  %82 = add %81, 1
+  store %82, @i_0
+  jump %_while_entry_11
+
+%_end_11:
+  %83 = load @ans_0
+  store %83, @sum_0_0_0_1_0_0_1_0
+  store 0, @ans_0
+  store 0, @i_0
+  %84 = load @al_0_0_0_1_0_0_1_0
+  store %84, @x_0
+  %85 = load @c_0_0_0_1_0_0_1_0
+  store %85, @y_0
+  jump %_while_entry_15
+
+%_while_entry_15:
+  %86 = load @i_0
+  %87 = lt %86, 16
+  br %87, %_while_body_15, %_end_15
+
+%_while_body_15:
+  %88 = load @x_0
+  %89 = mod %88, 2
+  @t2_0_0_0_1_0_0_1_0_0_1 = alloc i32
+  %90 = ne %89, 0
+  br %90, %_then_17, %_else_17
+
+%_then_17:
+  %91 = load @y_0
+  %92 = mod %91, 2
+  %93 = ne %92, 0
+  store %93, @t2_0_0_0_1_0_0_1_0_0_1
+  jump %_end_17
+
+%_else_17:
+  store 0, @t2_0_0_0_1_0_0_1_0_0_1
+  jump %_end_17
+
+%_end_17:
+  %94 = load @t2_0_0_0_1_0_0_1_0_0_1
+  br %94, %_then_16, %_end_16
+
+%_then_16:
+  %95 = load @ans_0
+  %96 = load @i_0
+  %97 = getelemptr @SHIFT_TABLE, %96
+  %98 = load %97
+  %99 = mul 1, %98
+  %100 = add %95, %99
+  store %100, @ans_0
+  jump %_end_16
+
+%_end_16:
+  %101 = load @x_0
+  %102 = div %101, 2
+  store %102, @x_0
+  %103 = load @y_0
+  %104 = div %103, 2
+  store %104, @y_0
+  %105 = load @i_0
+  %106 = add %105, 1
+  store %106, @i_0
+  jump %_while_entry_15
+
+%_end_15:
+  %107 = load @ans_0
+  store %107, @c_0_0_0_1_0_0_1_0
+  br 0, %_then_18, %_else_18
+
+%_then_18:
+  store 0, @ans_0
+  jump %_end_18
+
+%_else_18:
+  store 0, @ans_0
+  store 0, @i_0
+  %108 = load @c_0_0_0_1_0_0_1_0
+  %109 = getelemptr @SHIFT_TABLE, 1
+  %110 = load %109
+  %111 = mul %108, %110
+  store %111, @x_0
+  store 65535, @y_0
+  jump %_while_entry_19
+
+%_while_entry_19:
+  %112 = load @i_0
+  %113 = lt %112, 16
+  br %113, %_while_body_19, %_end_19
+
+%_while_body_19:
+  %114 = load @x_0
+  %115 = mod %114, 2
+  @t3_0_0_0_1_0_0_1_0_0_3_0 = alloc i32
+  %116 = ne %115, 0
+  br %116, %_then_21, %_else_21
+
+%_then_21:
+  %117 = load @y_0
+  %118 = mod %117, 2
+  %119 = ne %118, 0
+  store %119, @t3_0_0_0_1_0_0_1_0_0_3_0
+  jump %_end_21
+
+%_else_21:
+  store 0, @t3_0_0_0_1_0_0_1_0_0_3_0
+  jump %_end_21
+
+%_end_21:
+  %120 = load @t3_0_0_0_1_0_0_1_0_0_3_0
+  br %120, %_then_20, %_end_20
+
+%_then_20:
+  %121 = load @ans_0
+  %122 = load @i_0
+  %123 = getelemptr @SHIFT_TABLE, %122
+  %124 = load %123
+  %125 = mul 1, %124
+  %126 = add %121, %125
+  store %126, @ans_0
+  jump %_end_20
+
+%_end_20:
+  %127 = load @x_0
+  %128 = div %127, 2
+  store %128, @x_0
+  %129 = load @y_0
+  %130 = div %129, 2
+  store %130, @y_0
+  %131 = load @i_0
+  %132 = add %131, 1
+  store %132, @i_0
+  jump %_while_entry_19
+
+%_end_19:
+  jump %_end_18
+
+%_end_18:
+  %133 = load @ans_0
+  store %133, @c_0_0_0_1_0_0_1_0
+  %134 = load @sum_0_0_0_1_0_0_1_0
+  store %134, @al_0_0_0_1_0_0_1_0
+  jump %_while_entry_10
+
+%_end_10:
+  %135 = load @al_0_0_0_1_0_0_1_0
+  store %135, @ans_0
+  %136 = load @ans_0
+  store %136, @mres_0_0_0_1_0
+  jump %_end_9
+
+%_end_9:
+  @al_0_0_0_1_0_0_2 = alloc i32
+  %137 = load @ml_0_0_0_1_0
+  store %137, @al_0_0_0_1_0_0_2
+  @c_0_0_0_1_0_0_2 = alloc i32
+  %138 = load @ml_0_0_0_1_0
+  store %138, @c_0_0_0_1_0_0_2
+  @sum_0_0_0_1_0_0_2 = alloc i32
+  jump %_while_entry_22
+
+%_while_entry_22:
+  %139 = load @c_0_0_0_1_0_0_2
+  br %139, %_while_body_22, %_end_22
+
+%_while_body_22:
+  store 0, @ans_0
+  store 0, @i_0
+  %140 = load @al_0_0_0_1_0_0_2
+  store %140, @x_0
+  %141 = load @c_0_0_0_1_0_0_2
+  store %141, @y_0
+  jump %_while_entry_23
+
+%_while_entry_23:
+  %142 = load @i_0
+  %143 = lt %142, 16
+  br %143, %_while_body_23, %_end_23
+
+%_while_body_23:
+  %144 = load @x_0
+  %145 = mod %144, 2
+  br %145, %_then_24, %_else_24
+
+%_then_24:
+  %146 = load @y_0
+  %147 = mod %146, 2
+  %148 = eq %147, 0
+  br %148, %_then_25, %_end_25
+
+%_then_25:
+  %149 = load @ans_0
+  %150 = load @i_0
+  %151 = getelemptr @SHIFT_TABLE, %150
+  %152 = load %151
+  %153 = mul 1, %152
+  %154 = add %149, %153
+  store %154, @ans_0
+  jump %_end_25
+
+%_end_25:
+  jump %_end_24
+
+%_else_24:
+  %155 = load @y_0
+  %156 = mod %155, 2
+  br %156, %_then_26, %_end_26
+
+%_then_26:
+  %157 = load @ans_0
+  %158 = load @i_0
+  %159 = getelemptr @SHIFT_TABLE, %158
+  %160 = load %159
+  %161 = mul 1, %160
+  %162 = add %157, %161
+  store %162, @ans_0
+  jump %_end_26
+
+%_end_26:
+  jump %_end_24
+
+%_end_24:
+  %163 = load @x_0
+  %164 = div %163, 2
+  store %164, @x_0
+  %165 = load @y_0
+  %166 = div %165, 2
+  store %166, @y_0
+  %167 = load @i_0
+  %168 = add %167, 1
+  store %168, @i_0
+  jump %_while_entry_23
+
+%_end_23:
+  %169 = load @ans_0
+  store %169, @sum_0_0_0_1_0_0_2
+  store 0, @ans_0
+  store 0, @i_0
+  %170 = load @al_0_0_0_1_0_0_2
+  store %170, @x_0
+  %171 = load @c_0_0_0_1_0_0_2
+  store %171, @y_0
+  jump %_while_entry_27
+
+%_while_entry_27:
+  %172 = load @i_0
+  %173 = lt %172, 16
+  br %173, %_while_body_27, %_end_27
+
+%_while_body_27:
+  %174 = load @x_0
+  %175 = mod %174, 2
+  @t4_0_0_0_1_0_0_2_0_1 = alloc i32
+  %176 = ne %175, 0
+  br %176, %_then_29, %_else_29
+
+%_then_29:
+  %177 = load @y_0
+  %178 = mod %177, 2
+  %179 = ne %178, 0
+  store %179, @t4_0_0_0_1_0_0_2_0_1
+  jump %_end_29
+
+%_else_29:
+  store 0, @t4_0_0_0_1_0_0_2_0_1
+  jump %_end_29
+
+%_end_29:
+  %180 = load @t4_0_0_0_1_0_0_2_0_1
+  br %180, %_then_28, %_end_28
+
+%_then_28:
+  %181 = load @ans_0
+  %182 = load @i_0
+  %183 = getelemptr @SHIFT_TABLE, %182
+  %184 = load %183
+  %185 = mul 1, %184
+  %186 = add %181, %185
+  store %186, @ans_0
+  jump %_end_28
+
+%_end_28:
+  %187 = load @x_0
+  %188 = div %187, 2
+  store %188, @x_0
+  %189 = load @y_0
+  %190 = div %189, 2
+  store %190, @y_0
+  %191 = load @i_0
+  %192 = add %191, 1
+  store %192, @i_0
+  jump %_while_entry_27
+
+%_end_27:
+  %193 = load @ans_0
+  store %193, @c_0_0_0_1_0_0_2
+  br 0, %_then_30, %_else_30
+
+%_then_30:
+  store 0, @ans_0
+  jump %_end_30
+
+%_else_30:
+  store 0, @ans_0
+  store 0, @i_0
+  %194 = load @c_0_0_0_1_0_0_2
+  %195 = getelemptr @SHIFT_TABLE, 1
+  %196 = load %195
+  %197 = mul %194, %196
+  store %197, @x_0
+  store 65535, @y_0
+  jump %_while_entry_31
+
+%_while_entry_31:
+  %198 = load @i_0
+  %199 = lt %198, 16
+  br %199, %_while_body_31, %_end_31
+
+%_while_body_31:
+  %200 = load @x_0
+  %201 = mod %200, 2
+  @t5_0_0_0_1_0_0_2_0_3_0 = alloc i32
+  %202 = ne %201, 0
+  br %202, %_then_33, %_else_33
+
+%_then_33:
+  %203 = load @y_0
+  %204 = mod %203, 2
+  %205 = ne %204, 0
+  store %205, @t5_0_0_0_1_0_0_2_0_3_0
+  jump %_end_33
+
+%_else_33:
+  store 0, @t5_0_0_0_1_0_0_2_0_3_0
+  jump %_end_33
+
+%_end_33:
+  %206 = load @t5_0_0_0_1_0_0_2_0_3_0
+  br %206, %_then_32, %_end_32
+
+%_then_32:
+  %207 = load @ans_0
+  %208 = load @i_0
+  %209 = getelemptr @SHIFT_TABLE, %208
+  %210 = load %209
+  %211 = mul 1, %210
+  %212 = add %207, %211
+  store %212, @ans_0
+  jump %_end_32
+
+%_end_32:
+  %213 = load @x_0
+  %214 = div %213, 2
+  store %214, @x_0
+  %215 = load @y_0
+  %216 = div %215, 2
+  store %216, @y_0
+  %217 = load @i_0
+  %218 = add %217, 1
+  store %218, @i_0
+  jump %_while_entry_31
+
+%_end_31:
+  jump %_end_30
+
+%_end_30:
+  %219 = load @ans_0
+  store %219, @c_0_0_0_1_0_0_2
+  %220 = load @sum_0_0_0_1_0_0_2
+  store %220, @al_0_0_0_1_0_0_2
+  jump %_while_entry_22
+
+%_end_22:
+  %221 = load @al_0_0_0_1_0_0_2
+  store %221, @ans_0
+  %222 = load @ans_0
+  store %222, @ml_0_0_0_1_0
+  %223 = load @mr_0_0_0_1_0
+  store %223, @x_0
+  store 1, @y_0
+  %224 = load @y_0
+  %225 = ge %224, 15
+  br %225, %_then_34, %_else_34
+
+%_then_34:
+  %226 = load @x_0
+  %227 = lt %226, 0
+  br %227, %_then_35, %_else_35
+
+%_then_35:
+  store 65535, @ans_0
+  jump %_end_35
+
+%_else_35:
+  store 0, @ans_0
+  jump %_end_35
+
+%_end_35:
+  jump %_end_34
+
+%_else_34:
+  %228 = load @y_0
+  %229 = gt %228, 0
+  br %229, %_then_36, %_else_36
+
+%_then_36:
+  %230 = load @x_0
+  %231 = gt %230, 32767
+  br %231, %_then_37, %_else_37
+
+%_then_37:
+  %232 = load @x_0
+  %233 = load @y_0
+  %234 = getelemptr @SHIFT_TABLE, %233
+  %235 = load %234
+  %236 = div %232, %235
+  store %236, @x_0
+  %237 = load @x_0
+  %238 = add %237, 65536
+  %239 = load @y_0
+  %240 = sub 15, %239
+  %241 = add %240, 1
+  %242 = getelemptr @SHIFT_TABLE, %241
+  %243 = load %242
+  %244 = sub %238, %243
+  store %244, @ans_0
+  jump %_end_37
+
+%_else_37:
+  %245 = load @x_0
+  %246 = load @y_0
+  %247 = getelemptr @SHIFT_TABLE, %246
+  %248 = load %247
+  %249 = div %245, %248
+  store %249, @ans_0
+  jump %_end_37
+
+%_end_37:
+  jump %_end_36
+
+%_else_36:
+  %250 = load @x_0
+  store %250, @ans_0
+  jump %_end_36
+
+%_end_36:
+  jump %_end_34
+
+%_end_34:
+  %251 = load @ans_0
+  store %251, @mr_0_0_0_1_0
+  jump %_while_entry_5
+
+%_end_5:
+  %252 = load @mres_0_0_0_1_0
+  store %252, @ans_0
+  %253 = load @ans_0
+  store %253, @pres_0_0
+  jump %_end_4
+
+%_end_4:
+  @ml_0_0_0_2 = alloc i32
+  %254 = load @pl_0_0
+  store %254, @ml_0_0_0_2
+  @mr_0_0_0_2 = alloc i32
+  %255 = load @pl_0_0
+  store %255, @mr_0_0_0_2
+  @mres_0_0_0_2 = alloc i32
+  store 0, @mres_0_0_0_2
+  jump %_while_entry_38
+
+%_while_entry_38:
+  %256 = load @mr_0_0_0_2
+  br %256, %_while_body_38, %_end_38
+
+%_while_body_38:
+  store 0, @ans_0
+  store 0, @i_0
+  %257 = load @mr_0_0_0_2
+  store %257, @x_0
+  store 1, @y_0
+  jump %_while_entry_39
+
+%_while_entry_39:
+  %258 = load @i_0
+  %259 = lt %258, 16
+  br %259, %_while_body_39, %_end_39
+
+%_while_body_39:
+  %260 = load @x_0
+  %261 = mod %260, 2
+  @t6_0_0_0_2_0_0 = alloc i32
+  %262 = ne %261, 0
+  br %262, %_then_41, %_else_41
+
+%_then_41:
+  %263 = load @y_0
+  %264 = mod %263, 2
+  %265 = ne %264, 0
+  store %265, @t6_0_0_0_2_0_0
+  jump %_end_41
+
+%_else_41:
+  store 0, @t6_0_0_0_2_0_0
+  jump %_end_41
+
+%_end_41:
+  %266 = load @t6_0_0_0_2_0_0
+  br %266, %_then_40, %_end_40
+
+%_then_40:
+  %267 = load @ans_0
+  %268 = load @i_0
+  %269 = getelemptr @SHIFT_TABLE, %268
+  %270 = load %269
+  %271 = mul 1, %270
+  %272 = add %267, %271
+  store %272, @ans_0
+  jump %_end_40
+
+%_end_40:
+  %273 = load @x_0
+  %274 = div %273, 2
+  store %274, @x_0
+  %275 = load @y_0
+  %276 = div %275, 2
+  store %276, @y_0
+  %277 = load @i_0
+  %278 = add %277, 1
+  store %278, @i_0
+  jump %_while_entry_39
+
+%_end_39:
+  %279 = load @ans_0
+  br %279, %_then_42, %_end_42
+
+%_then_42:
+  @al_0_0_0_2_0_1_0 = alloc i32
+  %280 = load @mres_0_0_0_2
+  store %280, @al_0_0_0_2_0_1_0
+  @c_0_0_0_2_0_1_0 = alloc i32
+  %281 = load @ml_0_0_0_2
+  store %281, @c_0_0_0_2_0_1_0
+  @sum_0_0_0_2_0_1_0 = alloc i32
+  jump %_while_entry_43
+
+%_while_entry_43:
+  %282 = load @c_0_0_0_2_0_1_0
+  br %282, %_while_body_43, %_end_43
+
+%_while_body_43:
+  store 0, @ans_0
+  store 0, @i_0
+  %283 = load @al_0_0_0_2_0_1_0
+  store %283, @x_0
+  %284 = load @c_0_0_0_2_0_1_0
+  store %284, @y_0
+  jump %_while_entry_44
+
+%_while_entry_44:
+  %285 = load @i_0
+  %286 = lt %285, 16
+  br %286, %_while_body_44, %_end_44
+
+%_while_body_44:
+  %287 = load @x_0
+  %288 = mod %287, 2
+  br %288, %_then_45, %_else_45
+
+%_then_45:
+  %289 = load @y_0
+  %290 = mod %289, 2
+  %291 = eq %290, 0
+  br %291, %_then_46, %_end_46
+
+%_then_46:
+  %292 = load @ans_0
+  %293 = load @i_0
+  %294 = getelemptr @SHIFT_TABLE, %293
+  %295 = load %294
+  %296 = mul 1, %295
+  %297 = add %292, %296
+  store %297, @ans_0
+  jump %_end_46
+
+%_end_46:
+  jump %_end_45
+
+%_else_45:
+  %298 = load @y_0
+  %299 = mod %298, 2
+  br %299, %_then_47, %_end_47
+
+%_then_47:
+  %300 = load @ans_0
+  %301 = load @i_0
+  %302 = getelemptr @SHIFT_TABLE, %301
+  %303 = load %302
+  %304 = mul 1, %303
+  %305 = add %300, %304
+  store %305, @ans_0
+  jump %_end_47
+
+%_end_47:
+  jump %_end_45
+
+%_end_45:
+  %306 = load @x_0
+  %307 = div %306, 2
+  store %307, @x_0
+  %308 = load @y_0
+  %309 = div %308, 2
+  store %309, @y_0
+  %310 = load @i_0
+  %311 = add %310, 1
+  store %311, @i_0
+  jump %_while_entry_44
+
+%_end_44:
+  %312 = load @ans_0
+  store %312, @sum_0_0_0_2_0_1_0
+  store 0, @ans_0
+  store 0, @i_0
+  %313 = load @al_0_0_0_2_0_1_0
+  store %313, @x_0
+  %314 = load @c_0_0_0_2_0_1_0
+  store %314, @y_0
+  jump %_while_entry_48
+
+%_while_entry_48:
+  %315 = load @i_0
+  %316 = lt %315, 16
+  br %316, %_while_body_48, %_end_48
+
+%_while_body_48:
+  %317 = load @x_0
+  %318 = mod %317, 2
+  @t7_0_0_0_2_0_1_0_0_1 = alloc i32
+  %319 = ne %318, 0
+  br %319, %_then_50, %_else_50
+
+%_then_50:
+  %320 = load @y_0
+  %321 = mod %320, 2
+  %322 = ne %321, 0
+  store %322, @t7_0_0_0_2_0_1_0_0_1
+  jump %_end_50
+
+%_else_50:
+  store 0, @t7_0_0_0_2_0_1_0_0_1
+  jump %_end_50
+
+%_end_50:
+  %323 = load @t7_0_0_0_2_0_1_0_0_1
+  br %323, %_then_49, %_end_49
+
+%_then_49:
+  %324 = load @ans_0
+  %325 = load @i_0
+  %326 = getelemptr @SHIFT_TABLE, %325
+  %327 = load %326
+  %328 = mul 1, %327
+  %329 = add %324, %328
+  store %329, @ans_0
+  jump %_end_49
+
+%_end_49:
+  %330 = load @x_0
+  %331 = div %330, 2
+  store %331, @x_0
+  %332 = load @y_0
+  %333 = div %332, 2
+  store %333, @y_0
+  %334 = load @i_0
+  %335 = add %334, 1
+  store %335, @i_0
+  jump %_while_entry_48
+
+%_end_48:
+  %336 = load @ans_0
+  store %336, @c_0_0_0_2_0_1_0
+  br 0, %_then_51, %_else_51
+
+%_then_51:
+  store 0, @ans_0
+  jump %_end_51
+
+%_else_51:
+  store 0, @ans_0
+  store 0, @i_0
+  %337 = load @c_0_0_0_2_0_1_0
+  %338 = getelemptr @SHIFT_TABLE, 1
+  %339 = load %338
+  %340 = mul %337, %339
+  store %340, @x_0
+  store 65535, @y_0
+  jump %_while_entry_52
+
+%_while_entry_52:
+  %341 = load @i_0
+  %342 = lt %341, 16
+  br %342, %_while_body_52, %_end_52
+
+%_while_body_52:
+  %343 = load @x_0
+  %344 = mod %343, 2
+  @t8_0_0_0_2_0_1_0_0_3_0 = alloc i32
+  %345 = ne %344, 0
+  br %345, %_then_54, %_else_54
+
+%_then_54:
+  %346 = load @y_0
+  %347 = mod %346, 2
+  %348 = ne %347, 0
+  store %348, @t8_0_0_0_2_0_1_0_0_3_0
+  jump %_end_54
+
+%_else_54:
+  store 0, @t8_0_0_0_2_0_1_0_0_3_0
+  jump %_end_54
+
+%_end_54:
+  %349 = load @t8_0_0_0_2_0_1_0_0_3_0
+  br %349, %_then_53, %_end_53
+
+%_then_53:
+  %350 = load @ans_0
+  %351 = load @i_0
+  %352 = getelemptr @SHIFT_TABLE, %351
+  %353 = load %352
+  %354 = mul 1, %353
+  %355 = add %350, %354
+  store %355, @ans_0
+  jump %_end_53
+
+%_end_53:
+  %356 = load @x_0
+  %357 = div %356, 2
+  store %357, @x_0
+  %358 = load @y_0
+  %359 = div %358, 2
+  store %359, @y_0
+  %360 = load @i_0
+  %361 = add %360, 1
+  store %361, @i_0
+  jump %_while_entry_52
+
+%_end_52:
+  jump %_end_51
+
+%_end_51:
+  %362 = load @ans_0
+  store %362, @c_0_0_0_2_0_1_0
+  %363 = load @sum_0_0_0_2_0_1_0
+  store %363, @al_0_0_0_2_0_1_0
+  jump %_while_entry_43
+
+%_end_43:
+  %364 = load @al_0_0_0_2_0_1_0
+  store %364, @ans_0
+  %365 = load @ans_0
+  store %365, @mres_0_0_0_2
+  jump %_end_42
+
+%_end_42:
+  @al_0_0_0_2_0_2 = alloc i32
+  %366 = load @ml_0_0_0_2
+  store %366, @al_0_0_0_2_0_2
+  @c_0_0_0_2_0_2 = alloc i32
+  %367 = load @ml_0_0_0_2
+  store %367, @c_0_0_0_2_0_2
+  @sum_0_0_0_2_0_2 = alloc i32
+  jump %_while_entry_55
+
+%_while_entry_55:
+  %368 = load @c_0_0_0_2_0_2
+  br %368, %_while_body_55, %_end_55
+
+%_while_body_55:
+  store 0, @ans_0
+  store 0, @i_0
+  %369 = load @al_0_0_0_2_0_2
+  store %369, @x_0
+  %370 = load @c_0_0_0_2_0_2
+  store %370, @y_0
+  jump %_while_entry_56
+
+%_while_entry_56:
+  %371 = load @i_0
+  %372 = lt %371, 16
+  br %372, %_while_body_56, %_end_56
+
+%_while_body_56:
+  %373 = load @x_0
+  %374 = mod %373, 2
+  br %374, %_then_57, %_else_57
+
+%_then_57:
+  %375 = load @y_0
+  %376 = mod %375, 2
+  %377 = eq %376, 0
+  br %377, %_then_58, %_end_58
+
+%_then_58:
+  %378 = load @ans_0
+  %379 = load @i_0
+  %380 = getelemptr @SHIFT_TABLE, %379
+  %381 = load %380
+  %382 = mul 1, %381
+  %383 = add %378, %382
+  store %383, @ans_0
+  jump %_end_58
+
+%_end_58:
+  jump %_end_57
+
+%_else_57:
+  %384 = load @y_0
+  %385 = mod %384, 2
+  br %385, %_then_59, %_end_59
+
+%_then_59:
+  %386 = load @ans_0
+  %387 = load @i_0
+  %388 = getelemptr @SHIFT_TABLE, %387
+  %389 = load %388
+  %390 = mul 1, %389
+  %391 = add %386, %390
+  store %391, @ans_0
+  jump %_end_59
+
+%_end_59:
+  jump %_end_57
+
+%_end_57:
+  %392 = load @x_0
+  %393 = div %392, 2
+  store %393, @x_0
+  %394 = load @y_0
+  %395 = div %394, 2
+  store %395, @y_0
+  %396 = load @i_0
+  %397 = add %396, 1
+  store %397, @i_0
+  jump %_while_entry_56
+
+%_end_56:
+  %398 = load @ans_0
+  store %398, @sum_0_0_0_2_0_2
+  store 0, @ans_0
+  store 0, @i_0
+  %399 = load @al_0_0_0_2_0_2
+  store %399, @x_0
+  %400 = load @c_0_0_0_2_0_2
+  store %400, @y_0
+  jump %_while_entry_60
+
+%_while_entry_60:
+  %401 = load @i_0
+  %402 = lt %401, 16
+  br %402, %_while_body_60, %_end_60
+
+%_while_body_60:
+  %403 = load @x_0
+  %404 = mod %403, 2
+  @t9_0_0_0_2_0_2_0_1 = alloc i32
+  %405 = ne %404, 0
+  br %405, %_then_62, %_else_62
+
+%_then_62:
+  %406 = load @y_0
+  %407 = mod %406, 2
+  %408 = ne %407, 0
+  store %408, @t9_0_0_0_2_0_2_0_1
+  jump %_end_62
+
+%_else_62:
+  store 0, @t9_0_0_0_2_0_2_0_1
+  jump %_end_62
+
+%_end_62:
+  %409 = load @t9_0_0_0_2_0_2_0_1
+  br %409, %_then_61, %_end_61
+
+%_then_61:
+  %410 = load @ans_0
+  %411 = load @i_0
+  %412 = getelemptr @SHIFT_TABLE, %411
+  %413 = load %412
+  %414 = mul 1, %413
+  %415 = add %410, %414
+  store %415, @ans_0
+  jump %_end_61
+
+%_end_61:
+  %416 = load @x_0
+  %417 = div %416, 2
+  store %417, @x_0
+  %418 = load @y_0
+  %419 = div %418, 2
+  store %419, @y_0
+  %420 = load @i_0
+  %421 = add %420, 1
+  store %421, @i_0
+  jump %_while_entry_60
+
+%_end_60:
+  %422 = load @ans_0
+  store %422, @c_0_0_0_2_0_2
+  br 0, %_then_63, %_else_63
+
+%_then_63:
+  store 0, @ans_0
+  jump %_end_63
+
+%_else_63:
+  store 0, @ans_0
+  store 0, @i_0
+  %423 = load @c_0_0_0_2_0_2
+  %424 = getelemptr @SHIFT_TABLE, 1
+  %425 = load %424
+  %426 = mul %423, %425
+  store %426, @x_0
+  store 65535, @y_0
+  jump %_while_entry_64
+
+%_while_entry_64:
+  %427 = load @i_0
+  %428 = lt %427, 16
+  br %428, %_while_body_64, %_end_64
+
+%_while_body_64:
+  %429 = load @x_0
+  %430 = mod %429, 2
+  @t10_0_0_0_2_0_2_0_3_0 = alloc i32
+  %431 = ne %430, 0
+  br %431, %_then_66, %_else_66
+
+%_then_66:
+  %432 = load @y_0
+  %433 = mod %432, 2
+  %434 = ne %433, 0
+  store %434, @t10_0_0_0_2_0_2_0_3_0
+  jump %_end_66
+
+%_else_66:
+  store 0, @t10_0_0_0_2_0_2_0_3_0
+  jump %_end_66
+
+%_end_66:
+  %435 = load @t10_0_0_0_2_0_2_0_3_0
+  br %435, %_then_65, %_end_65
+
+%_then_65:
+  %436 = load @ans_0
+  %437 = load @i_0
+  %438 = getelemptr @SHIFT_TABLE, %437
+  %439 = load %438
+  %440 = mul 1, %439
+  %441 = add %436, %440
+  store %441, @ans_0
+  jump %_end_65
+
+%_end_65:
+  %442 = load @x_0
+  %443 = div %442, 2
+  store %443, @x_0
+  %444 = load @y_0
+  %445 = div %444, 2
+  store %445, @y_0
+  %446 = load @i_0
+  %447 = add %446, 1
+  store %447, @i_0
+  jump %_while_entry_64
+
+%_end_64:
+  jump %_end_63
+
+%_end_63:
+  %448 = load @ans_0
+  store %448, @c_0_0_0_2_0_2
+  %449 = load @sum_0_0_0_2_0_2
+  store %449, @al_0_0_0_2_0_2
+  jump %_while_entry_55
+
+%_end_55:
+  %450 = load @al_0_0_0_2_0_2
+  store %450, @ans_0
+  %451 = load @ans_0
+  store %451, @ml_0_0_0_2
+  %452 = load @mr_0_0_0_2
+  store %452, @x_0
+  store 1, @y_0
+  %453 = load @y_0
+  %454 = ge %453, 15
+  br %454, %_then_67, %_else_67
+
+%_then_67:
+  %455 = load @x_0
+  %456 = lt %455, 0
+  br %456, %_then_68, %_else_68
+
+%_then_68:
+  store 65535, @ans_0
+  jump %_end_68
+
+%_else_68:
+  store 0, @ans_0
+  jump %_end_68
+
+%_end_68:
+  jump %_end_67
+
+%_else_67:
+  %457 = load @y_0
+  %458 = gt %457, 0
+  br %458, %_then_69, %_else_69
+
+%_then_69:
+  %459 = load @x_0
+  %460 = gt %459, 32767
+  br %460, %_then_70, %_else_70
+
+%_then_70:
+  %461 = load @x_0
+  %462 = load @y_0
+  %463 = getelemptr @SHIFT_TABLE, %462
+  %464 = load %463
+  %465 = div %461, %464
+  store %465, @x_0
+  %466 = load @x_0
+  %467 = add %466, 65536
+  %468 = load @y_0
+  %469 = sub 15, %468
+  %470 = add %469, 1
+  %471 = getelemptr @SHIFT_TABLE, %470
+  %472 = load %471
+  %473 = sub %467, %472
+  store %473, @ans_0
+  jump %_end_70
+
+%_else_70:
+  %474 = load @x_0
+  %475 = load @y_0
+  %476 = getelemptr @SHIFT_TABLE, %475
+  %477 = load %476
+  %478 = div %474, %477
+  store %478, @ans_0
+  jump %_end_70
+
+%_end_70:
+  jump %_end_69
+
+%_else_69:
+  %479 = load @x_0
+  store %479, @ans_0
+  jump %_end_69
+
+%_end_69:
+  jump %_end_67
+
+%_end_67:
+  %480 = load @ans_0
+  store %480, @mr_0_0_0_2
+  jump %_while_entry_38
+
+%_end_38:
+  %481 = load @mres_0_0_0_2
+  store %481, @ans_0
+  %482 = load @ans_0
+  store %482, @pl_0_0
+  %483 = load @pr_0_0
+  store %483, @x_0
+  store 1, @y_0
+  %484 = load @y_0
+  %485 = ge %484, 15
+  br %485, %_then_71, %_else_71
+
+%_then_71:
+  %486 = load @x_0
+  %487 = lt %486, 0
+  br %487, %_then_72, %_else_72
+
+%_then_72:
+  store 65535, @ans_0
+  jump %_end_72
+
+%_else_72:
+  store 0, @ans_0
+  jump %_end_72
+
+%_end_72:
+  jump %_end_71
+
+%_else_71:
+  %488 = load @y_0
+  %489 = gt %488, 0
+  br %489, %_then_73, %_else_73
+
+%_then_73:
+  %490 = load @x_0
+  %491 = gt %490, 32767
+  br %491, %_then_74, %_else_74
+
+%_then_74:
+  %492 = load @x_0
+  %493 = load @y_0
+  %494 = getelemptr @SHIFT_TABLE, %493
+  %495 = load %494
+  %496 = div %492, %495
+  store %496, @x_0
+  %497 = load @x_0
+  %498 = add %497, 65536
+  %499 = load @y_0
+  %500 = sub 15, %499
+  %501 = add %500, 1
+  %502 = getelemptr @SHIFT_TABLE, %501
+  %503 = load %502
+  %504 = sub %498, %503
+  store %504, @ans_0
+  jump %_end_74
+
+%_else_74:
+  %505 = load @x_0
+  %506 = load @y_0
+  %507 = getelemptr @SHIFT_TABLE, %506
+  %508 = load %507
+  %509 = div %505, %508
+  store %509, @ans_0
+  jump %_end_74
+
+%_end_74:
+  jump %_end_73
+
+%_else_73:
+  %510 = load @x_0
+  store %510, @ans_0
+  jump %_end_73
+
+%_end_73:
+  jump %_end_71
+
+%_end_71:
+  %511 = load @ans_0
+  store %511, @pr_0_0
+  jump %_while_entry_0
+
+%_end_0:
+  %512 = load @pres_0_0
+  store %512, @ans_0
+  %513 = load @ans_0
+  call @putint(%513)
+  call @putch(10)
+  @pl_0_1 = alloc i32
+  store 2, @pl_0_1
+  @pr_0_1 = alloc i32
+  store 1, @pr_0_1
+  @pres_0_1 = alloc i32
+  store 1, @pres_0_1
+  jump %_while_entry_75
+
+%_while_entry_75:
+  %514 = load @pr_0_1
+  %515 = gt %514, 0
+  br %515, %_while_body_75, %_end_75
+
+%_while_body_75:
+  store 0, @ans_0
+  store 0, @i_0
+  %516 = load @pr_0_1
+  store %516, @x_0
+  store 1, @y_0
+  jump %_while_entry_76
+
+%_while_entry_76:
+  %517 = load @i_0
+  %518 = lt %517, 16
+  br %518, %_while_body_76, %_end_76
+
+%_while_body_76:
+  %519 = load @x_0
+  %520 = mod %519, 2
+  @t11_0_1_0_0 = alloc i32
+  %521 = ne %520, 0
+  br %521, %_then_78, %_else_78
+
+%_then_78:
+  %522 = load @y_0
+  %523 = mod %522, 2
+  %524 = ne %523, 0
+  store %524, @t11_0_1_0_0
+  jump %_end_78
+
+%_else_78:
+  store 0, @t11_0_1_0_0
+  jump %_end_78
+
+%_end_78:
+  %525 = load @t11_0_1_0_0
+  br %525, %_then_77, %_end_77
+
+%_then_77:
+  %526 = load @ans_0
+  %527 = load @i_0
+  %528 = getelemptr @SHIFT_TABLE, %527
+  %529 = load %528
+  %530 = mul 1, %529
+  %531 = add %526, %530
+  store %531, @ans_0
+  jump %_end_77
+
+%_end_77:
+  %532 = load @x_0
+  %533 = div %532, 2
+  store %533, @x_0
+  %534 = load @y_0
+  %535 = div %534, 2
+  store %535, @y_0
+  %536 = load @i_0
+  %537 = add %536, 1
+  store %537, @i_0
+  jump %_while_entry_76
+
+%_end_76:
+  %538 = load @ans_0
+  br %538, %_then_79, %_end_79
+
+%_then_79:
+  @ml_0_1_0_1_0 = alloc i32
+  %539 = load @pres_0_1
+  store %539, @ml_0_1_0_1_0
+  @mr_0_1_0_1_0 = alloc i32
+  %540 = load @pl_0_1
+  store %540, @mr_0_1_0_1_0
+  @mres_0_1_0_1_0 = alloc i32
+  store 0, @mres_0_1_0_1_0
+  jump %_while_entry_80
+
+%_while_entry_80:
+  %541 = load @mr_0_1_0_1_0
+  br %541, %_while_body_80, %_end_80
+
+%_while_body_80:
+  store 0, @ans_0
+  store 0, @i_0
+  %542 = load @mr_0_1_0_1_0
+  store %542, @x_0
+  store 1, @y_0
+  jump %_while_entry_81
+
+%_while_entry_81:
+  %543 = load @i_0
+  %544 = lt %543, 16
+  br %544, %_while_body_81, %_end_81
+
+%_while_body_81:
+  %545 = load @x_0
+  %546 = mod %545, 2
+  @t12_0_1_0_1_0_0_0 = alloc i32
+  %547 = ne %546, 0
+  br %547, %_then_83, %_else_83
+
+%_then_83:
+  %548 = load @y_0
+  %549 = mod %548, 2
+  %550 = ne %549, 0
+  store %550, @t12_0_1_0_1_0_0_0
+  jump %_end_83
+
+%_else_83:
+  store 0, @t12_0_1_0_1_0_0_0
+  jump %_end_83
+
+%_end_83:
+  %551 = load @t12_0_1_0_1_0_0_0
+  br %551, %_then_82, %_end_82
+
+%_then_82:
+  %552 = load @ans_0
+  %553 = load @i_0
+  %554 = getelemptr @SHIFT_TABLE, %553
+  %555 = load %554
+  %556 = mul 1, %555
+  %557 = add %552, %556
+  store %557, @ans_0
+  jump %_end_82
+
+%_end_82:
+  %558 = load @x_0
+  %559 = div %558, 2
+  store %559, @x_0
+  %560 = load @y_0
+  %561 = div %560, 2
+  store %561, @y_0
+  %562 = load @i_0
+  %563 = add %562, 1
+  store %563, @i_0
+  jump %_while_entry_81
+
+%_end_81:
+  %564 = load @ans_0
+  br %564, %_then_84, %_end_84
+
+%_then_84:
+  @al_0_1_0_1_0_0_1_0 = alloc i32
+  %565 = load @mres_0_1_0_1_0
+  store %565, @al_0_1_0_1_0_0_1_0
+  @c_0_1_0_1_0_0_1_0 = alloc i32
+  %566 = load @ml_0_1_0_1_0
+  store %566, @c_0_1_0_1_0_0_1_0
+  @sum_0_1_0_1_0_0_1_0 = alloc i32
+  jump %_while_entry_85
+
+%_while_entry_85:
+  %567 = load @c_0_1_0_1_0_0_1_0
+  br %567, %_while_body_85, %_end_85
+
+%_while_body_85:
+  store 0, @ans_0
+  store 0, @i_0
+  %568 = load @al_0_1_0_1_0_0_1_0
+  store %568, @x_0
+  %569 = load @c_0_1_0_1_0_0_1_0
+  store %569, @y_0
+  jump %_while_entry_86
+
+%_while_entry_86:
+  %570 = load @i_0
+  %571 = lt %570, 16
+  br %571, %_while_body_86, %_end_86
+
+%_while_body_86:
+  %572 = load @x_0
+  %573 = mod %572, 2
+  br %573, %_then_87, %_else_87
+
+%_then_87:
+  %574 = load @y_0
+  %575 = mod %574, 2
+  %576 = eq %575, 0
+  br %576, %_then_88, %_end_88
+
+%_then_88:
+  %577 = load @ans_0
+  %578 = load @i_0
+  %579 = getelemptr @SHIFT_TABLE, %578
+  %580 = load %579
+  %581 = mul 1, %580
+  %582 = add %577, %581
+  store %582, @ans_0
+  jump %_end_88
+
+%_end_88:
+  jump %_end_87
+
+%_else_87:
+  %583 = load @y_0
+  %584 = mod %583, 2
+  br %584, %_then_89, %_end_89
+
+%_then_89:
+  %585 = load @ans_0
+  %586 = load @i_0
+  %587 = getelemptr @SHIFT_TABLE, %586
+  %588 = load %587
+  %589 = mul 1, %588
+  %590 = add %585, %589
+  store %590, @ans_0
+  jump %_end_89
+
+%_end_89:
+  jump %_end_87
+
+%_end_87:
+  %591 = load @x_0
+  %592 = div %591, 2
+  store %592, @x_0
+  %593 = load @y_0
+  %594 = div %593, 2
+  store %594, @y_0
+  %595 = load @i_0
+  %596 = add %595, 1
+  store %596, @i_0
+  jump %_while_entry_86
+
+%_end_86:
+  %597 = load @ans_0
+  store %597, @sum_0_1_0_1_0_0_1_0
+  store 0, @ans_0
+  store 0, @i_0
+  %598 = load @al_0_1_0_1_0_0_1_0
+  store %598, @x_0
+  %599 = load @c_0_1_0_1_0_0_1_0
+  store %599, @y_0
+  jump %_while_entry_90
+
+%_while_entry_90:
+  %600 = load @i_0
+  %601 = lt %600, 16
+  br %601, %_while_body_90, %_end_90
+
+%_while_body_90:
+  %602 = load @x_0
+  %603 = mod %602, 2
+  @t13_0_1_0_1_0_0_1_0_0_1 = alloc i32
+  %604 = ne %603, 0
+  br %604, %_then_92, %_else_92
+
+%_then_92:
+  %605 = load @y_0
+  %606 = mod %605, 2
+  %607 = ne %606, 0
+  store %607, @t13_0_1_0_1_0_0_1_0_0_1
+  jump %_end_92
+
+%_else_92:
+  store 0, @t13_0_1_0_1_0_0_1_0_0_1
+  jump %_end_92
+
+%_end_92:
+  %608 = load @t13_0_1_0_1_0_0_1_0_0_1
+  br %608, %_then_91, %_end_91
+
+%_then_91:
+  %609 = load @ans_0
+  %610 = load @i_0
+  %611 = getelemptr @SHIFT_TABLE, %610
+  %612 = load %611
+  %613 = mul 1, %612
+  %614 = add %609, %613
+  store %614, @ans_0
+  jump %_end_91
+
+%_end_91:
+  %615 = load @x_0
+  %616 = div %615, 2
+  store %616, @x_0
+  %617 = load @y_0
+  %618 = div %617, 2
+  store %618, @y_0
+  %619 = load @i_0
+  %620 = add %619, 1
+  store %620, @i_0
+  jump %_while_entry_90
+
+%_end_90:
+  %621 = load @ans_0
+  store %621, @c_0_1_0_1_0_0_1_0
+  br 0, %_then_93, %_else_93
+
+%_then_93:
+  store 0, @ans_0
+  jump %_end_93
+
+%_else_93:
+  store 0, @ans_0
+  store 0, @i_0
+  %622 = load @c_0_1_0_1_0_0_1_0
+  %623 = getelemptr @SHIFT_TABLE, 1
+  %624 = load %623
+  %625 = mul %622, %624
+  store %625, @x_0
+  store 65535, @y_0
+  jump %_while_entry_94
+
+%_while_entry_94:
+  %626 = load @i_0
+  %627 = lt %626, 16
+  br %627, %_while_body_94, %_end_94
+
+%_while_body_94:
+  %628 = load @x_0
+  %629 = mod %628, 2
+  @t14_0_1_0_1_0_0_1_0_0_3_0 = alloc i32
+  %630 = ne %629, 0
+  br %630, %_then_96, %_else_96
+
+%_then_96:
+  %631 = load @y_0
+  %632 = mod %631, 2
+  %633 = ne %632, 0
+  store %633, @t14_0_1_0_1_0_0_1_0_0_3_0
+  jump %_end_96
+
+%_else_96:
+  store 0, @t14_0_1_0_1_0_0_1_0_0_3_0
+  jump %_end_96
+
+%_end_96:
+  %634 = load @t14_0_1_0_1_0_0_1_0_0_3_0
+  br %634, %_then_95, %_end_95
+
+%_then_95:
+  %635 = load @ans_0
+  %636 = load @i_0
+  %637 = getelemptr @SHIFT_TABLE, %636
+  %638 = load %637
+  %639 = mul 1, %638
+  %640 = add %635, %639
+  store %640, @ans_0
+  jump %_end_95
+
+%_end_95:
+  %641 = load @x_0
+  %642 = div %641, 2
+  store %642, @x_0
+  %643 = load @y_0
+  %644 = div %643, 2
+  store %644, @y_0
+  %645 = load @i_0
+  %646 = add %645, 1
+  store %646, @i_0
+  jump %_while_entry_94
+
+%_end_94:
+  jump %_end_93
+
+%_end_93:
+  %647 = load @ans_0
+  store %647, @c_0_1_0_1_0_0_1_0
+  %648 = load @sum_0_1_0_1_0_0_1_0
+  store %648, @al_0_1_0_1_0_0_1_0
+  jump %_while_entry_85
+
+%_end_85:
+  %649 = load @al_0_1_0_1_0_0_1_0
+  store %649, @ans_0
+  %650 = load @ans_0
+  store %650, @mres_0_1_0_1_0
+  jump %_end_84
+
+%_end_84:
+  @al_0_1_0_1_0_0_2 = alloc i32
+  %651 = load @ml_0_1_0_1_0
+  store %651, @al_0_1_0_1_0_0_2
+  @c_0_1_0_1_0_0_2 = alloc i32
+  %652 = load @ml_0_1_0_1_0
+  store %652, @c_0_1_0_1_0_0_2
+  @sum_0_1_0_1_0_0_2 = alloc i32
+  jump %_while_entry_97
+
+%_while_entry_97:
+  %653 = load @c_0_1_0_1_0_0_2
+  br %653, %_while_body_97, %_end_97
+
+%_while_body_97:
+  store 0, @ans_0
+  store 0, @i_0
+  %654 = load @al_0_1_0_1_0_0_2
+  store %654, @x_0
+  %655 = load @c_0_1_0_1_0_0_2
+  store %655, @y_0
+  jump %_while_entry_98
+
+%_while_entry_98:
+  %656 = load @i_0
+  %657 = lt %656, 16
+  br %657, %_while_body_98, %_end_98
+
+%_while_body_98:
+  %658 = load @x_0
+  %659 = mod %658, 2
+  br %659, %_then_99, %_else_99
+
+%_then_99:
+  %660 = load @y_0
+  %661 = mod %660, 2
+  %662 = eq %661, 0
+  br %662, %_then_100, %_end_100
+
+%_then_100:
+  %663 = load @ans_0
+  %664 = load @i_0
+  %665 = getelemptr @SHIFT_TABLE, %664
+  %666 = load %665
+  %667 = mul 1, %666
+  %668 = add %663, %667
+  store %668, @ans_0
+  jump %_end_100
+
+%_end_100:
+  jump %_end_99
+
+%_else_99:
+  %669 = load @y_0
+  %670 = mod %669, 2
+  br %670, %_then_101, %_end_101
+
+%_then_101:
+  %671 = load @ans_0
+  %672 = load @i_0
+  %673 = getelemptr @SHIFT_TABLE, %672
+  %674 = load %673
+  %675 = mul 1, %674
+  %676 = add %671, %675
+  store %676, @ans_0
+  jump %_end_101
+
+%_end_101:
+  jump %_end_99
+
+%_end_99:
+  %677 = load @x_0
+  %678 = div %677, 2
+  store %678, @x_0
+  %679 = load @y_0
+  %680 = div %679, 2
+  store %680, @y_0
+  %681 = load @i_0
+  %682 = add %681, 1
+  store %682, @i_0
+  jump %_while_entry_98
+
+%_end_98:
+  %683 = load @ans_0
+  store %683, @sum_0_1_0_1_0_0_2
+  store 0, @ans_0
+  store 0, @i_0
+  %684 = load @al_0_1_0_1_0_0_2
+  store %684, @x_0
+  %685 = load @c_0_1_0_1_0_0_2
+  store %685, @y_0
+  jump %_while_entry_102
+
+%_while_entry_102:
+  %686 = load @i_0
+  %687 = lt %686, 16
+  br %687, %_while_body_102, %_end_102
+
+%_while_body_102:
+  %688 = load @x_0
+  %689 = mod %688, 2
+  @t15_0_1_0_1_0_0_2_0_1 = alloc i32
+  %690 = ne %689, 0
+  br %690, %_then_104, %_else_104
+
+%_then_104:
+  %691 = load @y_0
+  %692 = mod %691, 2
+  %693 = ne %692, 0
+  store %693, @t15_0_1_0_1_0_0_2_0_1
+  jump %_end_104
+
+%_else_104:
+  store 0, @t15_0_1_0_1_0_0_2_0_1
+  jump %_end_104
+
+%_end_104:
+  %694 = load @t15_0_1_0_1_0_0_2_0_1
+  br %694, %_then_103, %_end_103
+
+%_then_103:
+  %695 = load @ans_0
+  %696 = load @i_0
+  %697 = getelemptr @SHIFT_TABLE, %696
+  %698 = load %697
+  %699 = mul 1, %698
+  %700 = add %695, %699
+  store %700, @ans_0
+  jump %_end_103
+
+%_end_103:
+  %701 = load @x_0
+  %702 = div %701, 2
+  store %702, @x_0
+  %703 = load @y_0
+  %704 = div %703, 2
+  store %704, @y_0
+  %705 = load @i_0
+  %706 = add %705, 1
+  store %706, @i_0
+  jump %_while_entry_102
+
+%_end_102:
+  %707 = load @ans_0
+  store %707, @c_0_1_0_1_0_0_2
+  br 0, %_then_105, %_else_105
+
+%_then_105:
+  store 0, @ans_0
+  jump %_end_105
+
+%_else_105:
+  store 0, @ans_0
+  store 0, @i_0
+  %708 = load @c_0_1_0_1_0_0_2
+  %709 = getelemptr @SHIFT_TABLE, 1
+  %710 = load %709
+  %711 = mul %708, %710
+  store %711, @x_0
+  store 65535, @y_0
+  jump %_while_entry_106
+
+%_while_entry_106:
+  %712 = load @i_0
+  %713 = lt %712, 16
+  br %713, %_while_body_106, %_end_106
+
+%_while_body_106:
+  %714 = load @x_0
+  %715 = mod %714, 2
+  @t16_0_1_0_1_0_0_2_0_3_0 = alloc i32
+  %716 = ne %715, 0
+  br %716, %_then_108, %_else_108
+
+%_then_108:
+  %717 = load @y_0
+  %718 = mod %717, 2
+  %719 = ne %718, 0
+  store %719, @t16_0_1_0_1_0_0_2_0_3_0
+  jump %_end_108
+
+%_else_108:
+  store 0, @t16_0_1_0_1_0_0_2_0_3_0
+  jump %_end_108
+
+%_end_108:
+  %720 = load @t16_0_1_0_1_0_0_2_0_3_0
+  br %720, %_then_107, %_end_107
+
+%_then_107:
+  %721 = load @ans_0
+  %722 = load @i_0
+  %723 = getelemptr @SHIFT_TABLE, %722
+  %724 = load %723
+  %725 = mul 1, %724
+  %726 = add %721, %725
+  store %726, @ans_0
+  jump %_end_107
+
+%_end_107:
+  %727 = load @x_0
+  %728 = div %727, 2
+  store %728, @x_0
+  %729 = load @y_0
+  %730 = div %729, 2
+  store %730, @y_0
+  %731 = load @i_0
+  %732 = add %731, 1
+  store %732, @i_0
+  jump %_while_entry_106
+
+%_end_106:
+  jump %_end_105
+
+%_end_105:
+  %733 = load @ans_0
+  store %733, @c_0_1_0_1_0_0_2
+  %734 = load @sum_0_1_0_1_0_0_2
+  store %734, @al_0_1_0_1_0_0_2
+  jump %_while_entry_97
+
+%_end_97:
+  %735 = load @al_0_1_0_1_0_0_2
+  store %735, @ans_0
+  %736 = load @ans_0
+  store %736, @ml_0_1_0_1_0
+  %737 = load @mr_0_1_0_1_0
+  store %737, @x_0
+  store 1, @y_0
+  %738 = load @y_0
+  %739 = ge %738, 15
+  br %739, %_then_109, %_else_109
+
+%_then_109:
+  %740 = load @x_0
+  %741 = lt %740, 0
+  br %741, %_then_110, %_else_110
+
+%_then_110:
+  store 65535, @ans_0
+  jump %_end_110
+
+%_else_110:
+  store 0, @ans_0
+  jump %_end_110
+
+%_end_110:
+  jump %_end_109
+
+%_else_109:
+  %742 = load @y_0
+  %743 = gt %742, 0
+  br %743, %_then_111, %_else_111
+
+%_then_111:
+  %744 = load @x_0
+  %745 = gt %744, 32767
+  br %745, %_then_112, %_else_112
+
+%_then_112:
+  %746 = load @x_0
+  %747 = load @y_0
+  %748 = getelemptr @SHIFT_TABLE, %747
+  %749 = load %748
+  %750 = div %746, %749
+  store %750, @x_0
+  %751 = load @x_0
+  %752 = add %751, 65536
+  %753 = load @y_0
+  %754 = sub 15, %753
+  %755 = add %754, 1
+  %756 = getelemptr @SHIFT_TABLE, %755
+  %757 = load %756
+  %758 = sub %752, %757
+  store %758, @ans_0
+  jump %_end_112
+
+%_else_112:
+  %759 = load @x_0
+  %760 = load @y_0
+  %761 = getelemptr @SHIFT_TABLE, %760
+  %762 = load %761
+  %763 = div %759, %762
+  store %763, @ans_0
+  jump %_end_112
+
+%_end_112:
+  jump %_end_111
+
+%_else_111:
+  %764 = load @x_0
+  store %764, @ans_0
+  jump %_end_111
+
+%_end_111:
+  jump %_end_109
+
+%_end_109:
+  %765 = load @ans_0
+  store %765, @mr_0_1_0_1_0
+  jump %_while_entry_80
+
+%_end_80:
+  %766 = load @mres_0_1_0_1_0
+  store %766, @ans_0
+  %767 = load @ans_0
+  store %767, @pres_0_1
+  jump %_end_79
+
+%_end_79:
+  @ml_0_1_0_2 = alloc i32
+  %768 = load @pl_0_1
+  store %768, @ml_0_1_0_2
+  @mr_0_1_0_2 = alloc i32
+  %769 = load @pl_0_1
+  store %769, @mr_0_1_0_2
+  @mres_0_1_0_2 = alloc i32
+  store 0, @mres_0_1_0_2
+  jump %_while_entry_113
+
+%_while_entry_113:
+  %770 = load @mr_0_1_0_2
+  br %770, %_while_body_113, %_end_113
+
+%_while_body_113:
+  store 0, @ans_0
+  store 0, @i_0
+  %771 = load @mr_0_1_0_2
+  store %771, @x_0
+  store 1, @y_0
+  jump %_while_entry_114
+
+%_while_entry_114:
+  %772 = load @i_0
+  %773 = lt %772, 16
+  br %773, %_while_body_114, %_end_114
+
+%_while_body_114:
+  %774 = load @x_0
+  %775 = mod %774, 2
+  @t17_0_1_0_2_0_0 = alloc i32
+  %776 = ne %775, 0
+  br %776, %_then_116, %_else_116
+
+%_then_116:
+  %777 = load @y_0
+  %778 = mod %777, 2
+  %779 = ne %778, 0
+  store %779, @t17_0_1_0_2_0_0
+  jump %_end_116
+
+%_else_116:
+  store 0, @t17_0_1_0_2_0_0
+  jump %_end_116
+
+%_end_116:
+  %780 = load @t17_0_1_0_2_0_0
+  br %780, %_then_115, %_end_115
+
+%_then_115:
+  %781 = load @ans_0
+  %782 = load @i_0
+  %783 = getelemptr @SHIFT_TABLE, %782
+  %784 = load %783
+  %785 = mul 1, %784
+  %786 = add %781, %785
+  store %786, @ans_0
+  jump %_end_115
+
+%_end_115:
+  %787 = load @x_0
+  %788 = div %787, 2
+  store %788, @x_0
+  %789 = load @y_0
+  %790 = div %789, 2
+  store %790, @y_0
+  %791 = load @i_0
+  %792 = add %791, 1
+  store %792, @i_0
+  jump %_while_entry_114
+
+%_end_114:
+  %793 = load @ans_0
+  br %793, %_then_117, %_end_117
+
+%_then_117:
+  @al_0_1_0_2_0_1_0 = alloc i32
+  %794 = load @mres_0_1_0_2
+  store %794, @al_0_1_0_2_0_1_0
+  @c_0_1_0_2_0_1_0 = alloc i32
+  %795 = load @ml_0_1_0_2
+  store %795, @c_0_1_0_2_0_1_0
+  @sum_0_1_0_2_0_1_0 = alloc i32
+  jump %_while_entry_118
+
+%_while_entry_118:
+  %796 = load @c_0_1_0_2_0_1_0
+  br %796, %_while_body_118, %_end_118
+
+%_while_body_118:
+  store 0, @ans_0
+  store 0, @i_0
+  %797 = load @al_0_1_0_2_0_1_0
+  store %797, @x_0
+  %798 = load @c_0_1_0_2_0_1_0
+  store %798, @y_0
+  jump %_while_entry_119
+
+%_while_entry_119:
+  %799 = load @i_0
+  %800 = lt %799, 16
+  br %800, %_while_body_119, %_end_119
+
+%_while_body_119:
+  %801 = load @x_0
+  %802 = mod %801, 2
+  br %802, %_then_120, %_else_120
+
+%_then_120:
+  %803 = load @y_0
+  %804 = mod %803, 2
+  %805 = eq %804, 0
+  br %805, %_then_121, %_end_121
+
+%_then_121:
+  %806 = load @ans_0
+  %807 = load @i_0
+  %808 = getelemptr @SHIFT_TABLE, %807
+  %809 = load %808
+  %810 = mul 1, %809
+  %811 = add %806, %810
+  store %811, @ans_0
+  jump %_end_121
+
+%_end_121:
+  jump %_end_120
+
+%_else_120:
+  %812 = load @y_0
+  %813 = mod %812, 2
+  br %813, %_then_122, %_end_122
+
+%_then_122:
+  %814 = load @ans_0
+  %815 = load @i_0
+  %816 = getelemptr @SHIFT_TABLE, %815
+  %817 = load %816
+  %818 = mul 1, %817
+  %819 = add %814, %818
+  store %819, @ans_0
+  jump %_end_122
+
+%_end_122:
+  jump %_end_120
+
+%_end_120:
+  %820 = load @x_0
+  %821 = div %820, 2
+  store %821, @x_0
+  %822 = load @y_0
+  %823 = div %822, 2
+  store %823, @y_0
+  %824 = load @i_0
+  %825 = add %824, 1
+  store %825, @i_0
+  jump %_while_entry_119
+
+%_end_119:
+  %826 = load @ans_0
+  store %826, @sum_0_1_0_2_0_1_0
+  store 0, @ans_0
+  store 0, @i_0
+  %827 = load @al_0_1_0_2_0_1_0
+  store %827, @x_0
+  %828 = load @c_0_1_0_2_0_1_0
+  store %828, @y_0
+  jump %_while_entry_123
+
+%_while_entry_123:
+  %829 = load @i_0
+  %830 = lt %829, 16
+  br %830, %_while_body_123, %_end_123
+
+%_while_body_123:
+  %831 = load @x_0
+  %832 = mod %831, 2
+  @t18_0_1_0_2_0_1_0_0_1 = alloc i32
+  %833 = ne %832, 0
+  br %833, %_then_125, %_else_125
+
+%_then_125:
+  %834 = load @y_0
+  %835 = mod %834, 2
+  %836 = ne %835, 0
+  store %836, @t18_0_1_0_2_0_1_0_0_1
+  jump %_end_125
+
+%_else_125:
+  store 0, @t18_0_1_0_2_0_1_0_0_1
+  jump %_end_125
+
+%_end_125:
+  %837 = load @t18_0_1_0_2_0_1_0_0_1
+  br %837, %_then_124, %_end_124
+
+%_then_124:
+  %838 = load @ans_0
+  %839 = load @i_0
+  %840 = getelemptr @SHIFT_TABLE, %839
+  %841 = load %840
+  %842 = mul 1, %841
+  %843 = add %838, %842
+  store %843, @ans_0
+  jump %_end_124
+
+%_end_124:
+  %844 = load @x_0
+  %845 = div %844, 2
+  store %845, @x_0
+  %846 = load @y_0
+  %847 = div %846, 2
+  store %847, @y_0
+  %848 = load @i_0
+  %849 = add %848, 1
+  store %849, @i_0
+  jump %_while_entry_123
+
+%_end_123:
+  %850 = load @ans_0
+  store %850, @c_0_1_0_2_0_1_0
+  br 0, %_then_126, %_else_126
+
+%_then_126:
+  store 0, @ans_0
+  jump %_end_126
+
+%_else_126:
+  store 0, @ans_0
+  store 0, @i_0
+  %851 = load @c_0_1_0_2_0_1_0
+  %852 = getelemptr @SHIFT_TABLE, 1
+  %853 = load %852
+  %854 = mul %851, %853
+  store %854, @x_0
+  store 65535, @y_0
+  jump %_while_entry_127
+
+%_while_entry_127:
+  %855 = load @i_0
+  %856 = lt %855, 16
+  br %856, %_while_body_127, %_end_127
+
+%_while_body_127:
+  %857 = load @x_0
+  %858 = mod %857, 2
+  @t19_0_1_0_2_0_1_0_0_3_0 = alloc i32
+  %859 = ne %858, 0
+  br %859, %_then_129, %_else_129
+
+%_then_129:
+  %860 = load @y_0
+  %861 = mod %860, 2
+  %862 = ne %861, 0
+  store %862, @t19_0_1_0_2_0_1_0_0_3_0
+  jump %_end_129
+
+%_else_129:
+  store 0, @t19_0_1_0_2_0_1_0_0_3_0
+  jump %_end_129
+
+%_end_129:
+  %863 = load @t19_0_1_0_2_0_1_0_0_3_0
+  br %863, %_then_128, %_end_128
+
+%_then_128:
+  %864 = load @ans_0
+  %865 = load @i_0
+  %866 = getelemptr @SHIFT_TABLE, %865
+  %867 = load %866
+  %868 = mul 1, %867
+  %869 = add %864, %868
+  store %869, @ans_0
+  jump %_end_128
+
+%_end_128:
+  %870 = load @x_0
+  %871 = div %870, 2
+  store %871, @x_0
+  %872 = load @y_0
+  %873 = div %872, 2
+  store %873, @y_0
+  %874 = load @i_0
+  %875 = add %874, 1
+  store %875, @i_0
+  jump %_while_entry_127
+
+%_end_127:
+  jump %_end_126
+
+%_end_126:
+  %876 = load @ans_0
+  store %876, @c_0_1_0_2_0_1_0
+  %877 = load @sum_0_1_0_2_0_1_0
+  store %877, @al_0_1_0_2_0_1_0
+  jump %_while_entry_118
+
+%_end_118:
+  %878 = load @al_0_1_0_2_0_1_0
+  store %878, @ans_0
+  %879 = load @ans_0
+  store %879, @mres_0_1_0_2
+  jump %_end_117
+
+%_end_117:
+  @al_0_1_0_2_0_2 = alloc i32
+  %880 = load @ml_0_1_0_2
+  store %880, @al_0_1_0_2_0_2
+  @c_0_1_0_2_0_2 = alloc i32
+  %881 = load @ml_0_1_0_2
+  store %881, @c_0_1_0_2_0_2
+  @sum_0_1_0_2_0_2 = alloc i32
+  jump %_while_entry_130
+
+%_while_entry_130:
+  %882 = load @c_0_1_0_2_0_2
+  br %882, %_while_body_130, %_end_130
+
+%_while_body_130:
+  store 0, @ans_0
+  store 0, @i_0
+  %883 = load @al_0_1_0_2_0_2
+  store %883, @x_0
+  %884 = load @c_0_1_0_2_0_2
+  store %884, @y_0
+  jump %_while_entry_131
+
+%_while_entry_131:
+  %885 = load @i_0
+  %886 = lt %885, 16
+  br %886, %_while_body_131, %_end_131
+
+%_while_body_131:
+  %887 = load @x_0
+  %888 = mod %887, 2
+  br %888, %_then_132, %_else_132
+
+%_then_132:
+  %889 = load @y_0
+  %890 = mod %889, 2
+  %891 = eq %890, 0
+  br %891, %_then_133, %_end_133
+
+%_then_133:
+  %892 = load @ans_0
+  %893 = load @i_0
+  %894 = getelemptr @SHIFT_TABLE, %893
+  %895 = load %894
+  %896 = mul 1, %895
+  %897 = add %892, %896
+  store %897, @ans_0
+  jump %_end_133
+
+%_end_133:
+  jump %_end_132
+
+%_else_132:
+  %898 = load @y_0
+  %899 = mod %898, 2
+  br %899, %_then_134, %_end_134
+
+%_then_134:
+  %900 = load @ans_0
+  %901 = load @i_0
+  %902 = getelemptr @SHIFT_TABLE, %901
+  %903 = load %902
+  %904 = mul 1, %903
+  %905 = add %900, %904
+  store %905, @ans_0
+  jump %_end_134
+
+%_end_134:
+  jump %_end_132
+
+%_end_132:
+  %906 = load @x_0
+  %907 = div %906, 2
+  store %907, @x_0
+  %908 = load @y_0
+  %909 = div %908, 2
+  store %909, @y_0
+  %910 = load @i_0
+  %911 = add %910, 1
+  store %911, @i_0
+  jump %_while_entry_131
+
+%_end_131:
+  %912 = load @ans_0
+  store %912, @sum_0_1_0_2_0_2
+  store 0, @ans_0
+  store 0, @i_0
+  %913 = load @al_0_1_0_2_0_2
+  store %913, @x_0
+  %914 = load @c_0_1_0_2_0_2
+  store %914, @y_0
+  jump %_while_entry_135
+
+%_while_entry_135:
+  %915 = load @i_0
+  %916 = lt %915, 16
+  br %916, %_while_body_135, %_end_135
+
+%_while_body_135:
+  %917 = load @x_0
+  %918 = mod %917, 2
+  @t20_0_1_0_2_0_2_0_1 = alloc i32
+  %919 = ne %918, 0
+  br %919, %_then_137, %_else_137
+
+%_then_137:
+  %920 = load @y_0
+  %921 = mod %920, 2
+  %922 = ne %921, 0
+  store %922, @t20_0_1_0_2_0_2_0_1
+  jump %_end_137
+
+%_else_137:
+  store 0, @t20_0_1_0_2_0_2_0_1
+  jump %_end_137
+
+%_end_137:
+  %923 = load @t20_0_1_0_2_0_2_0_1
+  br %923, %_then_136, %_end_136
+
+%_then_136:
+  %924 = load @ans_0
+  %925 = load @i_0
+  %926 = getelemptr @SHIFT_TABLE, %925
+  %927 = load %926
+  %928 = mul 1, %927
+  %929 = add %924, %928
+  store %929, @ans_0
+  jump %_end_136
+
+%_end_136:
+  %930 = load @x_0
+  %931 = div %930, 2
+  store %931, @x_0
+  %932 = load @y_0
+  %933 = div %932, 2
+  store %933, @y_0
+  %934 = load @i_0
+  %935 = add %934, 1
+  store %935, @i_0
+  jump %_while_entry_135
+
+%_end_135:
+  %936 = load @ans_0
+  store %936, @c_0_1_0_2_0_2
+  br 0, %_then_138, %_else_138
+
+%_then_138:
+  store 0, @ans_0
+  jump %_end_138
+
+%_else_138:
+  store 0, @ans_0
+  store 0, @i_0
+  %937 = load @c_0_1_0_2_0_2
+  %938 = getelemptr @SHIFT_TABLE, 1
+  %939 = load %938
+  %940 = mul %937, %939
+  store %940, @x_0
+  store 65535, @y_0
+  jump %_while_entry_139
+
+%_while_entry_139:
+  %941 = load @i_0
+  %942 = lt %941, 16
+  br %942, %_while_body_139, %_end_139
+
+%_while_body_139:
+  %943 = load @x_0
+  %944 = mod %943, 2
+  @t21_0_1_0_2_0_2_0_3_0 = alloc i32
+  %945 = ne %944, 0
+  br %945, %_then_141, %_else_141
+
+%_then_141:
+  %946 = load @y_0
+  %947 = mod %946, 2
+  %948 = ne %947, 0
+  store %948, @t21_0_1_0_2_0_2_0_3_0
+  jump %_end_141
+
+%_else_141:
+  store 0, @t21_0_1_0_2_0_2_0_3_0
+  jump %_end_141
+
+%_end_141:
+  %949 = load @t21_0_1_0_2_0_2_0_3_0
+  br %949, %_then_140, %_end_140
+
+%_then_140:
+  %950 = load @ans_0
+  %951 = load @i_0
+  %952 = getelemptr @SHIFT_TABLE, %951
+  %953 = load %952
+  %954 = mul 1, %953
+  %955 = add %950, %954
+  store %955, @ans_0
+  jump %_end_140
+
+%_end_140:
+  %956 = load @x_0
+  %957 = div %956, 2
+  store %957, @x_0
+  %958 = load @y_0
+  %959 = div %958, 2
+  store %959, @y_0
+  %960 = load @i_0
+  %961 = add %960, 1
+  store %961, @i_0
+  jump %_while_entry_139
+
+%_end_139:
+  jump %_end_138
+
+%_end_138:
+  %962 = load @ans_0
+  store %962, @c_0_1_0_2_0_2
+  %963 = load @sum_0_1_0_2_0_2
+  store %963, @al_0_1_0_2_0_2
+  jump %_while_entry_130
+
+%_end_130:
+  %964 = load @al_0_1_0_2_0_2
+  store %964, @ans_0
+  %965 = load @ans_0
+  store %965, @ml_0_1_0_2
+  %966 = load @mr_0_1_0_2
+  store %966, @x_0
+  store 1, @y_0
+  %967 = load @y_0
+  %968 = ge %967, 15
+  br %968, %_then_142, %_else_142
+
+%_then_142:
+  %969 = load @x_0
+  %970 = lt %969, 0
+  br %970, %_then_143, %_else_143
+
+%_then_143:
+  store 65535, @ans_0
+  jump %_end_143
+
+%_else_143:
+  store 0, @ans_0
+  jump %_end_143
+
+%_end_143:
+  jump %_end_142
+
+%_else_142:
+  %971 = load @y_0
+  %972 = gt %971, 0
+  br %972, %_then_144, %_else_144
+
+%_then_144:
+  %973 = load @x_0
+  %974 = gt %973, 32767
+  br %974, %_then_145, %_else_145
+
+%_then_145:
+  %975 = load @x_0
+  %976 = load @y_0
+  %977 = getelemptr @SHIFT_TABLE, %976
+  %978 = load %977
+  %979 = div %975, %978
+  store %979, @x_0
+  %980 = load @x_0
+  %981 = add %980, 65536
+  %982 = load @y_0
+  %983 = sub 15, %982
+  %984 = add %983, 1
+  %985 = getelemptr @SHIFT_TABLE, %984
+  %986 = load %985
+  %987 = sub %981, %986
+  store %987, @ans_0
+  jump %_end_145
+
+%_else_145:
+  %988 = load @x_0
+  %989 = load @y_0
+  %990 = getelemptr @SHIFT_TABLE, %989
+  %991 = load %990
+  %992 = div %988, %991
+  store %992, @ans_0
+  jump %_end_145
+
+%_end_145:
+  jump %_end_144
+
+%_else_144:
+  %993 = load @x_0
+  store %993, @ans_0
+  jump %_end_144
+
+%_end_144:
+  jump %_end_142
+
+%_end_142:
+  %994 = load @ans_0
+  store %994, @mr_0_1_0_2
+  jump %_while_entry_113
+
+%_end_113:
+  %995 = load @mres_0_1_0_2
+  store %995, @ans_0
+  %996 = load @ans_0
+  store %996, @pl_0_1
+  %997 = load @pr_0_1
+  store %997, @x_0
+  store 1, @y_0
+  %998 = load @y_0
+  %999 = ge %998, 15
+  br %999, %_then_146, %_else_146
+
+%_then_146:
+  %1000 = load @x_0
+  %1001 = lt %1000, 0
+  br %1001, %_then_147, %_else_147
+
+%_then_147:
+  store 65535, @ans_0
+  jump %_end_147
+
+%_else_147:
+  store 0, @ans_0
+  jump %_end_147
+
+%_end_147:
+  jump %_end_146
+
+%_else_146:
+  %1002 = load @y_0
+  %1003 = gt %1002, 0
+  br %1003, %_then_148, %_else_148
+
+%_then_148:
+  %1004 = load @x_0
+  %1005 = gt %1004, 32767
+  br %1005, %_then_149, %_else_149
+
+%_then_149:
+  %1006 = load @x_0
+  %1007 = load @y_0
+  %1008 = getelemptr @SHIFT_TABLE, %1007
+  %1009 = load %1008
+  %1010 = div %1006, %1009
+  store %1010, @x_0
+  %1011 = load @x_0
+  %1012 = add %1011, 65536
+  %1013 = load @y_0
+  %1014 = sub 15, %1013
+  %1015 = add %1014, 1
+  %1016 = getelemptr @SHIFT_TABLE, %1015
+  %1017 = load %1016
+  %1018 = sub %1012, %1017
+  store %1018, @ans_0
+  jump %_end_149
+
+%_else_149:
+  %1019 = load @x_0
+  %1020 = load @y_0
+  %1021 = getelemptr @SHIFT_TABLE, %1020
+  %1022 = load %1021
+  %1023 = div %1019, %1022
+  store %1023, @ans_0
+  jump %_end_149
+
+%_end_149:
+  jump %_end_148
+
+%_else_148:
+  %1024 = load @x_0
+  store %1024, @ans_0
+  jump %_end_148
+
+%_end_148:
+  jump %_end_146
+
+%_end_146:
+  %1025 = load @ans_0
+  store %1025, @pr_0_1
+  jump %_while_entry_75
+
+%_end_75:
+  %1026 = load @pres_0_1
+  store %1026, @ans_0
+  %1027 = load @ans_0
+  call @putint(%1027)
+  call @putch(10)
+  store 2, @cur_0
+  jump %_while_entry_150
+
+%_while_entry_150:
+  %1028 = load @cur_0
+  %1029 = lt %1028, 16
+  br %1029, %_while_body_150, %_end_150
+
+%_while_body_150:
+  @pl_0_2_0 = alloc i32
+  store 2, @pl_0_2_0
+  @pr_0_2_0 = alloc i32
+  %1030 = load @cur_0
+  store %1030, @pr_0_2_0
+  @pres_0_2_0 = alloc i32
+  store 1, @pres_0_2_0
+  jump %_while_entry_151
+
+%_while_entry_151:
+  %1031 = load @pr_0_2_0
+  %1032 = gt %1031, 0
+  br %1032, %_while_body_151, %_end_151
+
+%_while_body_151:
+  store 0, @ans_0
+  store 0, @i_0
+  %1033 = load @pr_0_2_0
+  store %1033, @x_0
+  store 1, @y_0
+  jump %_while_entry_152
+
+%_while_entry_152:
+  %1034 = load @i_0
+  %1035 = lt %1034, 16
+  br %1035, %_while_body_152, %_end_152
+
+%_while_body_152:
+  %1036 = load @x_0
+  %1037 = mod %1036, 2
+  @t22_0_2_0_0_0 = alloc i32
+  %1038 = ne %1037, 0
+  br %1038, %_then_154, %_else_154
+
+%_then_154:
+  %1039 = load @y_0
+  %1040 = mod %1039, 2
+  %1041 = ne %1040, 0
+  store %1041, @t22_0_2_0_0_0
+  jump %_end_154
+
+%_else_154:
+  store 0, @t22_0_2_0_0_0
+  jump %_end_154
+
+%_end_154:
+  %1042 = load @t22_0_2_0_0_0
+  br %1042, %_then_153, %_end_153
+
+%_then_153:
+  %1043 = load @ans_0
+  %1044 = load @i_0
+  %1045 = getelemptr @SHIFT_TABLE, %1044
+  %1046 = load %1045
+  %1047 = mul 1, %1046
+  %1048 = add %1043, %1047
+  store %1048, @ans_0
+  jump %_end_153
+
+%_end_153:
+  %1049 = load @x_0
+  %1050 = div %1049, 2
+  store %1050, @x_0
+  %1051 = load @y_0
+  %1052 = div %1051, 2
+  store %1052, @y_0
+  %1053 = load @i_0
+  %1054 = add %1053, 1
+  store %1054, @i_0
+  jump %_while_entry_152
+
+%_end_152:
+  %1055 = load @ans_0
+  br %1055, %_then_155, %_end_155
+
+%_then_155:
+  @ml_0_2_0_0_1_0 = alloc i32
+  %1056 = load @pres_0_2_0
+  store %1056, @ml_0_2_0_0_1_0
+  @mr_0_2_0_0_1_0 = alloc i32
+  %1057 = load @pl_0_2_0
+  store %1057, @mr_0_2_0_0_1_0
+  @mres_0_2_0_0_1_0 = alloc i32
+  store 0, @mres_0_2_0_0_1_0
+  jump %_while_entry_156
+
+%_while_entry_156:
+  %1058 = load @mr_0_2_0_0_1_0
+  br %1058, %_while_body_156, %_end_156
+
+%_while_body_156:
+  store 0, @ans_0
+  store 0, @i_0
+  %1059 = load @mr_0_2_0_0_1_0
+  store %1059, @x_0
+  store 1, @y_0
+  jump %_while_entry_157
+
+%_while_entry_157:
+  %1060 = load @i_0
+  %1061 = lt %1060, 16
+  br %1061, %_while_body_157, %_end_157
+
+%_while_body_157:
+  %1062 = load @x_0
+  %1063 = mod %1062, 2
+  @t23_0_2_0_0_1_0_0_0 = alloc i32
+  %1064 = ne %1063, 0
+  br %1064, %_then_159, %_else_159
+
+%_then_159:
+  %1065 = load @y_0
+  %1066 = mod %1065, 2
+  %1067 = ne %1066, 0
+  store %1067, @t23_0_2_0_0_1_0_0_0
+  jump %_end_159
+
+%_else_159:
+  store 0, @t23_0_2_0_0_1_0_0_0
+  jump %_end_159
+
+%_end_159:
+  %1068 = load @t23_0_2_0_0_1_0_0_0
+  br %1068, %_then_158, %_end_158
+
+%_then_158:
+  %1069 = load @ans_0
+  %1070 = load @i_0
+  %1071 = getelemptr @SHIFT_TABLE, %1070
+  %1072 = load %1071
+  %1073 = mul 1, %1072
+  %1074 = add %1069, %1073
+  store %1074, @ans_0
+  jump %_end_158
+
+%_end_158:
+  %1075 = load @x_0
+  %1076 = div %1075, 2
+  store %1076, @x_0
+  %1077 = load @y_0
+  %1078 = div %1077, 2
+  store %1078, @y_0
+  %1079 = load @i_0
+  %1080 = add %1079, 1
+  store %1080, @i_0
+  jump %_while_entry_157
+
+%_end_157:
+  %1081 = load @ans_0
+  br %1081, %_then_160, %_end_160
+
+%_then_160:
+  @al_0_2_0_0_1_0_0_1_0 = alloc i32
+  %1082 = load @mres_0_2_0_0_1_0
+  store %1082, @al_0_2_0_0_1_0_0_1_0
+  @c_0_2_0_0_1_0_0_1_0 = alloc i32
+  %1083 = load @ml_0_2_0_0_1_0
+  store %1083, @c_0_2_0_0_1_0_0_1_0
+  @sum_0_2_0_0_1_0_0_1_0 = alloc i32
+  jump %_while_entry_161
+
+%_while_entry_161:
+  %1084 = load @c_0_2_0_0_1_0_0_1_0
+  br %1084, %_while_body_161, %_end_161
+
+%_while_body_161:
+  store 0, @ans_0
+  store 0, @i_0
+  %1085 = load @al_0_2_0_0_1_0_0_1_0
+  store %1085, @x_0
+  %1086 = load @c_0_2_0_0_1_0_0_1_0
+  store %1086, @y_0
+  jump %_while_entry_162
+
+%_while_entry_162:
+  %1087 = load @i_0
+  %1088 = lt %1087, 16
+  br %1088, %_while_body_162, %_end_162
+
+%_while_body_162:
+  %1089 = load @x_0
+  %1090 = mod %1089, 2
+  br %1090, %_then_163, %_else_163
+
+%_then_163:
+  %1091 = load @y_0
+  %1092 = mod %1091, 2
+  %1093 = eq %1092, 0
+  br %1093, %_then_164, %_end_164
+
+%_then_164:
+  %1094 = load @ans_0
+  %1095 = load @i_0
+  %1096 = getelemptr @SHIFT_TABLE, %1095
+  %1097 = load %1096
+  %1098 = mul 1, %1097
+  %1099 = add %1094, %1098
+  store %1099, @ans_0
+  jump %_end_164
+
+%_end_164:
+  jump %_end_163
+
+%_else_163:
+  %1100 = load @y_0
+  %1101 = mod %1100, 2
+  br %1101, %_then_165, %_end_165
+
+%_then_165:
+  %1102 = load @ans_0
+  %1103 = load @i_0
+  %1104 = getelemptr @SHIFT_TABLE, %1103
+  %1105 = load %1104
+  %1106 = mul 1, %1105
+  %1107 = add %1102, %1106
+  store %1107, @ans_0
+  jump %_end_165
+
+%_end_165:
+  jump %_end_163
+
+%_end_163:
+  %1108 = load @x_0
+  %1109 = div %1108, 2
+  store %1109, @x_0
+  %1110 = load @y_0
+  %1111 = div %1110, 2
+  store %1111, @y_0
+  %1112 = load @i_0
+  %1113 = add %1112, 1
+  store %1113, @i_0
+  jump %_while_entry_162
+
+%_end_162:
+  %1114 = load @ans_0
+  store %1114, @sum_0_2_0_0_1_0_0_1_0
+  store 0, @ans_0
+  store 0, @i_0
+  %1115 = load @al_0_2_0_0_1_0_0_1_0
+  store %1115, @x_0
+  %1116 = load @c_0_2_0_0_1_0_0_1_0
+  store %1116, @y_0
+  jump %_while_entry_166
+
+%_while_entry_166:
+  %1117 = load @i_0
+  %1118 = lt %1117, 16
+  br %1118, %_while_body_166, %_end_166
+
+%_while_body_166:
+  %1119 = load @x_0
+  %1120 = mod %1119, 2
+  @t24_0_2_0_0_1_0_0_1_0_0_1 = alloc i32
+  %1121 = ne %1120, 0
+  br %1121, %_then_168, %_else_168
+
+%_then_168:
+  %1122 = load @y_0
+  %1123 = mod %1122, 2
+  %1124 = ne %1123, 0
+  store %1124, @t24_0_2_0_0_1_0_0_1_0_0_1
+  jump %_end_168
+
+%_else_168:
+  store 0, @t24_0_2_0_0_1_0_0_1_0_0_1
+  jump %_end_168
+
+%_end_168:
+  %1125 = load @t24_0_2_0_0_1_0_0_1_0_0_1
+  br %1125, %_then_167, %_end_167
+
+%_then_167:
+  %1126 = load @ans_0
+  %1127 = load @i_0
+  %1128 = getelemptr @SHIFT_TABLE, %1127
+  %1129 = load %1128
+  %1130 = mul 1, %1129
+  %1131 = add %1126, %1130
+  store %1131, @ans_0
+  jump %_end_167
+
+%_end_167:
+  %1132 = load @x_0
+  %1133 = div %1132, 2
+  store %1133, @x_0
+  %1134 = load @y_0
+  %1135 = div %1134, 2
+  store %1135, @y_0
+  %1136 = load @i_0
+  %1137 = add %1136, 1
+  store %1137, @i_0
+  jump %_while_entry_166
+
+%_end_166:
+  %1138 = load @ans_0
+  store %1138, @c_0_2_0_0_1_0_0_1_0
+  br 0, %_then_169, %_else_169
+
+%_then_169:
+  store 0, @ans_0
+  jump %_end_169
+
+%_else_169:
+  store 0, @ans_0
+  store 0, @i_0
+  %1139 = load @c_0_2_0_0_1_0_0_1_0
+  %1140 = getelemptr @SHIFT_TABLE, 1
+  %1141 = load %1140
+  %1142 = mul %1139, %1141
+  store %1142, @x_0
+  store 65535, @y_0
+  jump %_while_entry_170
+
+%_while_entry_170:
+  %1143 = load @i_0
+  %1144 = lt %1143, 16
+  br %1144, %_while_body_170, %_end_170
+
+%_while_body_170:
+  %1145 = load @x_0
+  %1146 = mod %1145, 2
+  @t25_0_2_0_0_1_0_0_1_0_0_3_0 = alloc i32
+  %1147 = ne %1146, 0
+  br %1147, %_then_172, %_else_172
+
+%_then_172:
+  %1148 = load @y_0
+  %1149 = mod %1148, 2
+  %1150 = ne %1149, 0
+  store %1150, @t25_0_2_0_0_1_0_0_1_0_0_3_0
+  jump %_end_172
+
+%_else_172:
+  store 0, @t25_0_2_0_0_1_0_0_1_0_0_3_0
+  jump %_end_172
+
+%_end_172:
+  %1151 = load @t25_0_2_0_0_1_0_0_1_0_0_3_0
+  br %1151, %_then_171, %_end_171
+
+%_then_171:
+  %1152 = load @ans_0
+  %1153 = load @i_0
+  %1154 = getelemptr @SHIFT_TABLE, %1153
+  %1155 = load %1154
+  %1156 = mul 1, %1155
+  %1157 = add %1152, %1156
+  store %1157, @ans_0
+  jump %_end_171
+
+%_end_171:
+  %1158 = load @x_0
+  %1159 = div %1158, 2
+  store %1159, @x_0
+  %1160 = load @y_0
+  %1161 = div %1160, 2
+  store %1161, @y_0
+  %1162 = load @i_0
+  %1163 = add %1162, 1
+  store %1163, @i_0
+  jump %_while_entry_170
+
+%_end_170:
+  jump %_end_169
+
+%_end_169:
+  %1164 = load @ans_0
+  store %1164, @c_0_2_0_0_1_0_0_1_0
+  %1165 = load @sum_0_2_0_0_1_0_0_1_0
+  store %1165, @al_0_2_0_0_1_0_0_1_0
+  jump %_while_entry_161
+
+%_end_161:
+  %1166 = load @al_0_2_0_0_1_0_0_1_0
+  store %1166, @ans_0
+  %1167 = load @ans_0
+  store %1167, @mres_0_2_0_0_1_0
+  jump %_end_160
+
+%_end_160:
+  @al_0_2_0_0_1_0_0_2 = alloc i32
+  %1168 = load @ml_0_2_0_0_1_0
+  store %1168, @al_0_2_0_0_1_0_0_2
+  @c_0_2_0_0_1_0_0_2 = alloc i32
+  %1169 = load @ml_0_2_0_0_1_0
+  store %1169, @c_0_2_0_0_1_0_0_2
+  @sum_0_2_0_0_1_0_0_2 = alloc i32
+  jump %_while_entry_173
+
+%_while_entry_173:
+  %1170 = load @c_0_2_0_0_1_0_0_2
+  br %1170, %_while_body_173, %_end_173
+
+%_while_body_173:
+  store 0, @ans_0
+  store 0, @i_0
+  %1171 = load @al_0_2_0_0_1_0_0_2
+  store %1171, @x_0
+  %1172 = load @c_0_2_0_0_1_0_0_2
+  store %1172, @y_0
+  jump %_while_entry_174
+
+%_while_entry_174:
+  %1173 = load @i_0
+  %1174 = lt %1173, 16
+  br %1174, %_while_body_174, %_end_174
+
+%_while_body_174:
+  %1175 = load @x_0
+  %1176 = mod %1175, 2
+  br %1176, %_then_175, %_else_175
+
+%_then_175:
+  %1177 = load @y_0
+  %1178 = mod %1177, 2
+  %1179 = eq %1178, 0
+  br %1179, %_then_176, %_end_176
+
+%_then_176:
+  %1180 = load @ans_0
+  %1181 = load @i_0
+  %1182 = getelemptr @SHIFT_TABLE, %1181
+  %1183 = load %1182
+  %1184 = mul 1, %1183
+  %1185 = add %1180, %1184
+  store %1185, @ans_0
+  jump %_end_176
+
+%_end_176:
+  jump %_end_175
+
+%_else_175:
+  %1186 = load @y_0
+  %1187 = mod %1186, 2
+  br %1187, %_then_177, %_end_177
+
+%_then_177:
+  %1188 = load @ans_0
+  %1189 = load @i_0
+  %1190 = getelemptr @SHIFT_TABLE, %1189
+  %1191 = load %1190
+  %1192 = mul 1, %1191
+  %1193 = add %1188, %1192
+  store %1193, @ans_0
+  jump %_end_177
+
+%_end_177:
+  jump %_end_175
+
+%_end_175:
+  %1194 = load @x_0
+  %1195 = div %1194, 2
+  store %1195, @x_0
+  %1196 = load @y_0
+  %1197 = div %1196, 2
+  store %1197, @y_0
+  %1198 = load @i_0
+  %1199 = add %1198, 1
+  store %1199, @i_0
+  jump %_while_entry_174
+
+%_end_174:
+  %1200 = load @ans_0
+  store %1200, @sum_0_2_0_0_1_0_0_2
+  store 0, @ans_0
+  store 0, @i_0
+  %1201 = load @al_0_2_0_0_1_0_0_2
+  store %1201, @x_0
+  %1202 = load @c_0_2_0_0_1_0_0_2
+  store %1202, @y_0
+  jump %_while_entry_178
+
+%_while_entry_178:
+  %1203 = load @i_0
+  %1204 = lt %1203, 16
+  br %1204, %_while_body_178, %_end_178
+
+%_while_body_178:
+  %1205 = load @x_0
+  %1206 = mod %1205, 2
+  @t26_0_2_0_0_1_0_0_2_0_1 = alloc i32
+  %1207 = ne %1206, 0
+  br %1207, %_then_180, %_else_180
+
+%_then_180:
+  %1208 = load @y_0
+  %1209 = mod %1208, 2
+  %1210 = ne %1209, 0
+  store %1210, @t26_0_2_0_0_1_0_0_2_0_1
+  jump %_end_180
+
+%_else_180:
+  store 0, @t26_0_2_0_0_1_0_0_2_0_1
+  jump %_end_180
+
+%_end_180:
+  %1211 = load @t26_0_2_0_0_1_0_0_2_0_1
+  br %1211, %_then_179, %_end_179
+
+%_then_179:
+  %1212 = load @ans_0
+  %1213 = load @i_0
+  %1214 = getelemptr @SHIFT_TABLE, %1213
+  %1215 = load %1214
+  %1216 = mul 1, %1215
+  %1217 = add %1212, %1216
+  store %1217, @ans_0
+  jump %_end_179
+
+%_end_179:
+  %1218 = load @x_0
+  %1219 = div %1218, 2
+  store %1219, @x_0
+  %1220 = load @y_0
+  %1221 = div %1220, 2
+  store %1221, @y_0
+  %1222 = load @i_0
+  %1223 = add %1222, 1
+  store %1223, @i_0
+  jump %_while_entry_178
+
+%_end_178:
+  %1224 = load @ans_0
+  store %1224, @c_0_2_0_0_1_0_0_2
+  br 0, %_then_181, %_else_181
+
+%_then_181:
+  store 0, @ans_0
+  jump %_end_181
+
+%_else_181:
+  store 0, @ans_0
+  store 0, @i_0
+  %1225 = load @c_0_2_0_0_1_0_0_2
+  %1226 = getelemptr @SHIFT_TABLE, 1
+  %1227 = load %1226
+  %1228 = mul %1225, %1227
+  store %1228, @x_0
+  store 65535, @y_0
+  jump %_while_entry_182
+
+%_while_entry_182:
+  %1229 = load @i_0
+  %1230 = lt %1229, 16
+  br %1230, %_while_body_182, %_end_182
+
+%_while_body_182:
+  %1231 = load @x_0
+  %1232 = mod %1231, 2
+  @t27_0_2_0_0_1_0_0_2_0_3_0 = alloc i32
+  %1233 = ne %1232, 0
+  br %1233, %_then_184, %_else_184
+
+%_then_184:
+  %1234 = load @y_0
+  %1235 = mod %1234, 2
+  %1236 = ne %1235, 0
+  store %1236, @t27_0_2_0_0_1_0_0_2_0_3_0
+  jump %_end_184
+
+%_else_184:
+  store 0, @t27_0_2_0_0_1_0_0_2_0_3_0
+  jump %_end_184
+
+%_end_184:
+  %1237 = load @t27_0_2_0_0_1_0_0_2_0_3_0
+  br %1237, %_then_183, %_end_183
+
+%_then_183:
+  %1238 = load @ans_0
+  %1239 = load @i_0
+  %1240 = getelemptr @SHIFT_TABLE, %1239
+  %1241 = load %1240
+  %1242 = mul 1, %1241
+  %1243 = add %1238, %1242
+  store %1243, @ans_0
+  jump %_end_183
+
+%_end_183:
+  %1244 = load @x_0
+  %1245 = div %1244, 2
+  store %1245, @x_0
+  %1246 = load @y_0
+  %1247 = div %1246, 2
+  store %1247, @y_0
+  %1248 = load @i_0
+  %1249 = add %1248, 1
+  store %1249, @i_0
+  jump %_while_entry_182
+
+%_end_182:
+  jump %_end_181
+
+%_end_181:
+  %1250 = load @ans_0
+  store %1250, @c_0_2_0_0_1_0_0_2
+  %1251 = load @sum_0_2_0_0_1_0_0_2
+  store %1251, @al_0_2_0_0_1_0_0_2
+  jump %_while_entry_173
+
+%_end_173:
+  %1252 = load @al_0_2_0_0_1_0_0_2
+  store %1252, @ans_0
+  %1253 = load @ans_0
+  store %1253, @ml_0_2_0_0_1_0
+  %1254 = load @mr_0_2_0_0_1_0
+  store %1254, @x_0
+  store 1, @y_0
+  %1255 = load @y_0
+  %1256 = ge %1255, 15
+  br %1256, %_then_185, %_else_185
+
+%_then_185:
+  %1257 = load @x_0
+  %1258 = lt %1257, 0
+  br %1258, %_then_186, %_else_186
+
+%_then_186:
+  store 65535, @ans_0
+  jump %_end_186
+
+%_else_186:
+  store 0, @ans_0
+  jump %_end_186
+
+%_end_186:
+  jump %_end_185
+
+%_else_185:
+  %1259 = load @y_0
+  %1260 = gt %1259, 0
+  br %1260, %_then_187, %_else_187
+
+%_then_187:
+  %1261 = load @x_0
+  %1262 = gt %1261, 32767
+  br %1262, %_then_188, %_else_188
+
+%_then_188:
+  %1263 = load @x_0
+  %1264 = load @y_0
+  %1265 = getelemptr @SHIFT_TABLE, %1264
+  %1266 = load %1265
+  %1267 = div %1263, %1266
+  store %1267, @x_0
+  %1268 = load @x_0
+  %1269 = add %1268, 65536
+  %1270 = load @y_0
+  %1271 = sub 15, %1270
+  %1272 = add %1271, 1
+  %1273 = getelemptr @SHIFT_TABLE, %1272
+  %1274 = load %1273
+  %1275 = sub %1269, %1274
+  store %1275, @ans_0
+  jump %_end_188
+
+%_else_188:
+  %1276 = load @x_0
+  %1277 = load @y_0
+  %1278 = getelemptr @SHIFT_TABLE, %1277
+  %1279 = load %1278
+  %1280 = div %1276, %1279
+  store %1280, @ans_0
+  jump %_end_188
+
+%_end_188:
+  jump %_end_187
+
+%_else_187:
+  %1281 = load @x_0
+  store %1281, @ans_0
+  jump %_end_187
+
+%_end_187:
+  jump %_end_185
+
+%_end_185:
+  %1282 = load @ans_0
+  store %1282, @mr_0_2_0_0_1_0
+  jump %_while_entry_156
+
+%_end_156:
+  %1283 = load @mres_0_2_0_0_1_0
+  store %1283, @ans_0
+  %1284 = load @ans_0
+  store %1284, @pres_0_2_0
+  jump %_end_155
+
+%_end_155:
+  @ml_0_2_0_0_2 = alloc i32
+  %1285 = load @pl_0_2_0
+  store %1285, @ml_0_2_0_0_2
+  @mr_0_2_0_0_2 = alloc i32
+  %1286 = load @pl_0_2_0
+  store %1286, @mr_0_2_0_0_2
+  @mres_0_2_0_0_2 = alloc i32
+  store 0, @mres_0_2_0_0_2
+  jump %_while_entry_189
+
+%_while_entry_189:
+  %1287 = load @mr_0_2_0_0_2
+  br %1287, %_while_body_189, %_end_189
+
+%_while_body_189:
+  store 0, @ans_0
+  store 0, @i_0
+  %1288 = load @mr_0_2_0_0_2
+  store %1288, @x_0
+  store 1, @y_0
+  jump %_while_entry_190
+
+%_while_entry_190:
+  %1289 = load @i_0
+  %1290 = lt %1289, 16
+  br %1290, %_while_body_190, %_end_190
+
+%_while_body_190:
+  %1291 = load @x_0
+  %1292 = mod %1291, 2
+  @t28_0_2_0_0_2_0_0 = alloc i32
+  %1293 = ne %1292, 0
+  br %1293, %_then_192, %_else_192
+
+%_then_192:
+  %1294 = load @y_0
+  %1295 = mod %1294, 2
+  %1296 = ne %1295, 0
+  store %1296, @t28_0_2_0_0_2_0_0
+  jump %_end_192
+
+%_else_192:
+  store 0, @t28_0_2_0_0_2_0_0
+  jump %_end_192
+
+%_end_192:
+  %1297 = load @t28_0_2_0_0_2_0_0
+  br %1297, %_then_191, %_end_191
+
+%_then_191:
+  %1298 = load @ans_0
+  %1299 = load @i_0
+  %1300 = getelemptr @SHIFT_TABLE, %1299
+  %1301 = load %1300
+  %1302 = mul 1, %1301
+  %1303 = add %1298, %1302
+  store %1303, @ans_0
+  jump %_end_191
+
+%_end_191:
+  %1304 = load @x_0
+  %1305 = div %1304, 2
+  store %1305, @x_0
+  %1306 = load @y_0
+  %1307 = div %1306, 2
+  store %1307, @y_0
+  %1308 = load @i_0
+  %1309 = add %1308, 1
+  store %1309, @i_0
+  jump %_while_entry_190
+
+%_end_190:
+  %1310 = load @ans_0
+  br %1310, %_then_193, %_end_193
+
+%_then_193:
+  @al_0_2_0_0_2_0_1_0 = alloc i32
+  %1311 = load @mres_0_2_0_0_2
+  store %1311, @al_0_2_0_0_2_0_1_0
+  @c_0_2_0_0_2_0_1_0 = alloc i32
+  %1312 = load @ml_0_2_0_0_2
+  store %1312, @c_0_2_0_0_2_0_1_0
+  @sum_0_2_0_0_2_0_1_0 = alloc i32
+  jump %_while_entry_194
+
+%_while_entry_194:
+  %1313 = load @c_0_2_0_0_2_0_1_0
+  br %1313, %_while_body_194, %_end_194
+
+%_while_body_194:
+  store 0, @ans_0
+  store 0, @i_0
+  %1314 = load @al_0_2_0_0_2_0_1_0
+  store %1314, @x_0
+  %1315 = load @c_0_2_0_0_2_0_1_0
+  store %1315, @y_0
+  jump %_while_entry_195
+
+%_while_entry_195:
+  %1316 = load @i_0
+  %1317 = lt %1316, 16
+  br %1317, %_while_body_195, %_end_195
+
+%_while_body_195:
+  %1318 = load @x_0
+  %1319 = mod %1318, 2
+  br %1319, %_then_196, %_else_196
+
+%_then_196:
+  %1320 = load @y_0
+  %1321 = mod %1320, 2
+  %1322 = eq %1321, 0
+  br %1322, %_then_197, %_end_197
+
+%_then_197:
+  %1323 = load @ans_0
+  %1324 = load @i_0
+  %1325 = getelemptr @SHIFT_TABLE, %1324
+  %1326 = load %1325
+  %1327 = mul 1, %1326
+  %1328 = add %1323, %1327
+  store %1328, @ans_0
+  jump %_end_197
+
+%_end_197:
+  jump %_end_196
+
+%_else_196:
+  %1329 = load @y_0
+  %1330 = mod %1329, 2
+  br %1330, %_then_198, %_end_198
+
+%_then_198:
+  %1331 = load @ans_0
+  %1332 = load @i_0
+  %1333 = getelemptr @SHIFT_TABLE, %1332
+  %1334 = load %1333
+  %1335 = mul 1, %1334
+  %1336 = add %1331, %1335
+  store %1336, @ans_0
+  jump %_end_198
+
+%_end_198:
+  jump %_end_196
+
+%_end_196:
+  %1337 = load @x_0
+  %1338 = div %1337, 2
+  store %1338, @x_0
+  %1339 = load @y_0
+  %1340 = div %1339, 2
+  store %1340, @y_0
+  %1341 = load @i_0
+  %1342 = add %1341, 1
+  store %1342, @i_0
+  jump %_while_entry_195
+
+%_end_195:
+  %1343 = load @ans_0
+  store %1343, @sum_0_2_0_0_2_0_1_0
+  store 0, @ans_0
+  store 0, @i_0
+  %1344 = load @al_0_2_0_0_2_0_1_0
+  store %1344, @x_0
+  %1345 = load @c_0_2_0_0_2_0_1_0
+  store %1345, @y_0
+  jump %_while_entry_199
+
+%_while_entry_199:
+  %1346 = load @i_0
+  %1347 = lt %1346, 16
+  br %1347, %_while_body_199, %_end_199
+
+%_while_body_199:
+  %1348 = load @x_0
+  %1349 = mod %1348, 2
+  @t29_0_2_0_0_2_0_1_0_0_1 = alloc i32
+  %1350 = ne %1349, 0
+  br %1350, %_then_201, %_else_201
+
+%_then_201:
+  %1351 = load @y_0
+  %1352 = mod %1351, 2
+  %1353 = ne %1352, 0
+  store %1353, @t29_0_2_0_0_2_0_1_0_0_1
+  jump %_end_201
+
+%_else_201:
+  store 0, @t29_0_2_0_0_2_0_1_0_0_1
+  jump %_end_201
+
+%_end_201:
+  %1354 = load @t29_0_2_0_0_2_0_1_0_0_1
+  br %1354, %_then_200, %_end_200
+
+%_then_200:
+  %1355 = load @ans_0
+  %1356 = load @i_0
+  %1357 = getelemptr @SHIFT_TABLE, %1356
+  %1358 = load %1357
+  %1359 = mul 1, %1358
+  %1360 = add %1355, %1359
+  store %1360, @ans_0
+  jump %_end_200
+
+%_end_200:
+  %1361 = load @x_0
+  %1362 = div %1361, 2
+  store %1362, @x_0
+  %1363 = load @y_0
+  %1364 = div %1363, 2
+  store %1364, @y_0
+  %1365 = load @i_0
+  %1366 = add %1365, 1
+  store %1366, @i_0
+  jump %_while_entry_199
+
+%_end_199:
+  %1367 = load @ans_0
+  store %1367, @c_0_2_0_0_2_0_1_0
+  br 0, %_then_202, %_else_202
+
+%_then_202:
+  store 0, @ans_0
+  jump %_end_202
+
+%_else_202:
+  store 0, @ans_0
+  store 0, @i_0
+  %1368 = load @c_0_2_0_0_2_0_1_0
+  %1369 = getelemptr @SHIFT_TABLE, 1
+  %1370 = load %1369
+  %1371 = mul %1368, %1370
+  store %1371, @x_0
+  store 65535, @y_0
+  jump %_while_entry_203
+
+%_while_entry_203:
+  %1372 = load @i_0
+  %1373 = lt %1372, 16
+  br %1373, %_while_body_203, %_end_203
+
+%_while_body_203:
+  %1374 = load @x_0
+  %1375 = mod %1374, 2
+  @t30_0_2_0_0_2_0_1_0_0_3_0 = alloc i32
+  %1376 = ne %1375, 0
+  br %1376, %_then_205, %_else_205
+
+%_then_205:
+  %1377 = load @y_0
+  %1378 = mod %1377, 2
+  %1379 = ne %1378, 0
+  store %1379, @t30_0_2_0_0_2_0_1_0_0_3_0
+  jump %_end_205
+
+%_else_205:
+  store 0, @t30_0_2_0_0_2_0_1_0_0_3_0
+  jump %_end_205
+
+%_end_205:
+  %1380 = load @t30_0_2_0_0_2_0_1_0_0_3_0
+  br %1380, %_then_204, %_end_204
+
+%_then_204:
+  %1381 = load @ans_0
+  %1382 = load @i_0
+  %1383 = getelemptr @SHIFT_TABLE, %1382
+  %1384 = load %1383
+  %1385 = mul 1, %1384
+  %1386 = add %1381, %1385
+  store %1386, @ans_0
+  jump %_end_204
+
+%_end_204:
+  %1387 = load @x_0
+  %1388 = div %1387, 2
+  store %1388, @x_0
+  %1389 = load @y_0
+  %1390 = div %1389, 2
+  store %1390, @y_0
+  %1391 = load @i_0
+  %1392 = add %1391, 1
+  store %1392, @i_0
+  jump %_while_entry_203
+
+%_end_203:
+  jump %_end_202
+
+%_end_202:
+  %1393 = load @ans_0
+  store %1393, @c_0_2_0_0_2_0_1_0
+  %1394 = load @sum_0_2_0_0_2_0_1_0
+  store %1394, @al_0_2_0_0_2_0_1_0
+  jump %_while_entry_194
+
+%_end_194:
+  %1395 = load @al_0_2_0_0_2_0_1_0
+  store %1395, @ans_0
+  %1396 = load @ans_0
+  store %1396, @mres_0_2_0_0_2
+  jump %_end_193
+
+%_end_193:
+  @al_0_2_0_0_2_0_2 = alloc i32
+  %1397 = load @ml_0_2_0_0_2
+  store %1397, @al_0_2_0_0_2_0_2
+  @c_0_2_0_0_2_0_2 = alloc i32
+  %1398 = load @ml_0_2_0_0_2
+  store %1398, @c_0_2_0_0_2_0_2
+  @sum_0_2_0_0_2_0_2 = alloc i32
+  jump %_while_entry_206
+
+%_while_entry_206:
+  %1399 = load @c_0_2_0_0_2_0_2
+  br %1399, %_while_body_206, %_end_206
+
+%_while_body_206:
+  store 0, @ans_0
+  store 0, @i_0
+  %1400 = load @al_0_2_0_0_2_0_2
+  store %1400, @x_0
+  %1401 = load @c_0_2_0_0_2_0_2
+  store %1401, @y_0
+  jump %_while_entry_207
+
+%_while_entry_207:
+  %1402 = load @i_0
+  %1403 = lt %1402, 16
+  br %1403, %_while_body_207, %_end_207
+
+%_while_body_207:
+  %1404 = load @x_0
+  %1405 = mod %1404, 2
+  br %1405, %_then_208, %_else_208
+
+%_then_208:
+  %1406 = load @y_0
+  %1407 = mod %1406, 2
+  %1408 = eq %1407, 0
+  br %1408, %_then_209, %_end_209
+
+%_then_209:
+  %1409 = load @ans_0
+  %1410 = load @i_0
+  %1411 = getelemptr @SHIFT_TABLE, %1410
+  %1412 = load %1411
+  %1413 = mul 1, %1412
+  %1414 = add %1409, %1413
+  store %1414, @ans_0
+  jump %_end_209
+
+%_end_209:
+  jump %_end_208
+
+%_else_208:
+  %1415 = load @y_0
+  %1416 = mod %1415, 2
+  br %1416, %_then_210, %_end_210
+
+%_then_210:
+  %1417 = load @ans_0
+  %1418 = load @i_0
+  %1419 = getelemptr @SHIFT_TABLE, %1418
+  %1420 = load %1419
+  %1421 = mul 1, %1420
+  %1422 = add %1417, %1421
+  store %1422, @ans_0
+  jump %_end_210
+
+%_end_210:
+  jump %_end_208
+
+%_end_208:
+  %1423 = load @x_0
+  %1424 = div %1423, 2
+  store %1424, @x_0
+  %1425 = load @y_0
+  %1426 = div %1425, 2
+  store %1426, @y_0
+  %1427 = load @i_0
+  %1428 = add %1427, 1
+  store %1428, @i_0
+  jump %_while_entry_207
+
+%_end_207:
+  %1429 = load @ans_0
+  store %1429, @sum_0_2_0_0_2_0_2
+  store 0, @ans_0
+  store 0, @i_0
+  %1430 = load @al_0_2_0_0_2_0_2
+  store %1430, @x_0
+  %1431 = load @c_0_2_0_0_2_0_2
+  store %1431, @y_0
+  jump %_while_entry_211
+
+%_while_entry_211:
+  %1432 = load @i_0
+  %1433 = lt %1432, 16
+  br %1433, %_while_body_211, %_end_211
+
+%_while_body_211:
+  %1434 = load @x_0
+  %1435 = mod %1434, 2
+  @t31_0_2_0_0_2_0_2_0_1 = alloc i32
+  %1436 = ne %1435, 0
+  br %1436, %_then_213, %_else_213
+
+%_then_213:
+  %1437 = load @y_0
+  %1438 = mod %1437, 2
+  %1439 = ne %1438, 0
+  store %1439, @t31_0_2_0_0_2_0_2_0_1
+  jump %_end_213
+
+%_else_213:
+  store 0, @t31_0_2_0_0_2_0_2_0_1
+  jump %_end_213
+
+%_end_213:
+  %1440 = load @t31_0_2_0_0_2_0_2_0_1
+  br %1440, %_then_212, %_end_212
+
+%_then_212:
+  %1441 = load @ans_0
+  %1442 = load @i_0
+  %1443 = getelemptr @SHIFT_TABLE, %1442
+  %1444 = load %1443
+  %1445 = mul 1, %1444
+  %1446 = add %1441, %1445
+  store %1446, @ans_0
+  jump %_end_212
+
+%_end_212:
+  %1447 = load @x_0
+  %1448 = div %1447, 2
+  store %1448, @x_0
+  %1449 = load @y_0
+  %1450 = div %1449, 2
+  store %1450, @y_0
+  %1451 = load @i_0
+  %1452 = add %1451, 1
+  store %1452, @i_0
+  jump %_while_entry_211
+
+%_end_211:
+  %1453 = load @ans_0
+  store %1453, @c_0_2_0_0_2_0_2
+  br 0, %_then_214, %_else_214
+
+%_then_214:
+  store 0, @ans_0
+  jump %_end_214
+
+%_else_214:
+  store 0, @ans_0
+  store 0, @i_0
+  %1454 = load @c_0_2_0_0_2_0_2
+  %1455 = getelemptr @SHIFT_TABLE, 1
+  %1456 = load %1455
+  %1457 = mul %1454, %1456
+  store %1457, @x_0
+  store 65535, @y_0
+  jump %_while_entry_215
+
+%_while_entry_215:
+  %1458 = load @i_0
+  %1459 = lt %1458, 16
+  br %1459, %_while_body_215, %_end_215
+
+%_while_body_215:
+  %1460 = load @x_0
+  %1461 = mod %1460, 2
+  @t32_0_2_0_0_2_0_2_0_3_0 = alloc i32
+  %1462 = ne %1461, 0
+  br %1462, %_then_217, %_else_217
+
+%_then_217:
+  %1463 = load @y_0
+  %1464 = mod %1463, 2
+  %1465 = ne %1464, 0
+  store %1465, @t32_0_2_0_0_2_0_2_0_3_0
+  jump %_end_217
+
+%_else_217:
+  store 0, @t32_0_2_0_0_2_0_2_0_3_0
+  jump %_end_217
+
+%_end_217:
+  %1466 = load @t32_0_2_0_0_2_0_2_0_3_0
+  br %1466, %_then_216, %_end_216
+
+%_then_216:
+  %1467 = load @ans_0
+  %1468 = load @i_0
+  %1469 = getelemptr @SHIFT_TABLE, %1468
+  %1470 = load %1469
+  %1471 = mul 1, %1470
+  %1472 = add %1467, %1471
+  store %1472, @ans_0
+  jump %_end_216
+
+%_end_216:
+  %1473 = load @x_0
+  %1474 = div %1473, 2
+  store %1474, @x_0
+  %1475 = load @y_0
+  %1476 = div %1475, 2
+  store %1476, @y_0
+  %1477 = load @i_0
+  %1478 = add %1477, 1
+  store %1478, @i_0
+  jump %_while_entry_215
+
+%_end_215:
+  jump %_end_214
+
+%_end_214:
+  %1479 = load @ans_0
+  store %1479, @c_0_2_0_0_2_0_2
+  %1480 = load @sum_0_2_0_0_2_0_2
+  store %1480, @al_0_2_0_0_2_0_2
+  jump %_while_entry_206
+
+%_end_206:
+  %1481 = load @al_0_2_0_0_2_0_2
+  store %1481, @ans_0
+  %1482 = load @ans_0
+  store %1482, @ml_0_2_0_0_2
+  %1483 = load @mr_0_2_0_0_2
+  store %1483, @x_0
+  store 1, @y_0
+  %1484 = load @y_0
+  %1485 = ge %1484, 15
+  br %1485, %_then_218, %_else_218
+
+%_then_218:
+  %1486 = load @x_0
+  %1487 = lt %1486, 0
+  br %1487, %_then_219, %_else_219
+
+%_then_219:
+  store 65535, @ans_0
+  jump %_end_219
+
+%_else_219:
+  store 0, @ans_0
+  jump %_end_219
+
+%_end_219:
+  jump %_end_218
+
+%_else_218:
+  %1488 = load @y_0
+  %1489 = gt %1488, 0
+  br %1489, %_then_220, %_else_220
+
+%_then_220:
+  %1490 = load @x_0
+  %1491 = gt %1490, 32767
+  br %1491, %_then_221, %_else_221
+
+%_then_221:
+  %1492 = load @x_0
+  %1493 = load @y_0
+  %1494 = getelemptr @SHIFT_TABLE, %1493
+  %1495 = load %1494
+  %1496 = div %1492, %1495
+  store %1496, @x_0
+  %1497 = load @x_0
+  %1498 = add %1497, 65536
+  %1499 = load @y_0
+  %1500 = sub 15, %1499
+  %1501 = add %1500, 1
+  %1502 = getelemptr @SHIFT_TABLE, %1501
+  %1503 = load %1502
+  %1504 = sub %1498, %1503
+  store %1504, @ans_0
+  jump %_end_221
+
+%_else_221:
+  %1505 = load @x_0
+  %1506 = load @y_0
+  %1507 = getelemptr @SHIFT_TABLE, %1506
+  %1508 = load %1507
+  %1509 = div %1505, %1508
+  store %1509, @ans_0
+  jump %_end_221
+
+%_end_221:
+  jump %_end_220
+
+%_else_220:
+  %1510 = load @x_0
+  store %1510, @ans_0
+  jump %_end_220
+
+%_end_220:
+  jump %_end_218
+
+%_end_218:
+  %1511 = load @ans_0
+  store %1511, @mr_0_2_0_0_2
+  jump %_while_entry_189
+
+%_end_189:
+  %1512 = load @mres_0_2_0_0_2
+  store %1512, @ans_0
+  %1513 = load @ans_0
+  store %1513, @pl_0_2_0
+  %1514 = load @pr_0_2_0
+  store %1514, @x_0
+  store 1, @y_0
+  %1515 = load @y_0
+  %1516 = ge %1515, 15
+  br %1516, %_then_222, %_else_222
+
+%_then_222:
+  %1517 = load @x_0
+  %1518 = lt %1517, 0
+  br %1518, %_then_223, %_else_223
+
+%_then_223:
+  store 65535, @ans_0
+  jump %_end_223
+
+%_else_223:
+  store 0, @ans_0
+  jump %_end_223
+
+%_end_223:
+  jump %_end_222
+
+%_else_222:
+  %1519 = load @y_0
+  %1520 = gt %1519, 0
+  br %1520, %_then_224, %_else_224
+
+%_then_224:
+  %1521 = load @x_0
+  %1522 = gt %1521, 32767
+  br %1522, %_then_225, %_else_225
+
+%_then_225:
+  %1523 = load @x_0
+  %1524 = load @y_0
+  %1525 = getelemptr @SHIFT_TABLE, %1524
+  %1526 = load %1525
+  %1527 = div %1523, %1526
+  store %1527, @x_0
+  %1528 = load @x_0
+  %1529 = add %1528, 65536
+  %1530 = load @y_0
+  %1531 = sub 15, %1530
+  %1532 = add %1531, 1
+  %1533 = getelemptr @SHIFT_TABLE, %1532
+  %1534 = load %1533
+  %1535 = sub %1529, %1534
+  store %1535, @ans_0
+  jump %_end_225
+
+%_else_225:
+  %1536 = load @x_0
+  %1537 = load @y_0
+  %1538 = getelemptr @SHIFT_TABLE, %1537
+  %1539 = load %1538
+  %1540 = div %1536, %1539
+  store %1540, @ans_0
+  jump %_end_225
+
+%_end_225:
+  jump %_end_224
+
+%_else_224:
+  %1541 = load @x_0
+  store %1541, @ans_0
+  jump %_end_224
+
+%_end_224:
+  jump %_end_222
+
+%_end_222:
+  %1542 = load @ans_0
+  store %1542, @pr_0_2_0
+  jump %_while_entry_151
+
+%_end_151:
+  %1543 = load @pres_0_2_0
+  store %1543, @ans_0
+  %1544 = load @ans_0
+  call @putint(%1544)
+  call @putch(10)
+  %1545 = load @cur_0
+  %1546 = add %1545, 1
+  store %1546, @cur_0
+  jump %_while_entry_150
+
+%_end_150:
+  store 0, @cur_0
+  jump %_while_entry_226
+
+%_while_entry_226:
+  %1547 = load @cur_0
+  %1548 = lt %1547, 16
+  br %1548, %_while_body_226, %_end_226
+
+%_while_body_226:
+  @pl_0_3_0 = alloc i32
+  store 2, @pl_0_3_0
+  @pr_0_3_0 = alloc i32
+  %1549 = load @cur_0
+  store %1549, @pr_0_3_0
+  @pres_0_3_0 = alloc i32
+  store 1, @pres_0_3_0
+  jump %_while_entry_227
+
+%_while_entry_227:
+  %1550 = load @pr_0_3_0
+  %1551 = gt %1550, 0
+  br %1551, %_while_body_227, %_end_227
+
+%_while_body_227:
+  store 0, @ans_0
+  store 0, @i_0
+  %1552 = load @pr_0_3_0
+  store %1552, @x_0
+  store 1, @y_0
+  jump %_while_entry_228
+
+%_while_entry_228:
+  %1553 = load @i_0
+  %1554 = lt %1553, 16
+  br %1554, %_while_body_228, %_end_228
+
+%_while_body_228:
+  %1555 = load @x_0
+  %1556 = mod %1555, 2
+  @t33_0_3_0_0_0 = alloc i32
+  %1557 = ne %1556, 0
+  br %1557, %_then_230, %_else_230
+
+%_then_230:
+  %1558 = load @y_0
+  %1559 = mod %1558, 2
+  %1560 = ne %1559, 0
+  store %1560, @t33_0_3_0_0_0
+  jump %_end_230
+
+%_else_230:
+  store 0, @t33_0_3_0_0_0
+  jump %_end_230
+
+%_end_230:
+  %1561 = load @t33_0_3_0_0_0
+  br %1561, %_then_229, %_end_229
+
+%_then_229:
+  %1562 = load @ans_0
+  %1563 = load @i_0
+  %1564 = getelemptr @SHIFT_TABLE, %1563
+  %1565 = load %1564
+  %1566 = mul 1, %1565
+  %1567 = add %1562, %1566
+  store %1567, @ans_0
+  jump %_end_229
+
+%_end_229:
+  %1568 = load @x_0
+  %1569 = div %1568, 2
+  store %1569, @x_0
+  %1570 = load @y_0
+  %1571 = div %1570, 2
+  store %1571, @y_0
+  %1572 = load @i_0
+  %1573 = add %1572, 1
+  store %1573, @i_0
+  jump %_while_entry_228
+
+%_end_228:
+  %1574 = load @ans_0
+  br %1574, %_then_231, %_end_231
+
+%_then_231:
+  @ml_0_3_0_0_1_0 = alloc i32
+  %1575 = load @pres_0_3_0
+  store %1575, @ml_0_3_0_0_1_0
+  @mr_0_3_0_0_1_0 = alloc i32
+  %1576 = load @pl_0_3_0
+  store %1576, @mr_0_3_0_0_1_0
+  @mres_0_3_0_0_1_0 = alloc i32
+  store 0, @mres_0_3_0_0_1_0
+  jump %_while_entry_232
+
+%_while_entry_232:
+  %1577 = load @mr_0_3_0_0_1_0
+  br %1577, %_while_body_232, %_end_232
+
+%_while_body_232:
+  store 0, @ans_0
+  store 0, @i_0
+  %1578 = load @mr_0_3_0_0_1_0
+  store %1578, @x_0
+  store 1, @y_0
+  jump %_while_entry_233
+
+%_while_entry_233:
+  %1579 = load @i_0
+  %1580 = lt %1579, 16
+  br %1580, %_while_body_233, %_end_233
+
+%_while_body_233:
+  %1581 = load @x_0
+  %1582 = mod %1581, 2
+  @t34_0_3_0_0_1_0_0_0 = alloc i32
+  %1583 = ne %1582, 0
+  br %1583, %_then_235, %_else_235
+
+%_then_235:
+  %1584 = load @y_0
+  %1585 = mod %1584, 2
+  %1586 = ne %1585, 0
+  store %1586, @t34_0_3_0_0_1_0_0_0
+  jump %_end_235
+
+%_else_235:
+  store 0, @t34_0_3_0_0_1_0_0_0
+  jump %_end_235
+
+%_end_235:
+  %1587 = load @t34_0_3_0_0_1_0_0_0
+  br %1587, %_then_234, %_end_234
+
+%_then_234:
+  %1588 = load @ans_0
+  %1589 = load @i_0
+  %1590 = getelemptr @SHIFT_TABLE, %1589
+  %1591 = load %1590
+  %1592 = mul 1, %1591
+  %1593 = add %1588, %1592
+  store %1593, @ans_0
+  jump %_end_234
+
+%_end_234:
+  %1594 = load @x_0
+  %1595 = div %1594, 2
+  store %1595, @x_0
+  %1596 = load @y_0
+  %1597 = div %1596, 2
+  store %1597, @y_0
+  %1598 = load @i_0
+  %1599 = add %1598, 1
+  store %1599, @i_0
+  jump %_while_entry_233
+
+%_end_233:
+  %1600 = load @ans_0
+  br %1600, %_then_236, %_end_236
+
+%_then_236:
+  @al_0_3_0_0_1_0_0_1_0 = alloc i32
+  %1601 = load @mres_0_3_0_0_1_0
+  store %1601, @al_0_3_0_0_1_0_0_1_0
+  @c_0_3_0_0_1_0_0_1_0 = alloc i32
+  %1602 = load @ml_0_3_0_0_1_0
+  store %1602, @c_0_3_0_0_1_0_0_1_0
+  @sum_0_3_0_0_1_0_0_1_0 = alloc i32
+  jump %_while_entry_237
+
+%_while_entry_237:
+  %1603 = load @c_0_3_0_0_1_0_0_1_0
+  br %1603, %_while_body_237, %_end_237
+
+%_while_body_237:
+  store 0, @ans_0
+  store 0, @i_0
+  %1604 = load @al_0_3_0_0_1_0_0_1_0
+  store %1604, @x_0
+  %1605 = load @c_0_3_0_0_1_0_0_1_0
+  store %1605, @y_0
+  jump %_while_entry_238
+
+%_while_entry_238:
+  %1606 = load @i_0
+  %1607 = lt %1606, 16
+  br %1607, %_while_body_238, %_end_238
+
+%_while_body_238:
+  %1608 = load @x_0
+  %1609 = mod %1608, 2
+  br %1609, %_then_239, %_else_239
+
+%_then_239:
+  %1610 = load @y_0
+  %1611 = mod %1610, 2
+  %1612 = eq %1611, 0
+  br %1612, %_then_240, %_end_240
+
+%_then_240:
+  %1613 = load @ans_0
+  %1614 = load @i_0
+  %1615 = getelemptr @SHIFT_TABLE, %1614
+  %1616 = load %1615
+  %1617 = mul 1, %1616
+  %1618 = add %1613, %1617
+  store %1618, @ans_0
+  jump %_end_240
+
+%_end_240:
+  jump %_end_239
+
+%_else_239:
+  %1619 = load @y_0
+  %1620 = mod %1619, 2
+  br %1620, %_then_241, %_end_241
+
+%_then_241:
+  %1621 = load @ans_0
+  %1622 = load @i_0
+  %1623 = getelemptr @SHIFT_TABLE, %1622
+  %1624 = load %1623
+  %1625 = mul 1, %1624
+  %1626 = add %1621, %1625
+  store %1626, @ans_0
+  jump %_end_241
+
+%_end_241:
+  jump %_end_239
+
+%_end_239:
+  %1627 = load @x_0
+  %1628 = div %1627, 2
+  store %1628, @x_0
+  %1629 = load @y_0
+  %1630 = div %1629, 2
+  store %1630, @y_0
+  %1631 = load @i_0
+  %1632 = add %1631, 1
+  store %1632, @i_0
+  jump %_while_entry_238
+
+%_end_238:
+  %1633 = load @ans_0
+  store %1633, @sum_0_3_0_0_1_0_0_1_0
+  store 0, @ans_0
+  store 0, @i_0
+  %1634 = load @al_0_3_0_0_1_0_0_1_0
+  store %1634, @x_0
+  %1635 = load @c_0_3_0_0_1_0_0_1_0
+  store %1635, @y_0
+  jump %_while_entry_242
+
+%_while_entry_242:
+  %1636 = load @i_0
+  %1637 = lt %1636, 16
+  br %1637, %_while_body_242, %_end_242
+
+%_while_body_242:
+  %1638 = load @x_0
+  %1639 = mod %1638, 2
+  @t35_0_3_0_0_1_0_0_1_0_0_1 = alloc i32
+  %1640 = ne %1639, 0
+  br %1640, %_then_244, %_else_244
+
+%_then_244:
+  %1641 = load @y_0
+  %1642 = mod %1641, 2
+  %1643 = ne %1642, 0
+  store %1643, @t35_0_3_0_0_1_0_0_1_0_0_1
+  jump %_end_244
+
+%_else_244:
+  store 0, @t35_0_3_0_0_1_0_0_1_0_0_1
+  jump %_end_244
+
+%_end_244:
+  %1644 = load @t35_0_3_0_0_1_0_0_1_0_0_1
+  br %1644, %_then_243, %_end_243
+
+%_then_243:
+  %1645 = load @ans_0
+  %1646 = load @i_0
+  %1647 = getelemptr @SHIFT_TABLE, %1646
+  %1648 = load %1647
+  %1649 = mul 1, %1648
+  %1650 = add %1645, %1649
+  store %1650, @ans_0
+  jump %_end_243
+
+%_end_243:
+  %1651 = load @x_0
+  %1652 = div %1651, 2
+  store %1652, @x_0
+  %1653 = load @y_0
+  %1654 = div %1653, 2
+  store %1654, @y_0
+  %1655 = load @i_0
+  %1656 = add %1655, 1
+  store %1656, @i_0
+  jump %_while_entry_242
+
+%_end_242:
+  %1657 = load @ans_0
+  store %1657, @c_0_3_0_0_1_0_0_1_0
+  br 0, %_then_245, %_else_245
+
+%_then_245:
+  store 0, @ans_0
+  jump %_end_245
+
+%_else_245:
+  store 0, @ans_0
+  store 0, @i_0
+  %1658 = load @c_0_3_0_0_1_0_0_1_0
+  %1659 = getelemptr @SHIFT_TABLE, 1
+  %1660 = load %1659
+  %1661 = mul %1658, %1660
+  store %1661, @x_0
+  store 65535, @y_0
+  jump %_while_entry_246
+
+%_while_entry_246:
+  %1662 = load @i_0
+  %1663 = lt %1662, 16
+  br %1663, %_while_body_246, %_end_246
+
+%_while_body_246:
+  %1664 = load @x_0
+  %1665 = mod %1664, 2
+  @t36_0_3_0_0_1_0_0_1_0_0_3_0 = alloc i32
+  %1666 = ne %1665, 0
+  br %1666, %_then_248, %_else_248
+
+%_then_248:
+  %1667 = load @y_0
+  %1668 = mod %1667, 2
+  %1669 = ne %1668, 0
+  store %1669, @t36_0_3_0_0_1_0_0_1_0_0_3_0
+  jump %_end_248
+
+%_else_248:
+  store 0, @t36_0_3_0_0_1_0_0_1_0_0_3_0
+  jump %_end_248
+
+%_end_248:
+  %1670 = load @t36_0_3_0_0_1_0_0_1_0_0_3_0
+  br %1670, %_then_247, %_end_247
+
+%_then_247:
+  %1671 = load @ans_0
+  %1672 = load @i_0
+  %1673 = getelemptr @SHIFT_TABLE, %1672
+  %1674 = load %1673
+  %1675 = mul 1, %1674
+  %1676 = add %1671, %1675
+  store %1676, @ans_0
+  jump %_end_247
+
+%_end_247:
+  %1677 = load @x_0
+  %1678 = div %1677, 2
+  store %1678, @x_0
+  %1679 = load @y_0
+  %1680 = div %1679, 2
+  store %1680, @y_0
+  %1681 = load @i_0
+  %1682 = add %1681, 1
+  store %1682, @i_0
+  jump %_while_entry_246
+
+%_end_246:
+  jump %_end_245
+
+%_end_245:
+  %1683 = load @ans_0
+  store %1683, @c_0_3_0_0_1_0_0_1_0
+  %1684 = load @sum_0_3_0_0_1_0_0_1_0
+  store %1684, @al_0_3_0_0_1_0_0_1_0
+  jump %_while_entry_237
+
+%_end_237:
+  %1685 = load @al_0_3_0_0_1_0_0_1_0
+  store %1685, @ans_0
+  %1686 = load @ans_0
+  store %1686, @mres_0_3_0_0_1_0
+  jump %_end_236
+
+%_end_236:
+  @al_0_3_0_0_1_0_0_2 = alloc i32
+  %1687 = load @ml_0_3_0_0_1_0
+  store %1687, @al_0_3_0_0_1_0_0_2
+  @c_0_3_0_0_1_0_0_2 = alloc i32
+  %1688 = load @ml_0_3_0_0_1_0
+  store %1688, @c_0_3_0_0_1_0_0_2
+  @sum_0_3_0_0_1_0_0_2 = alloc i32
+  jump %_while_entry_249
+
+%_while_entry_249:
+  %1689 = load @c_0_3_0_0_1_0_0_2
+  br %1689, %_while_body_249, %_end_249
+
+%_while_body_249:
+  store 0, @ans_0
+  store 0, @i_0
+  %1690 = load @al_0_3_0_0_1_0_0_2
+  store %1690, @x_0
+  %1691 = load @c_0_3_0_0_1_0_0_2
+  store %1691, @y_0
+  jump %_while_entry_250
+
+%_while_entry_250:
+  %1692 = load @i_0
+  %1693 = lt %1692, 16
+  br %1693, %_while_body_250, %_end_250
+
+%_while_body_250:
+  %1694 = load @x_0
+  %1695 = mod %1694, 2
+  br %1695, %_then_251, %_else_251
+
+%_then_251:
+  %1696 = load @y_0
+  %1697 = mod %1696, 2
+  %1698 = eq %1697, 0
+  br %1698, %_then_252, %_end_252
+
+%_then_252:
+  %1699 = load @ans_0
+  %1700 = load @i_0
+  %1701 = getelemptr @SHIFT_TABLE, %1700
+  %1702 = load %1701
+  %1703 = mul 1, %1702
+  %1704 = add %1699, %1703
+  store %1704, @ans_0
+  jump %_end_252
+
+%_end_252:
+  jump %_end_251
+
+%_else_251:
+  %1705 = load @y_0
+  %1706 = mod %1705, 2
+  br %1706, %_then_253, %_end_253
+
+%_then_253:
+  %1707 = load @ans_0
+  %1708 = load @i_0
+  %1709 = getelemptr @SHIFT_TABLE, %1708
+  %1710 = load %1709
+  %1711 = mul 1, %1710
+  %1712 = add %1707, %1711
+  store %1712, @ans_0
+  jump %_end_253
+
+%_end_253:
+  jump %_end_251
+
+%_end_251:
+  %1713 = load @x_0
+  %1714 = div %1713, 2
+  store %1714, @x_0
+  %1715 = load @y_0
+  %1716 = div %1715, 2
+  store %1716, @y_0
+  %1717 = load @i_0
+  %1718 = add %1717, 1
+  store %1718, @i_0
+  jump %_while_entry_250
+
+%_end_250:
+  %1719 = load @ans_0
+  store %1719, @sum_0_3_0_0_1_0_0_2
+  store 0, @ans_0
+  store 0, @i_0
+  %1720 = load @al_0_3_0_0_1_0_0_2
+  store %1720, @x_0
+  %1721 = load @c_0_3_0_0_1_0_0_2
+  store %1721, @y_0
+  jump %_while_entry_254
+
+%_while_entry_254:
+  %1722 = load @i_0
+  %1723 = lt %1722, 16
+  br %1723, %_while_body_254, %_end_254
+
+%_while_body_254:
+  %1724 = load @x_0
+  %1725 = mod %1724, 2
+  @t37_0_3_0_0_1_0_0_2_0_1 = alloc i32
+  %1726 = ne %1725, 0
+  br %1726, %_then_256, %_else_256
+
+%_then_256:
+  %1727 = load @y_0
+  %1728 = mod %1727, 2
+  %1729 = ne %1728, 0
+  store %1729, @t37_0_3_0_0_1_0_0_2_0_1
+  jump %_end_256
+
+%_else_256:
+  store 0, @t37_0_3_0_0_1_0_0_2_0_1
+  jump %_end_256
+
+%_end_256:
+  %1730 = load @t37_0_3_0_0_1_0_0_2_0_1
+  br %1730, %_then_255, %_end_255
+
+%_then_255:
+  %1731 = load @ans_0
+  %1732 = load @i_0
+  %1733 = getelemptr @SHIFT_TABLE, %1732
+  %1734 = load %1733
+  %1735 = mul 1, %1734
+  %1736 = add %1731, %1735
+  store %1736, @ans_0
+  jump %_end_255
+
+%_end_255:
+  %1737 = load @x_0
+  %1738 = div %1737, 2
+  store %1738, @x_0
+  %1739 = load @y_0
+  %1740 = div %1739, 2
+  store %1740, @y_0
+  %1741 = load @i_0
+  %1742 = add %1741, 1
+  store %1742, @i_0
+  jump %_while_entry_254
+
+%_end_254:
+  %1743 = load @ans_0
+  store %1743, @c_0_3_0_0_1_0_0_2
+  br 0, %_then_257, %_else_257
+
+%_then_257:
+  store 0, @ans_0
+  jump %_end_257
+
+%_else_257:
+  store 0, @ans_0
+  store 0, @i_0
+  %1744 = load @c_0_3_0_0_1_0_0_2
+  %1745 = getelemptr @SHIFT_TABLE, 1
+  %1746 = load %1745
+  %1747 = mul %1744, %1746
+  store %1747, @x_0
+  store 65535, @y_0
+  jump %_while_entry_258
+
+%_while_entry_258:
+  %1748 = load @i_0
+  %1749 = lt %1748, 16
+  br %1749, %_while_body_258, %_end_258
+
+%_while_body_258:
+  %1750 = load @x_0
+  %1751 = mod %1750, 2
+  @t38_0_3_0_0_1_0_0_2_0_3_0 = alloc i32
+  %1752 = ne %1751, 0
+  br %1752, %_then_260, %_else_260
+
+%_then_260:
+  %1753 = load @y_0
+  %1754 = mod %1753, 2
+  %1755 = ne %1754, 0
+  store %1755, @t38_0_3_0_0_1_0_0_2_0_3_0
+  jump %_end_260
+
+%_else_260:
+  store 0, @t38_0_3_0_0_1_0_0_2_0_3_0
+  jump %_end_260
+
+%_end_260:
+  %1756 = load @t38_0_3_0_0_1_0_0_2_0_3_0
+  br %1756, %_then_259, %_end_259
+
+%_then_259:
+  %1757 = load @ans_0
+  %1758 = load @i_0
+  %1759 = getelemptr @SHIFT_TABLE, %1758
+  %1760 = load %1759
+  %1761 = mul 1, %1760
+  %1762 = add %1757, %1761
+  store %1762, @ans_0
+  jump %_end_259
+
+%_end_259:
+  %1763 = load @x_0
+  %1764 = div %1763, 2
+  store %1764, @x_0
+  %1765 = load @y_0
+  %1766 = div %1765, 2
+  store %1766, @y_0
+  %1767 = load @i_0
+  %1768 = add %1767, 1
+  store %1768, @i_0
+  jump %_while_entry_258
+
+%_end_258:
+  jump %_end_257
+
+%_end_257:
+  %1769 = load @ans_0
+  store %1769, @c_0_3_0_0_1_0_0_2
+  %1770 = load @sum_0_3_0_0_1_0_0_2
+  store %1770, @al_0_3_0_0_1_0_0_2
+  jump %_while_entry_249
+
+%_end_249:
+  %1771 = load @al_0_3_0_0_1_0_0_2
+  store %1771, @ans_0
+  %1772 = load @ans_0
+  store %1772, @ml_0_3_0_0_1_0
+  %1773 = load @mr_0_3_0_0_1_0
+  store %1773, @x_0
+  store 1, @y_0
+  %1774 = load @y_0
+  %1775 = ge %1774, 15
+  br %1775, %_then_261, %_else_261
+
+%_then_261:
+  %1776 = load @x_0
+  %1777 = lt %1776, 0
+  br %1777, %_then_262, %_else_262
+
+%_then_262:
+  store 65535, @ans_0
+  jump %_end_262
+
+%_else_262:
+  store 0, @ans_0
+  jump %_end_262
+
+%_end_262:
+  jump %_end_261
+
+%_else_261:
+  %1778 = load @y_0
+  %1779 = gt %1778, 0
+  br %1779, %_then_263, %_else_263
+
+%_then_263:
+  %1780 = load @x_0
+  %1781 = gt %1780, 32767
+  br %1781, %_then_264, %_else_264
+
+%_then_264:
+  %1782 = load @x_0
+  %1783 = load @y_0
+  %1784 = getelemptr @SHIFT_TABLE, %1783
+  %1785 = load %1784
+  %1786 = div %1782, %1785
+  store %1786, @x_0
+  %1787 = load @x_0
+  %1788 = add %1787, 65536
+  %1789 = load @y_0
+  %1790 = sub 15, %1789
+  %1791 = add %1790, 1
+  %1792 = getelemptr @SHIFT_TABLE, %1791
+  %1793 = load %1792
+  %1794 = sub %1788, %1793
+  store %1794, @ans_0
+  jump %_end_264
+
+%_else_264:
+  %1795 = load @x_0
+  %1796 = load @y_0
+  %1797 = getelemptr @SHIFT_TABLE, %1796
+  %1798 = load %1797
+  %1799 = div %1795, %1798
+  store %1799, @ans_0
+  jump %_end_264
+
+%_end_264:
+  jump %_end_263
+
+%_else_263:
+  %1800 = load @x_0
+  store %1800, @ans_0
+  jump %_end_263
+
+%_end_263:
+  jump %_end_261
+
+%_end_261:
+  %1801 = load @ans_0
+  store %1801, @mr_0_3_0_0_1_0
+  jump %_while_entry_232
+
+%_end_232:
+  %1802 = load @mres_0_3_0_0_1_0
+  store %1802, @ans_0
+  %1803 = load @ans_0
+  store %1803, @pres_0_3_0
+  jump %_end_231
+
+%_end_231:
+  @ml_0_3_0_0_2 = alloc i32
+  %1804 = load @pl_0_3_0
+  store %1804, @ml_0_3_0_0_2
+  @mr_0_3_0_0_2 = alloc i32
+  %1805 = load @pl_0_3_0
+  store %1805, @mr_0_3_0_0_2
+  @mres_0_3_0_0_2 = alloc i32
+  store 0, @mres_0_3_0_0_2
+  jump %_while_entry_265
+
+%_while_entry_265:
+  %1806 = load @mr_0_3_0_0_2
+  br %1806, %_while_body_265, %_end_265
+
+%_while_body_265:
+  store 0, @ans_0
+  store 0, @i_0
+  %1807 = load @mr_0_3_0_0_2
+  store %1807, @x_0
+  store 1, @y_0
+  jump %_while_entry_266
+
+%_while_entry_266:
+  %1808 = load @i_0
+  %1809 = lt %1808, 16
+  br %1809, %_while_body_266, %_end_266
+
+%_while_body_266:
+  %1810 = load @x_0
+  %1811 = mod %1810, 2
+  @t39_0_3_0_0_2_0_0 = alloc i32
+  %1812 = ne %1811, 0
+  br %1812, %_then_268, %_else_268
+
+%_then_268:
+  %1813 = load @y_0
+  %1814 = mod %1813, 2
+  %1815 = ne %1814, 0
+  store %1815, @t39_0_3_0_0_2_0_0
+  jump %_end_268
+
+%_else_268:
+  store 0, @t39_0_3_0_0_2_0_0
+  jump %_end_268
+
+%_end_268:
+  %1816 = load @t39_0_3_0_0_2_0_0
+  br %1816, %_then_267, %_end_267
+
+%_then_267:
+  %1817 = load @ans_0
+  %1818 = load @i_0
+  %1819 = getelemptr @SHIFT_TABLE, %1818
+  %1820 = load %1819
+  %1821 = mul 1, %1820
+  %1822 = add %1817, %1821
+  store %1822, @ans_0
+  jump %_end_267
+
+%_end_267:
+  %1823 = load @x_0
+  %1824 = div %1823, 2
+  store %1824, @x_0
+  %1825 = load @y_0
+  %1826 = div %1825, 2
+  store %1826, @y_0
+  %1827 = load @i_0
+  %1828 = add %1827, 1
+  store %1828, @i_0
+  jump %_while_entry_266
+
+%_end_266:
+  %1829 = load @ans_0
+  br %1829, %_then_269, %_end_269
+
+%_then_269:
+  @al_0_3_0_0_2_0_1_0 = alloc i32
+  %1830 = load @mres_0_3_0_0_2
+  store %1830, @al_0_3_0_0_2_0_1_0
+  @c_0_3_0_0_2_0_1_0 = alloc i32
+  %1831 = load @ml_0_3_0_0_2
+  store %1831, @c_0_3_0_0_2_0_1_0
+  @sum_0_3_0_0_2_0_1_0 = alloc i32
+  jump %_while_entry_270
+
+%_while_entry_270:
+  %1832 = load @c_0_3_0_0_2_0_1_0
+  br %1832, %_while_body_270, %_end_270
+
+%_while_body_270:
+  store 0, @ans_0
+  store 0, @i_0
+  %1833 = load @al_0_3_0_0_2_0_1_0
+  store %1833, @x_0
+  %1834 = load @c_0_3_0_0_2_0_1_0
+  store %1834, @y_0
+  jump %_while_entry_271
+
+%_while_entry_271:
+  %1835 = load @i_0
+  %1836 = lt %1835, 16
+  br %1836, %_while_body_271, %_end_271
+
+%_while_body_271:
+  %1837 = load @x_0
+  %1838 = mod %1837, 2
+  br %1838, %_then_272, %_else_272
+
+%_then_272:
+  %1839 = load @y_0
+  %1840 = mod %1839, 2
+  %1841 = eq %1840, 0
+  br %1841, %_then_273, %_end_273
+
+%_then_273:
+  %1842 = load @ans_0
+  %1843 = load @i_0
+  %1844 = getelemptr @SHIFT_TABLE, %1843
+  %1845 = load %1844
+  %1846 = mul 1, %1845
+  %1847 = add %1842, %1846
+  store %1847, @ans_0
+  jump %_end_273
+
+%_end_273:
+  jump %_end_272
+
+%_else_272:
+  %1848 = load @y_0
+  %1849 = mod %1848, 2
+  br %1849, %_then_274, %_end_274
+
+%_then_274:
+  %1850 = load @ans_0
+  %1851 = load @i_0
+  %1852 = getelemptr @SHIFT_TABLE, %1851
+  %1853 = load %1852
+  %1854 = mul 1, %1853
+  %1855 = add %1850, %1854
+  store %1855, @ans_0
+  jump %_end_274
+
+%_end_274:
+  jump %_end_272
+
+%_end_272:
+  %1856 = load @x_0
+  %1857 = div %1856, 2
+  store %1857, @x_0
+  %1858 = load @y_0
+  %1859 = div %1858, 2
+  store %1859, @y_0
+  %1860 = load @i_0
+  %1861 = add %1860, 1
+  store %1861, @i_0
+  jump %_while_entry_271
+
+%_end_271:
+  %1862 = load @ans_0
+  store %1862, @sum_0_3_0_0_2_0_1_0
+  store 0, @ans_0
+  store 0, @i_0
+  %1863 = load @al_0_3_0_0_2_0_1_0
+  store %1863, @x_0
+  %1864 = load @c_0_3_0_0_2_0_1_0
+  store %1864, @y_0
+  jump %_while_entry_275
+
+%_while_entry_275:
+  %1865 = load @i_0
+  %1866 = lt %1865, 16
+  br %1866, %_while_body_275, %_end_275
+
+%_while_body_275:
+  %1867 = load @x_0
+  %1868 = mod %1867, 2
+  @t40_0_3_0_0_2_0_1_0_0_1 = alloc i32
+  %1869 = ne %1868, 0
+  br %1869, %_then_277, %_else_277
+
+%_then_277:
+  %1870 = load @y_0
+  %1871 = mod %1870, 2
+  %1872 = ne %1871, 0
+  store %1872, @t40_0_3_0_0_2_0_1_0_0_1
+  jump %_end_277
+
+%_else_277:
+  store 0, @t40_0_3_0_0_2_0_1_0_0_1
+  jump %_end_277
+
+%_end_277:
+  %1873 = load @t40_0_3_0_0_2_0_1_0_0_1
+  br %1873, %_then_276, %_end_276
+
+%_then_276:
+  %1874 = load @ans_0
+  %1875 = load @i_0
+  %1876 = getelemptr @SHIFT_TABLE, %1875
+  %1877 = load %1876
+  %1878 = mul 1, %1877
+  %1879 = add %1874, %1878
+  store %1879, @ans_0
+  jump %_end_276
+
+%_end_276:
+  %1880 = load @x_0
+  %1881 = div %1880, 2
+  store %1881, @x_0
+  %1882 = load @y_0
+  %1883 = div %1882, 2
+  store %1883, @y_0
+  %1884 = load @i_0
+  %1885 = add %1884, 1
+  store %1885, @i_0
+  jump %_while_entry_275
+
+%_end_275:
+  %1886 = load @ans_0
+  store %1886, @c_0_3_0_0_2_0_1_0
+  br 0, %_then_278, %_else_278
+
+%_then_278:
+  store 0, @ans_0
+  jump %_end_278
+
+%_else_278:
+  store 0, @ans_0
+  store 0, @i_0
+  %1887 = load @c_0_3_0_0_2_0_1_0
+  %1888 = getelemptr @SHIFT_TABLE, 1
+  %1889 = load %1888
+  %1890 = mul %1887, %1889
+  store %1890, @x_0
+  store 65535, @y_0
+  jump %_while_entry_279
+
+%_while_entry_279:
+  %1891 = load @i_0
+  %1892 = lt %1891, 16
+  br %1892, %_while_body_279, %_end_279
+
+%_while_body_279:
+  %1893 = load @x_0
+  %1894 = mod %1893, 2
+  @t41_0_3_0_0_2_0_1_0_0_3_0 = alloc i32
+  %1895 = ne %1894, 0
+  br %1895, %_then_281, %_else_281
+
+%_then_281:
+  %1896 = load @y_0
+  %1897 = mod %1896, 2
+  %1898 = ne %1897, 0
+  store %1898, @t41_0_3_0_0_2_0_1_0_0_3_0
+  jump %_end_281
+
+%_else_281:
+  store 0, @t41_0_3_0_0_2_0_1_0_0_3_0
+  jump %_end_281
+
+%_end_281:
+  %1899 = load @t41_0_3_0_0_2_0_1_0_0_3_0
+  br %1899, %_then_280, %_end_280
+
+%_then_280:
+  %1900 = load @ans_0
+  %1901 = load @i_0
+  %1902 = getelemptr @SHIFT_TABLE, %1901
+  %1903 = load %1902
+  %1904 = mul 1, %1903
+  %1905 = add %1900, %1904
+  store %1905, @ans_0
+  jump %_end_280
+
+%_end_280:
+  %1906 = load @x_0
+  %1907 = div %1906, 2
+  store %1907, @x_0
+  %1908 = load @y_0
+  %1909 = div %1908, 2
+  store %1909, @y_0
+  %1910 = load @i_0
+  %1911 = add %1910, 1
+  store %1911, @i_0
+  jump %_while_entry_279
+
+%_end_279:
+  jump %_end_278
+
+%_end_278:
+  %1912 = load @ans_0
+  store %1912, @c_0_3_0_0_2_0_1_0
+  %1913 = load @sum_0_3_0_0_2_0_1_0
+  store %1913, @al_0_3_0_0_2_0_1_0
+  jump %_while_entry_270
+
+%_end_270:
+  %1914 = load @al_0_3_0_0_2_0_1_0
+  store %1914, @ans_0
+  %1915 = load @ans_0
+  store %1915, @mres_0_3_0_0_2
+  jump %_end_269
+
+%_end_269:
+  @al_0_3_0_0_2_0_2 = alloc i32
+  %1916 = load @ml_0_3_0_0_2
+  store %1916, @al_0_3_0_0_2_0_2
+  @c_0_3_0_0_2_0_2 = alloc i32
+  %1917 = load @ml_0_3_0_0_2
+  store %1917, @c_0_3_0_0_2_0_2
+  @sum_0_3_0_0_2_0_2 = alloc i32
+  jump %_while_entry_282
+
+%_while_entry_282:
+  %1918 = load @c_0_3_0_0_2_0_2
+  br %1918, %_while_body_282, %_end_282
+
+%_while_body_282:
+  store 0, @ans_0
+  store 0, @i_0
+  %1919 = load @al_0_3_0_0_2_0_2
+  store %1919, @x_0
+  %1920 = load @c_0_3_0_0_2_0_2
+  store %1920, @y_0
+  jump %_while_entry_283
+
+%_while_entry_283:
+  %1921 = load @i_0
+  %1922 = lt %1921, 16
+  br %1922, %_while_body_283, %_end_283
+
+%_while_body_283:
+  %1923 = load @x_0
+  %1924 = mod %1923, 2
+  br %1924, %_then_284, %_else_284
+
+%_then_284:
+  %1925 = load @y_0
+  %1926 = mod %1925, 2
+  %1927 = eq %1926, 0
+  br %1927, %_then_285, %_end_285
+
+%_then_285:
+  %1928 = load @ans_0
+  %1929 = load @i_0
+  %1930 = getelemptr @SHIFT_TABLE, %1929
+  %1931 = load %1930
+  %1932 = mul 1, %1931
+  %1933 = add %1928, %1932
+  store %1933, @ans_0
+  jump %_end_285
+
+%_end_285:
+  jump %_end_284
+
+%_else_284:
+  %1934 = load @y_0
+  %1935 = mod %1934, 2
+  br %1935, %_then_286, %_end_286
+
+%_then_286:
+  %1936 = load @ans_0
+  %1937 = load @i_0
+  %1938 = getelemptr @SHIFT_TABLE, %1937
+  %1939 = load %1938
+  %1940 = mul 1, %1939
+  %1941 = add %1936, %1940
+  store %1941, @ans_0
+  jump %_end_286
+
+%_end_286:
+  jump %_end_284
+
+%_end_284:
+  %1942 = load @x_0
+  %1943 = div %1942, 2
+  store %1943, @x_0
+  %1944 = load @y_0
+  %1945 = div %1944, 2
+  store %1945, @y_0
+  %1946 = load @i_0
+  %1947 = add %1946, 1
+  store %1947, @i_0
+  jump %_while_entry_283
+
+%_end_283:
+  %1948 = load @ans_0
+  store %1948, @sum_0_3_0_0_2_0_2
+  store 0, @ans_0
+  store 0, @i_0
+  %1949 = load @al_0_3_0_0_2_0_2
+  store %1949, @x_0
+  %1950 = load @c_0_3_0_0_2_0_2
+  store %1950, @y_0
+  jump %_while_entry_287
+
+%_while_entry_287:
+  %1951 = load @i_0
+  %1952 = lt %1951, 16
+  br %1952, %_while_body_287, %_end_287
+
+%_while_body_287:
+  %1953 = load @x_0
+  %1954 = mod %1953, 2
+  @t42_0_3_0_0_2_0_2_0_1 = alloc i32
+  %1955 = ne %1954, 0
+  br %1955, %_then_289, %_else_289
+
+%_then_289:
+  %1956 = load @y_0
+  %1957 = mod %1956, 2
+  %1958 = ne %1957, 0
+  store %1958, @t42_0_3_0_0_2_0_2_0_1
+  jump %_end_289
+
+%_else_289:
+  store 0, @t42_0_3_0_0_2_0_2_0_1
+  jump %_end_289
+
+%_end_289:
+  %1959 = load @t42_0_3_0_0_2_0_2_0_1
+  br %1959, %_then_288, %_end_288
+
+%_then_288:
+  %1960 = load @ans_0
+  %1961 = load @i_0
+  %1962 = getelemptr @SHIFT_TABLE, %1961
+  %1963 = load %1962
+  %1964 = mul 1, %1963
+  %1965 = add %1960, %1964
+  store %1965, @ans_0
+  jump %_end_288
+
+%_end_288:
+  %1966 = load @x_0
+  %1967 = div %1966, 2
+  store %1967, @x_0
+  %1968 = load @y_0
+  %1969 = div %1968, 2
+  store %1969, @y_0
+  %1970 = load @i_0
+  %1971 = add %1970, 1
+  store %1971, @i_0
+  jump %_while_entry_287
+
+%_end_287:
+  %1972 = load @ans_0
+  store %1972, @c_0_3_0_0_2_0_2
+  br 0, %_then_290, %_else_290
+
+%_then_290:
+  store 0, @ans_0
+  jump %_end_290
+
+%_else_290:
+  store 0, @ans_0
+  store 0, @i_0
+  %1973 = load @c_0_3_0_0_2_0_2
+  %1974 = getelemptr @SHIFT_TABLE, 1
+  %1975 = load %1974
+  %1976 = mul %1973, %1975
+  store %1976, @x_0
+  store 65535, @y_0
+  jump %_while_entry_291
+
+%_while_entry_291:
+  %1977 = load @i_0
+  %1978 = lt %1977, 16
+  br %1978, %_while_body_291, %_end_291
+
+%_while_body_291:
+  %1979 = load @x_0
+  %1980 = mod %1979, 2
+  @t43_0_3_0_0_2_0_2_0_3_0 = alloc i32
+  %1981 = ne %1980, 0
+  br %1981, %_then_293, %_else_293
+
+%_then_293:
+  %1982 = load @y_0
+  %1983 = mod %1982, 2
+  %1984 = ne %1983, 0
+  store %1984, @t43_0_3_0_0_2_0_2_0_3_0
+  jump %_end_293
+
+%_else_293:
+  store 0, @t43_0_3_0_0_2_0_2_0_3_0
+  jump %_end_293
+
+%_end_293:
+  %1985 = load @t43_0_3_0_0_2_0_2_0_3_0
+  br %1985, %_then_292, %_end_292
+
+%_then_292:
+  %1986 = load @ans_0
+  %1987 = load @i_0
+  %1988 = getelemptr @SHIFT_TABLE, %1987
+  %1989 = load %1988
+  %1990 = mul 1, %1989
+  %1991 = add %1986, %1990
+  store %1991, @ans_0
+  jump %_end_292
+
+%_end_292:
+  %1992 = load @x_0
+  %1993 = div %1992, 2
+  store %1993, @x_0
+  %1994 = load @y_0
+  %1995 = div %1994, 2
+  store %1995, @y_0
+  %1996 = load @i_0
+  %1997 = add %1996, 1
+  store %1997, @i_0
+  jump %_while_entry_291
+
+%_end_291:
+  jump %_end_290
+
+%_end_290:
+  %1998 = load @ans_0
+  store %1998, @c_0_3_0_0_2_0_2
+  %1999 = load @sum_0_3_0_0_2_0_2
+  store %1999, @al_0_3_0_0_2_0_2
+  jump %_while_entry_282
+
+%_end_282:
+  %2000 = load @al_0_3_0_0_2_0_2
+  store %2000, @ans_0
+  %2001 = load @ans_0
+  store %2001, @ml_0_3_0_0_2
+  %2002 = load @mr_0_3_0_0_2
+  store %2002, @x_0
+  store 1, @y_0
+  %2003 = load @y_0
+  %2004 = ge %2003, 15
+  br %2004, %_then_294, %_else_294
+
+%_then_294:
+  %2005 = load @x_0
+  %2006 = lt %2005, 0
+  br %2006, %_then_295, %_else_295
+
+%_then_295:
+  store 65535, @ans_0
+  jump %_end_295
+
+%_else_295:
+  store 0, @ans_0
+  jump %_end_295
+
+%_end_295:
+  jump %_end_294
+
+%_else_294:
+  %2007 = load @y_0
+  %2008 = gt %2007, 0
+  br %2008, %_then_296, %_else_296
+
+%_then_296:
+  %2009 = load @x_0
+  %2010 = gt %2009, 32767
+  br %2010, %_then_297, %_else_297
+
+%_then_297:
+  %2011 = load @x_0
+  %2012 = load @y_0
+  %2013 = getelemptr @SHIFT_TABLE, %2012
+  %2014 = load %2013
+  %2015 = div %2011, %2014
+  store %2015, @x_0
+  %2016 = load @x_0
+  %2017 = add %2016, 65536
+  %2018 = load @y_0
+  %2019 = sub 15, %2018
+  %2020 = add %2019, 1
+  %2021 = getelemptr @SHIFT_TABLE, %2020
+  %2022 = load %2021
+  %2023 = sub %2017, %2022
+  store %2023, @ans_0
+  jump %_end_297
+
+%_else_297:
+  %2024 = load @x_0
+  %2025 = load @y_0
+  %2026 = getelemptr @SHIFT_TABLE, %2025
+  %2027 = load %2026
+  %2028 = div %2024, %2027
+  store %2028, @ans_0
+  jump %_end_297
+
+%_end_297:
+  jump %_end_296
+
+%_else_296:
+  %2029 = load @x_0
+  store %2029, @ans_0
+  jump %_end_296
+
+%_end_296:
+  jump %_end_294
+
+%_end_294:
+  %2030 = load @ans_0
+  store %2030, @mr_0_3_0_0_2
+  jump %_while_entry_265
+
+%_end_265:
+  %2031 = load @mres_0_3_0_0_2
+  store %2031, @ans_0
+  %2032 = load @ans_0
+  store %2032, @pl_0_3_0
+  %2033 = load @pr_0_3_0
+  store %2033, @x_0
+  store 1, @y_0
+  %2034 = load @y_0
+  %2035 = ge %2034, 15
+  br %2035, %_then_298, %_else_298
+
+%_then_298:
+  %2036 = load @x_0
+  %2037 = lt %2036, 0
+  br %2037, %_then_299, %_else_299
+
+%_then_299:
+  store 65535, @ans_0
+  jump %_end_299
+
+%_else_299:
+  store 0, @ans_0
+  jump %_end_299
+
+%_end_299:
+  jump %_end_298
+
+%_else_298:
+  %2038 = load @y_0
+  %2039 = gt %2038, 0
+  br %2039, %_then_300, %_else_300
+
+%_then_300:
+  %2040 = load @x_0
+  %2041 = gt %2040, 32767
+  br %2041, %_then_301, %_else_301
+
+%_then_301:
+  %2042 = load @x_0
+  %2043 = load @y_0
+  %2044 = getelemptr @SHIFT_TABLE, %2043
+  %2045 = load %2044
+  %2046 = div %2042, %2045
+  store %2046, @x_0
+  %2047 = load @x_0
+  %2048 = add %2047, 65536
+  %2049 = load @y_0
+  %2050 = sub 15, %2049
+  %2051 = add %2050, 1
+  %2052 = getelemptr @SHIFT_TABLE, %2051
+  %2053 = load %2052
+  %2054 = sub %2048, %2053
+  store %2054, @ans_0
+  jump %_end_301
+
+%_else_301:
+  %2055 = load @x_0
+  %2056 = load @y_0
+  %2057 = getelemptr @SHIFT_TABLE, %2056
+  %2058 = load %2057
+  %2059 = div %2055, %2058
+  store %2059, @ans_0
+  jump %_end_301
+
+%_end_301:
+  jump %_end_300
+
+%_else_300:
+  %2060 = load @x_0
+  store %2060, @ans_0
+  jump %_end_300
+
+%_end_300:
+  jump %_end_298
+
+%_end_298:
+  %2061 = load @ans_0
+  store %2061, @pr_0_3_0
+  jump %_while_entry_227
+
+%_end_227:
+  %2062 = load @pres_0_3_0
+  store %2062, @ans_0
+  %2063 = load @cur_0
+  %2064 = getelemptr @SHIFT_TABLE, %2063
+  %2065 = load %2064
+  %2066 = load @ans_0
+  %2067 = ne %2065, %2066
+  br %2067, %_then_302, %_end_302
+
+%_then_302:
+  ret 1
+
+%_end_302:
+  %2068 = load @cur_0
+  %2069 = add %2068, 1
+  store %2069, @cur_0
+  jump %_while_entry_226
+
+%_end_226:
+  ret 0
 }
 fun @main(): i32 {
 %_entry_main:
-  @a_1 = alloc [[[i32, 2], 2], 2]
-  %0 = getelemptr @a_1, 0
-  %1 = getelemptr %0, 0
-  %2 = getelemptr %1, 0
-  store 3, %2
-  %3 = getelemptr %1, 1
-  store 2, %3
-  %4 = getelemptr %1, 2
-  store 3, %4
-  %5 = getelemptr %1, 3
-  store 4, %5
-  %6 = getelemptr %1, 4
-  store 0, %6
-  %7 = getelemptr %1, 5
-  store 0, %7
-  %8 = getelemptr %1, 6
-  store 0, %8
-  %9 = getelemptr %1, 7
-  store 0, %9
-  @s_1 = alloc i32
-  %10 = getelemptr @a_1, 0
-  %11 = getelemptr %10, 0
-  %12 = call @f(%11)
-  store %12, @s_1
-  %13 = load @s_1
-  call @putint(%13)
-  call @putch(10)
-  ret 0
+  %0 = call @long_func()
+  ret %0
 }
