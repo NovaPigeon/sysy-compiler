@@ -10,11 +10,18 @@
 #define ZERO_REG_ID 15
 #define PARAM_REG_NUM 8
 
-#define RISCV_DEBUG
+//#define RISCV_DEBUG
 #ifdef RISCV_DEBUG
 #define dbg_rscv_printf(...) fprintf(stderr, __VA_ARGS__)
 #else
 #define dbg_rscv_printf(...)
+#endif
+
+//#define REGS_DEBUG
+#ifdef REGS_DEBUG
+#define dbg_regs_printf(...) fprintf(stderr, __VA_ARGS__)
+#else
+#define dbg_regs_printf(...)
 #endif
 
 class StackFrame
@@ -66,6 +73,7 @@ public:
     {
         for(int i=0;i<REG_NUM;++i)
             regs_occupied[i]=false;
+        dbg_regs_printf("all free\n");
     }
     int alloc_reg()
     {
@@ -79,11 +87,25 @@ public:
                 break;
             }
         }
+        dbg_regs_printf("alloc %d\n", ret);
+        for (int j = 0; j < REG_NUM; ++j)
+        {
+            dbg_regs_printf("%d: %d\n", j, regs_occupied[j]);
+        }
         assert(ret!=-1);
         return ret;
     }
     int alloc_reg(int i)
     {
+        dbg_regs_printf("alloc special %d\n", i);
+        if(regs_occupied[i]==true)
+        {
+            dbg_regs_printf("Try to alloc occupied reg %d\n", i);
+            for(int j=0;j<REG_NUM;++j)
+            {
+                dbg_regs_printf("%d: %d\n", j, regs_occupied[j]);
+            }
+        }
         assert(regs_occupied[i]==false);
         regs_occupied[i]=true;
         return i;
@@ -92,6 +114,7 @@ public:
     void free(int i)
     {
         regs_occupied[i]=false;
+        dbg_regs_printf("free %d\n", i);
     }
 
 
