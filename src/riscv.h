@@ -2,6 +2,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <vector>
 #include "koopa.h"
 
 #define REG_NUM 15
@@ -127,3 +128,9 @@ var_info_t Visit(const koopa_raw_binary_t &binary);
 var_info_t Visit(const koopa_raw_load_t &load);
 var_info_t Visit(const koopa_raw_call_t &call,bool is_ret);
 var_info_t Visit(const koopa_raw_global_alloc_t &global_alloc);
+var_info_t Visit(const koopa_raw_get_elem_ptr_t &get_elem_ptr);
+var_info_t Visit(const koopa_raw_get_ptr_t &get_ptr);
+
+int get_var_size(const koopa_raw_type_t &ty);
+void get_aggregate(const koopa_raw_value_t &aggr);
+void generate_aggregate();

@@ -5,6 +5,7 @@
 #include <string>
 #include <string.h>
 #include <sstream>
+#include<vector>
 #include <map>
 #include "koopa.h"
 #include "riscv.h"
@@ -39,6 +40,8 @@ static std::map<koopa_raw_value_t,var_info_t> is_visited;
 static StackFrame stack_frame;
 static RegManager reg_manager;
 static int global_cnt=0;
+static std::vector<int> aggregate_vals;
+
 
 static void GenLoadStoreInst(std::string op,std::string reg1,int imm,std::string reg2)
 {
@@ -526,12 +529,13 @@ var_info_t Visit(const koopa_raw_global_alloc_t &global_alloc)
     switch (kind)
     {
         case KOOPA_RVT_ZERO_INIT:
-            std::cout<<"  .zero 4"<<std::endl;
+            std::cout<<"  .zero "<<get_var_size(global_alloc.init->ty)<<std::endl;
             break;
         case KOOPA_RVT_INTEGER:
             std::cout<<"  .word "<<global_alloc.init->kind.data.integer.value<<std::endl;
             break;
-        
+        case KOOPA_RVT_AGGREGATE:
+            break;
         default:
             assert(false);
     }
@@ -540,4 +544,53 @@ var_info_t Visit(const koopa_raw_global_alloc_t &global_alloc)
     vinfo.global_name=gname;
     std::cout<<std::endl;
     return vinfo;
+}
+
+var_info_t Visit(const koopa_raw_get_elem_ptr_t &get_elem_ptr)
+{
+    dbg_rscv_printf("Visit get elem ptr\n");
+}
+var_info_t Visit(const koopa_raw_get_ptr_t &get_ptr)
+{
+    dbg_rscv_printf("Visit get ptr\n");
+}
+
+int get_var_size(const koopa_raw_type_t &ty)
+{
+    if(ty->tag==KOOPA_RTT_ARRAY)
+        return (ty->data.array.len)*get_var_size(ty->data.array.base);
+    else
+        return 4;
+}
+
+void get_aggregate(const koopa_raw_value_t &aggr)
+{
+    koopa_raw_slice_t elems=aggr->kind.data.aggregate.elems;
+    for(size_t i=0;i<elems.len;++i)
+    {
+        auto elem = reinterpret_cast<koopa_raw_value_t>(elems.buffer[i]);
+        if(elem->kind.tag==KOOPA_RVT_INTEGER)
+            aggregate_vals.push_back(elem->kind.data.integer.value);
+        else if(elem->kind.tag==KOOPA_RVT_AGGREGATE)
+            get_aggregate(elem);
+        else
+            assert(false);
+    }
+}
+void generate_aggregate()
+{
+    int zero_cnt=0;
+    for(auto& val: aggregate_vals)
+    {
+        if(val!=0)
+        {
+            if(zero_cnt!=0)
+                std::cout<<"  .zero "<<zero_cnt*4<<std::endl;
+            std::cout<<"  .word "<<val<<std::endl;
+            zero_cnt=0;
+        }
+        else
+            zero_cnt++;
+    }
+    aggregate_vals.clear();
 }

@@ -318,13 +318,13 @@ public:
         for (int i = val_cnt; i < dims_size[0]; ++i)
             vals.push_back("0");
         val_cnt=dims_size[0];
-        if(is_all_const())
-        {
-            std::cout<<"  store ";
-            generate_aggregate();
-            std::cout<<", "<<ir_name<<std::endl;
-            return;
-        }
+        // if(is_all_const())
+        // {
+        //     std::cout<<"  store ";
+        //     generate_aggregate();
+        //     std::cout<<", "<<ir_name<<std::endl;
+        //     return;
+        // }
         std::stack<std::string> base_ptrs;
         std::string last_symbol=ir_name;
         for(int i=0;i<ndim;++i)
