@@ -31,11 +31,11 @@ public:
             top=0;
         store_ra=store_ra_;
     }
-    int push()
+    int push(int size=4)
     {
-        top+=4;
+        top+=size;
         assert(top<=stack_size);
-        return top-4;
+        return top-size;
     }
     int get_stack_size() const
     {

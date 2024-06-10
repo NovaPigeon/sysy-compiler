@@ -111,7 +111,12 @@ void Prologue(const koopa_raw_function_t &func)
         {
             koopa_raw_value_t inst=reinterpret_cast<koopa_raw_value_t>(bb->insts.buffer[j]);
             if(inst->ty->tag!=KOOPA_RTT_UNIT)
-                stack_size=stack_size+4;
+            {
+                if(inst->kind.tag==KOOPA_RVT_ALLOC)
+                    stack_size+=get_var_size(inst->ty->data.pointer.base);
+                else
+                    stack_size=stack_size+4;
+            }
             if(inst->kind.tag==KOOPA_RVT_CALL)
             {
                 store_ra=true;
@@ -222,7 +227,7 @@ var_info_t Visit(const koopa_raw_value_t &value)
     const auto &kind = value->kind;
     var_info_t vinfo;
     bool is_ret = (value->ty->tag != KOOPA_RTT_UNIT);
-
+    int var_size=4;
     switch (kind.tag)
     {
     case KOOPA_RVT_RETURN:
@@ -243,7 +248,8 @@ var_info_t Visit(const koopa_raw_value_t &value)
     case KOOPA_RVT_ALLOC:
         std::cout <<std::endl<< "  # alloc" << std::endl;
         vinfo.type=VAR_TYPE::ON_STACK;
-        vinfo.stack_location=stack_frame.push();
+        var_size=get_var_size(value->ty->data.pointer.base);
+        vinfo.stack_location=stack_frame.push(var_size);
         is_visited[value]=vinfo;
         reg_manager.free_regs();
         break;
@@ -272,9 +278,19 @@ var_info_t Visit(const koopa_raw_value_t &value)
         assert(vinfo.type==VAR_TYPE::ON_GLOBAL);
         is_visited[value]=vinfo;
         break;
+    case KOOPA_RVT_GET_ELEM_PTR:
+        vinfo=Visit(kind.data.get_elem_ptr);
+        is_visited[value]=vinfo;
+        reg_manager.free_regs();
+        break;
+    case KOOPA_RVT_GET_PTR:
+        vinfo=Visit(kind.data.get_ptr);
+        is_visited[value]=vinfo;
+        reg_manager.free_regs();
+        break;
     default:
         // 其他类型暂时遇不到
-        printf("%d\n",kind.tag);
+        printf("RVT type %d do not support.\n",kind.tag);
         assert(false);
     }
     return vinfo;
@@ -417,15 +433,25 @@ void Visit(const koopa_raw_store_t &store)
     var_info_t src_var = Visit(store.value);
     assert(src_var.type == VAR_TYPE::ON_REG);
 
-    var_info_t dst_var=is_visited[dst];
+    var_info_t dst_var;
     if(dst->kind.tag==KOOPA_RVT_GLOBAL_ALLOC)
     {
+        dst_var = is_visited[store.dest];
         int reg_id=reg_manager.alloc_reg();
         std::cout<<"  la "<<gen_reg(reg_id)<<", "<<dst_var.global_name<<std::endl;
         std::cout<<"  sw "<<gen_reg(src_var.reg_id)<<", 0("<<gen_reg(reg_id)<<")"<<std::endl;
     }
+    else if(dst->kind.tag==KOOPA_RVT_GET_ELEM_PTR ||
+            dst->kind.tag==KOOPA_RVT_GET_PTR)
+    {
+        dst_var=Visit(store.dest);
+        std::cout<<"  sw "<<gen_reg(src_var.reg_id)<<", ("<<gen_reg(dst_var.reg_id)<<")"<<std::endl;
+    }
     else
+    {
+        dst_var = is_visited[store.dest];
         GenLoadStoreInst("sw", gen_reg(src_var.reg_id),dst_var.stack_location,"sp");
+    }
 }
 
 var_info_t Visit(const koopa_raw_load_t &load)
@@ -436,10 +462,17 @@ var_info_t Visit(const koopa_raw_load_t &load)
 
     var_info_t src_var=Visit(load.src);
     assert(src_var.type==VAR_TYPE::ON_REG);
+    int src_reg=src_var.reg_id;
+    if(load.src->kind.tag==KOOPA_RVT_GET_ELEM_PTR || 
+       load.src->kind.tag==KOOPA_RVT_GET_PTR)
+    {
+        src_reg=reg_manager.alloc_reg();
+        std::cout<<"  lw "<<gen_reg(src_reg)<<" ,("<<gen_reg(src_var.reg_id)<<")"<<std::endl;
+    }
     var_info_t dst_var;
     dst_var.type=VAR_TYPE::ON_STACK;
     dst_var.stack_location=stack_frame.push();
-    GenLoadStoreInst("sw", gen_reg(src_var.reg_id), dst_var.stack_location, "sp");
+    GenLoadStoreInst("sw", gen_reg(src_reg), dst_var.stack_location, "sp");
     return dst_var;
 }
 
@@ -535,6 +568,8 @@ var_info_t Visit(const koopa_raw_global_alloc_t &global_alloc)
             std::cout<<"  .word "<<global_alloc.init->kind.data.integer.value<<std::endl;
             break;
         case KOOPA_RVT_AGGREGATE:
+            get_aggregate(global_alloc.init);
+            generate_aggregate();
             break;
         default:
             assert(false);
@@ -549,10 +584,68 @@ var_info_t Visit(const koopa_raw_global_alloc_t &global_alloc)
 var_info_t Visit(const koopa_raw_get_elem_ptr_t &get_elem_ptr)
 {
     dbg_rscv_printf("Visit get elem ptr\n");
+    std::cout<<"  # get elem ptr"<<std::endl;
+
+    var_info_t src_var;
+    if(get_elem_ptr.src->kind.tag==KOOPA_RVT_GLOBAL_ALLOC)
+    {
+        src_var=is_visited[get_elem_ptr.src];
+        int new_reg_id=reg_manager.alloc_reg();
+        std::cout<<"  la "<<gen_reg(new_reg_id)<<", "<<src_var.global_name<<std::endl;
+        src_var.reg_id=new_reg_id;
+        src_var.type=VAR_TYPE::ON_REG;
+    }
+    else
+        src_var=Visit(get_elem_ptr.src);
+    
+    var_info_t index_var=Visit(get_elem_ptr.index);
+    var_info_t res_var;
+
+    koopa_raw_type_t array=get_elem_ptr.src->ty->data.pointer.base;
+    int total_size=get_var_size(array);
+    int elem_size=total_size/(array->data.array.len);
+
+    int new_reg_id=reg_manager.alloc_reg();
+    std::string new_reg_name=gen_reg(new_reg_id);
+    std::cout<<"  li "<<new_reg_name<<", "<<elem_size<<std::endl;
+    std::cout<<"  mul "<<new_reg_name<<", "<<new_reg_name<<", "<<gen_reg(index_var.reg_id)<<std::endl;
+
+    int ret_reg_id=reg_manager.alloc_reg();
+    std::cout<<"  add "<<gen_reg(ret_reg_id)<<", "<<gen_reg(ret_reg_id)<<", "<<new_reg_name<<std::endl;
+
+
+    
+    res_var.type=VAR_TYPE::ON_STACK;
+    res_var.stack_location=stack_frame.push();
+    GenLoadStoreInst("sw", gen_reg(ret_reg_id), res_var.stack_location, "sp");
+    return res_var;
 }
 var_info_t Visit(const koopa_raw_get_ptr_t &get_ptr)
 {
     dbg_rscv_printf("Visit get ptr\n");
+    std::cout << "  # get ptr" << std::endl;
+
+    var_info_t src_var = Visit(get_ptr.src);
+
+    var_info_t index_var = Visit(get_ptr.index);
+    var_info_t res_var;
+
+    koopa_raw_type_t array = get_ptr.src->ty->data.pointer.base;
+    int total_size = get_var_size(array);
+    int elem_size = total_size / (array->data.array.len);
+
+    int new_reg_id = reg_manager.alloc_reg();
+    std::string new_reg_name = gen_reg(new_reg_id);
+    std::cout << "  li " << new_reg_name << ", " << elem_size << std::endl;
+    std::cout << "  mul " << new_reg_name << ", " << new_reg_name << ", " << gen_reg(index_var.reg_id) << std::endl;
+
+    int ret_reg_id = reg_manager.alloc_reg();
+    std::cout << "  add " << gen_reg(ret_reg_id) << ", " << gen_reg(ret_reg_id) << ", " <<new_reg_name << std::endl;
+
+    res_var.type = VAR_TYPE::ON_STACK;
+    res_var.stack_location = stack_frame.push();
+    GenLoadStoreInst("sw", gen_reg(ret_reg_id), res_var.stack_location, "sp");
+    return res_var;
 }
 
 int get_var_size(const koopa_raw_type_t &ty)
