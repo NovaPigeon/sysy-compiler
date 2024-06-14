@@ -14,7 +14,6 @@ typedef struct
 {
     SYMBOL_TYPE type;
     int val;
-    int addr;
     int ndim;
     std::string ir_name;
     

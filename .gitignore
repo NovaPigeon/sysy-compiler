@@ -6,3 +6,5 @@ testcase/
 lv9/
 t*
 *.log
+*.o
+test*
